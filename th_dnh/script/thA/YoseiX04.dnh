@@ -1,0 +1,47 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		let dir = [ -1, 1 ][ GetX() < GetCenterX() ];
+		SetMovePosition03( GetX(), GetClipMinY() + 128, 20, 6 );
+		WaitSpeedDown( 0.3 );
+		SetSpeed( 0.35 );
+		SetAngle( 90 );
+		ascent( let i in 1..3 ){
+			let gap = 0;
+			let speed = 1.5 * i;
+			while( gap <= 60 ){
+				CircleShotGap01( 45, speed, RED01, 10, gap * dir );
+				PlaySEEx( seShot1 );
+				Wait( 3 );
+				speed += 0.2 * i;
+				gap += 5;
+			}
+		}
+		while( GetSpeed() < 5 ){
+			SetSpeed( GetSpeed() + 0.03 );
+			yield;
+		}
+	}
+	@Initialize{
+		SetLife( 20 );
+		SetDamageRate( 0, 10 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count == 88 ){ SetDamageRate( 100, 100 ); }
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		if( IsBossExisting() ){ VanishEnemy(); }
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 2, 32 ); }
+	@DrawLoop{
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei2, count );
+	}
+}

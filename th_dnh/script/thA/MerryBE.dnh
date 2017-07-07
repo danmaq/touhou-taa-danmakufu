@@ -1,0 +1,68 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		PlaySEEx( seBossExplode );
+		CreateEventFromScript( "Talk" );
+		while( GetEventStep() != 1 ){ yield; }
+		SetCommonData( "Result", true );
+		let clear = 50000000;
+		let point = GetPoint() * 50000 - GetCommonDataDefault( "ResultPoint", 0 );
+		let graze = GetGraze() * 500 - GetCommonDataDefault( "ResultGraze", 0 );
+		let rank = [ 50, 100, 120, 150 ][ GetCommonDataDefault( "Level", 1 ) ];
+		let total = ( clear + point + graze ) * ( rank / 100 );
+		SetCommonData( "ResultClear", clear );
+		SetCommonData( "ResultPoint", point );
+		SetCommonData( "ResultGraze", graze );
+		SetCommonData( "ResultRank", rank );
+		SetCommonData( "ResultTotal", total );
+		AddScore( total );
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetX( -128 );
+		SetY( -128 );
+		LoadSE( seBossExplode );
+		ForbidBomb( true );
+		ForbidShot( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( !OnEvent() ){ VanishEnemy(); }
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			SetChar( RIGHT, imgCutInMerryCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			Player();
+			TextOut( "\c[BLUE]さ、弾幕ごっこが長くなったわね・・・\n分かったらどいてもらおうかしら" );
+			Enemy();
+			TextOut( "\c[RED]うぅ・・・そんな力も\n時の消滅の前には無に等しいわ" );
+			Player();
+			SetStep( 1 );
+			TextOut( "\c[BLUE]一体何のつもりで\nそんなことやってるのかしらね" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			SetChar( RIGHT, imgCutInMerryCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			Player();
+			TextOut( "\c[BLUE]さぁこれで分かったろ、\n強制退去されるのはお前だ" );
+			Enemy();
+			TextOut( "\c[RED]この力、まだ慣れないわ・・・\nでもあの方なら" );
+			Player();
+			SetStep( 1 );
+			TextOut( "\c[BLUE]こんな大それたことするやつ\n一体誰なんだか" );
+		}
+		End();
+	}
+}

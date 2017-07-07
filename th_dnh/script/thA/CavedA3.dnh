@@ -1,0 +1,124 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_CAVEDA3";
+	let PrevTime = GetTimer();
+	task Bloom( let finalangle ){
+		let width = 32;
+		let len = 256;
+		let obj = Obj_Create( OBJ_LASER );
+		Obj_SetX( obj, GetX() );
+		Obj_SetY( obj, GetY() );
+		Obj_SetAngle( obj, -90 );
+		ObjShot_SetDelay( obj, 100 );
+		ObjShot_SetBombResist( obj, true );
+		ObjShot_SetGraphic( obj, PURPLE01 );
+		ObjLaser_SetLength( obj, len );
+		ObjLaser_SetWidth( obj, width );
+		Wait( 60 );
+		let count = 0;
+		loop( 100 ){
+			Obj_SetAngle( obj, SlowDown( -90, -90 + finalangle, count, 100 ) );
+			count++;
+			yield;
+		}
+		CreateLaserB( 0, len, width, PURPLE01, 0 );
+		SetLaserDataB( 0, 0, 0, 0, 0, 0, 0, Obj_GetAngle( obj ), 0 );
+		let pos = 32;
+		while( pos < len ){
+			CreateShotA( 1, 0, 0, 50 );
+			SetShotDataA( 1, 0, 0, 90 - Obj_GetAngle( obj ), 0, 0.03, rand( [ 0.9, 1.1, 1.5, 2 ][ Level ], [ 1.6, 2, 2.7, 3.3 ][ Level ] ), PURPLE12 );
+			AddShot( rand( 10, 70 ), 0, 1, pos );
+			pos += [ 64, 48, 40, 32 ][ Level ];
+		}
+		SetShotKillTime( 0, 100 );
+		FireShot( 0 );
+		Obj_Delete( obj );
+	}
+	task Cherry(){
+		loop{
+			Wait( 300 );
+			let angle = 15;
+			while( angle <= 120 ){
+				let dir = -1;
+				loop( 2 ){
+					Bloom( angle * dir );
+					dir = -dir;
+				}
+				angle += 15;
+			}
+			PlaySEEx( seLaser1 );
+			Wait( 200 );
+		}
+	}
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let dir = -1;
+		loop( 2 ){
+			CreateEnemyFromScript( "Obj", GetX(), GetY(), 0, 0, dir );
+			dir = -dir;
+		}
+		SetShotDirectionType( ABSOLUTE );
+		Cherry();
+		let limit = [ 45, 30, 20, 45 ][ Level ];
+		let space = [ 45, 30, 20, 15 ][ Level ];
+		let speed = [ 1, 1, 1.2, 1.5 ][ Level ];
+		loop{
+			let x = GetX() + RandBlur( 160 );
+			let y = GetY() + RandBlur( 48 );
+			let angle = -limit;
+			while( angle <= limit ){
+				CreateShot01( x, y, speed, atan2( GetPlayerY() - y, GetPlayerX() - x ) + angle, BLUE01, 15 );
+				angle += space;
+			}
+			PlaySEEx( seShot3 );
+			Wait( 10 );
+		}
+	}
+	@Initialize{
+		SetLife( 6000 );
+		SetTimer( 80 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 5 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, -1 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{
+		SetGraphicRect( 0, 0, 512, 256 );
+		SetAlpha( Smooth( 255, 192, count, 200 ) );
+		SetGraphicScale( Accelerate( 2, 1, count, 60 ), Accelerate( 0, 1, count, 60 ) );
+		DrawChr( imgEnemySense[ count % 10 ], count );
+		SetGraphicScale( 1, 1 );
+		SetAlpha( 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+}
+script_enemy Obj{
+	let Argv = GetArgument();
+	let uniquestr = "G_CAVEDA3";
+	@Initialize{
+		SetDamageRateEx( 100, 100, 10, 5 );
+		SetLife( 32767 );
+	}
+	@MainLoop{
+		SetX( GetCommonData( uniquestr ~ "X" ) + 128 * Argv );
+		SetY( GetCommonData( uniquestr ~ "Y" ) - 144 );
+		SetCollisionA( GetX(), GetY(), 96 );
+	}
+}

@@ -1,0 +1,35 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 0 );
+	task Behavior(){
+		yield;
+	}
+	@Initialize{
+		SetLife( 10 );
+		SetInvincibility( 18 );
+		Behavior();
+	}
+	@MainLoop{
+		SEShotHit( seDamage, count );
+		Collision( 20, 0 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{
+		if( !BeVanished() ){
+			SetShotDirectionType( ABSOLUTE );
+			if( Level == 0 || GetY() > GetClipMaxY() - 64 ){ CreateShot01( GetX(), GetY(), 1.6, GetAngle(), GREEN31, 24 ); }
+			else{ CircleShotGap01( [ 360, 120, 90, 72 ][ Level ], 1.6, GREEN31, 24, GetAngle() ); }
+		}
+		if( count > 100 || Argv % 5 == 0 ){ DropItem( 1, 8 ); }
+	}
+	@DrawLoop{
+		SetGraphicAngle( 0, 0, -count * 8 );
+		SetGraphicRect( 0, 0, 32, 32 );
+		DrawChr( imgEnemyKedamaBlue, count );
+		SetGraphicAngle( 0, 0, 0 );
+	}
+}

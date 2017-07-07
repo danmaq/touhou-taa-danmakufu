@@ -1,0 +1,125 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_LILY4S";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let pattern = 0;
+		loop{
+			Concentration01( 120 );
+			PlaySEEx( sePower1 );
+			Wait( 120 );
+			local{
+				let max = 3 + pattern % 4;
+				SetCommonData( "SHADOWMAX", max );
+				ascent( let i in 1..max ){
+					let dir = -1;
+					loop( 2 ){
+						CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, 0, i * dir );
+						dir = -dir;
+					}
+				}
+				PlaySEEx( seShadow );
+				Wait( 60 );
+			}
+			local{
+				let color = [ RED21, PURPLE21 ][ pattern % 2 ];
+				let dir = [ -1, 1 ][ pattern % 2 ];
+				ascent( let i in 0..32 ){
+					SetShotDirectionType( PLAYER );
+					let angle = 0;
+					while( angle < 360 ){
+						ascent( let speed in 0..( 1 + trunc( Level / 2 ) ) ){
+							CreateShotA( 0, GetX(), GetY(), 20 );
+							SetShotDataA( 0, 0, [ 7, 4 ][ speed ], angle + i * 11 * dir, 3 * dir, [ -0.2, -0.3 ][ speed ], Smooth( 3, 4, i, 32 ), color );
+							SetShotDataA( 0, 60, NULL, NULL, -0.5 * dir, -0.3, Smooth( 1.5, 1.9, i, 32 ), color );
+							SetShotDataA( 0, 100, NULL, NULL, 0, -0.01, Smooth( 1.3, 1.5, i, 32 ), color );
+							FireShot( 0 );
+						}
+						angle += [ 60, 45, 45, 36 ][ Level ];
+					}
+					PlaySEEx( seShot1 );
+					Wait( 5 );
+				}
+			}
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 3600 );
+		SetScore( 1200000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 100, 150 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( [ 60, 1 ][ GetCommonDataDefault( "SpellPractice", false ) ], 0, 0 );
+		SetCommonData( "ShowName", 5 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 9, imgCutInLily, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( GetLife() <= 0 ){
+			SetCommonData( uniquestr, 0 );
+			if( count % 15 == 0 ){ PlaySEEx( seShot1 ); }
+		}
+		else{ yield; }
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, [ 1, 5 ][ count > 130 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 24 );
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 36 + Level );
+		DeleteCommonData( "SHADOWMAX" );
+		EndSpell();
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyLily, 1, 1, 58, 72, count ); }
+	@BackGround{ LilyBG( imgSpellBamboo, 255, 192, 224, count ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_LILY4S";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let Argv = GetArgument();
+	task BuckShot( let angle ){
+		let obj = SetHiddenObject( GetX(), GetY(), 32, angle, 0, true, false );
+		yield;
+		SetShotDirectionType( PLAYER );
+		CircleShotObject01( obj, [ 45, 40, 36, 30 ][ Level ], 1, [ WHITE31, ORANGE31 ][ absolute( Argv ) % 2 ], 30 );
+		Obj_Delete( obj );
+	}
+	task Behavior(){
+		Wait( 130 );
+		loop( 12 ){
+			BuckShot( rand( 0, 360 ) );
+			Wait( 8 );
+		}
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 286 );
+		SetMovePosition03( GetCenterX() + 176 * GetDir( Argv ), GetClipMinY() + Smooth( 32, 256, absolute( Argv ) - 1, GetCommonDataDefault( "SHADOWMAX", 0 ) - 2 ), 20, 2.5 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		yield;
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadowRect( imgSystemCircleBlue, imgEnemyShadow, 32, 32, sin( count ) * 820, count ); }
+}

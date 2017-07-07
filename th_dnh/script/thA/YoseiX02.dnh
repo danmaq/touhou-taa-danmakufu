@@ -1,0 +1,53 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Argv = GetArgumentDefault( 0 );
+	task Behavior(){
+		yield;
+		let dir = [ -1, 1 ][ GetX() < GetCenterX() ];
+		SetMovePosition03( GetX() + ( GetCommonDataDefault( "GlobalCount", count ) % 32 + 64 ) * dir, Max( GetPlayerY() / [ 3, 2 ][ Argv % 2 ], GetClipMinY() + 8 ), 20, Smooth( 1, [ 3, 5 ][ Argv % 2 ], GetPlayerY(), GetClipMaxY() ) );
+		yield;
+		while( GetSpeed() > 0 ){
+			ascent( let i in 2..6 ){ CircleShot01( 90, i, [ YELLOW05, PURPLE05 ][ Argv % 2 ], 5 ); }
+			PlaySEEx( seShot1 );
+			Wait( 20 );
+		}
+		SetShotDirectionType( ABSOLUTE );
+		WayShotGap01( 45, 15, 0.6, AQUA05, 5, 90 );
+		WayShotGap01( 6, 2, 1, AQUA05, 5, 90 );
+		PlaySEEx( seShot2 );
+		SetMovePosition03( GetX() - 12 * dir, GetY() + 8, 20, 0.5 );
+		WaitZeroSpeed();
+		Wait( 20 );
+		SetShotDirectionType( PLAYER );
+		let speed = 1;
+		loop( 5 ){
+			WayShot01( 15, 15, speed, WHITE05, 5 );
+			speed += 0.8;
+		}
+		PlaySEEx( seShot1 );
+		SetAngle( [ 150, 30 ][ GetX() < GetCenterX() ] );
+		while( GetSpeed() < 2 ){
+			SetSpeed( GetSpeed() + 0.1 );
+			Wait( 2 );
+		}
+	}
+	@Initialize{
+		SetLife( 10 );
+		SetDamageRate( 0, 10 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count == 3 ){ SetDamageRate( 100, 100 ); }
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 1, 8 ); }
+	@DrawLoop{
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei1, count );
+	}
+}

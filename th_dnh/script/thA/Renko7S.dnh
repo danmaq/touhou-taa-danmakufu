@@ -1,0 +1,88 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	let Freeze = false;
+	task Behavior(){
+		Wait( 40 );
+		let pattern = 0;
+		loop{
+			Wait( 60 );
+			loop( 73 ){
+				let angle = 0;
+				while( angle < 360 ){
+					let dir = -1;
+					loop( 2 ){
+						ChaosShot( count * 3 * dir + angle, dir, pattern + 1 );
+						dir = -dir;
+					}
+					angle += 90;
+				}
+				PlaySEEx( seShot1 );
+				Wait( 3 );
+			}
+			ExMove( false, count );
+			Wait( 60 );
+			Explosion01( GetX(), GetY(), 16, 0.5, 16 );
+			PlaySEEx( seKira1 );
+			Concentration01( 60 );
+			PlaySEEx( sePower1 );
+			Freeze = true;
+			Wait( 60 );
+			Freeze = false;
+			pattern++;
+		}
+	}
+	task ChaosShot( let angle, let dir, let pattern ){
+		let color = [ RED02, BLUE02 ][ dir < 0 ];
+		let obj = SetShotObject( GetX(), GetY(), 4.2, angle, color, 10 );
+		Obj_SetAutoDelete( obj, false );
+		let count = 0;
+		while( !Freeze ){
+			Obj_SetAngle( obj, Obj_GetAngle( obj ) + [ 2, 4 ][ count < 55 ] * dir );
+			yield;
+			count++;
+		}
+		while( Freeze ){
+			Obj_SetSpeed( obj, Max( Obj_GetSpeed( obj ) - 0.1, 0 ) );
+			yield;
+			count++;
+		}
+		CreateShot02( Obj_GetX( obj ), Obj_GetY( obj ), 0, count * pattern * dir, 0.05, sin( count * 10 ) / 2 + 1.3, color, 0 );
+		Obj_Delete( obj );
+	}
+	@Initialize{
+		SetLife( 500 );
+		SetScore( 7777777 );
+		SetTimer( 89 );
+		SetInvincibility( 130 );
+		SetDamageRate( 7, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 9 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 35, imgCutInRenko, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		if( !OnBomb ){ Collision( 32, 16 ); }
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 116 );
+		EndSpell();
+		DropItem( 30, 64 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		if( !OnBomb() ){ DrawBossChr( imgEnemyRenko, 1, 1, 43, 72, count ); }
+	}
+	@BackGround{ RenkoBG( imgSpellRenko ); }
+}

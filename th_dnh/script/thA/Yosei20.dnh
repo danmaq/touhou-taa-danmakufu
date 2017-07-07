@@ -1,0 +1,68 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquecode = RandBlur( 32767 );
+	let uniquestr = ToString( uniquecode );
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetShotDirectionType( ABSOLUTE );
+		let dir = GetX() < GetCenterX();
+		SetMovePosition03( GetX(), GetClipMinY() + 96, 20, 4 );
+		WaitZeroSpeed();
+		let angle = 0;
+		while( angle < 360 ){
+			CreateEnemyFromScript( "Shadow", GetX(), GetY(), 2, angle + GetAngleToPlayer(), uniquecode );
+			angle += 45;
+		}
+		PlaySEEx( seShadow );
+		SetAngle( [ 150, 30 ][ GetX() < GetCenterX() ] );
+		while( GetSpeed() < 2 ){
+			SetSpeed( GetSpeed() + 0.05 );
+			Wait( 2 );
+		}
+	}
+	@Initialize{
+		SetLife( 100 );
+		SetDamageRate( 2, 3 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 100 ){ SetDamageRate( 100, 30 ); }
+		TaskShadowInterface( uniquestr, 50 );
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		if( IsBossExisting() ){ VanishEnemy(); }
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		DropItem( 1, 68 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei1, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquecode = ToString( GetArgument() );
+	let PrevLife;
+	@Initialize{
+		SetLife( 30 );
+		PrevLife = GetLife();
+	}
+	@MainLoop{
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

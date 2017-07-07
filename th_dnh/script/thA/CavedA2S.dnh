@@ -1,0 +1,175 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_CAVEDA2S";
+	let PrevTime = GetTimer();
+	let AngleTable =	[ 0,	0,		5,		10,		120,	130,	135,	170,	180,	190,	225,	230,	240,	350,	355 ];
+	let StartTable = 	[ 0,	5,		3,		2,		0,		3,		6,		0,		1,		0,		6,		3,		0,		2,		3 ];
+	let LengthTable = 	[ 6,	2,		1,		1,		5,		5,		2,		3,		3,		3,		2,		5,		5,		1,		1 ];
+	let MaxSpeed = 3.5;
+	let AddSpeed = 0.03;
+	let Delay = 50;
+	let CircleSpace = [ 15, 12, 10, 8 ][ Level ];
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let dir = -1;
+		loop( 2 ){
+			CreateEnemyFromScript( "Obj", GetX(), GetY(), 0, 0, dir );
+			dir = -dir;
+		}
+		let pattern = 0;
+		loop{
+			Concentration01( 120 );
+			PlaySEEx( sePower1 );
+			Wait( 120 );
+			alternative( pattern % 6 )
+			case( 0 ){
+				Phoenix( GetAngleToPlayer() );
+				CircleShotGap01( CircleSpace, 1.8, RED01, Delay, GetAngleToPlayer() );
+				PlaySEEx( seShot1 );
+			}
+			case( 1 ){
+				let pangle = GetAngleToPlayer();
+				let angle = 36 - Level * 5;
+				while( angle <= 135 ){
+					let dir = -1;
+					loop( 2 ){
+						Phoenix( pangle + angle * dir );
+						dir = -dir;
+					}
+					CircleShotGap01( CircleSpace, 1.8, RED01, Delay, pangle + angle );
+					PlaySEEx( seShot1 );
+					Wait( 20 );
+					angle += 15;
+				}
+			}
+			case( 2, 4 ){
+				ascent( let i in 0..8 ){
+					Phoenix( GetAngleToPlayer() );
+					if( i == 7 ){
+						let dir = -1;
+						loop( [ 2, 1 ][ Level == 0 ] ){
+							Phoenix( GetAngleToPlayer() + [ 0, 10, 15, 18 ][ Level ] * dir );
+							dir = -dir;
+						}
+					}
+					CircleShotGap01( CircleSpace, 1.8, RED01, Delay, GetAngleToPlayer() + [ 0, 5 ][ i % 2 ] );
+					PlaySEEx( seShot1 );
+					Wait( 20 );
+				}
+			}
+			case( 3, 5 ){
+				let pangle = GetAngleToPlayer();
+				let limit = [ 150, 125, 140, 122.5 ][ Level ];
+				let space = [ 60, 50, 40, 35 ][ Level ];
+				let w = [ 30, 20 ][ trunc( Level / 2 ) ];
+				let angle = -limit;
+				while( angle <= limit ){
+					Phoenix( pangle + angle * [ -1, 1 ][ pattern == 3 ] );
+					CircleShotGap01( CircleSpace, 1.8, RED01, Delay, pangle + angle * [ -1, 1 ][ pattern == 3 ] );
+					PlaySEEx( seShot1 );
+					Wait( w );
+					angle += space;
+				}
+			}
+			ExMoveUnderBorder( false, 128 );
+			pattern++;
+		}
+	}
+	task Cluster( let x, let y, let angle ){
+		let obj = SetHiddenObject( x, y, 64, rand( 0, 360 ), 0, true, false );
+		yield;
+		CreateShotA( 0, Obj_GetX( obj ), Obj_GetY( obj ), Delay );
+		SetShotDataA( 0, 0, 0, angle, 0, 0, 0, RED23 );
+		SetShotDataA( 0, 30 + Level * 10, NULL, NULL, 0, AddSpeed, MaxSpeed, RED23 );
+		FireShot( 0 );
+		Obj_Delete( obj );
+	}
+	task BuckShot( let angle ){
+		let obj = SetHiddenObject( GetX(), GetY(), 0, angle, Delay + 50, true, true );
+		let count = 0;
+		while( !Obj_BeDeleted( obj ) ){
+			let speed = Obj_GetSpeed( obj );
+			Obj_SetSpeed( obj, Min( speed + AddSpeed, MaxSpeed ) );
+			if( speed > 1 && count % ( 2 + Level ) == 0 ){ Cluster( Obj_GetX( obj ), Obj_GetY( obj ), angle ) };
+			yield;
+			count++;
+		}
+	}
+	task PBody( let angle, let start, let len, let gap, let color ){
+		let obj = SetHiddenObject( GetX(), GetY(), 16, angle + gap, 0, false, true );
+		let count = 0;
+		loop( start ){
+			count++;
+			yield;
+		}
+		loop( len ){
+			CreateShot02( Obj_GetX( obj ), Obj_GetY( obj ), 0, angle, AddSpeed, MaxSpeed, color, Delay - count );
+			count++;
+			yield;
+		}
+		Obj_Delete( obj );
+	}
+	function Phoenix( let angle ){
+		BuckShot( angle );
+		CreateShot02( GetX(), GetY(), 0, angle, AddSpeed, MaxSpeed, RED03, Delay );
+		ascent( let i in 0..length( AngleTable ) ){ PBody( angle, StartTable[ i ], LengthTable[ i ], AngleTable[ i ], [ RED22, RED32 ][ i == 1 ] ); }
+	}
+	@Initialize{
+		SetLife( 1100 );
+		SetScore( 3650000 );
+		SetTimer( 90 );
+		SetInvincibility( 130 );
+		SetDamageRate( 30, 6 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 8 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 22, imgCutInKene, 192, 344 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, -1 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		CreateSpellResult( 22 * 4 + Level );
+		EndSpell();
+		DropItem( 20, 64 );
+	}
+	@DrawLoop{
+		SetGraphicRect( 0, 0, 256, 256 );
+		SetAlpha( Smooth( 255, 192, count, 200 ) );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ SetGraphicScale( Accelerate( 2, 1, count, 60 ), Accelerate( 0, 1, count, 60 ) ); }
+		DrawChr( imgEnemyPhoenix[ count % 10 ], count );
+		SetGraphicScale( 1, 1 );
+		SetAlpha( 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+	@BackGround{ KeneBG( imgSpellStar, imgSpellWheel, imgSpellKene, ALPHA, count ); }
+}
+script_enemy Obj{
+	let Argv = GetArgument();
+	let uniquestr = "G_CAVEDA2S";
+	@Initialize{
+		SetDamageRateEx( 100, 100, 5, 2 );
+		SetLife( 32767 );
+	}
+	@MainLoop{
+		SetX( GetCommonData( uniquestr ~ "X" ) + 128 * Argv );
+		SetY( GetCommonData( uniquestr ~ "Y" ) - 144 );
+		SetCollisionA( GetX(), GetY(), 96 );
+	}
+}

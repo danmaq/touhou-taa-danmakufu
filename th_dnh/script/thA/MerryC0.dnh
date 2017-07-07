@@ -1,0 +1,54 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		CreateEventFromScript( "Talk" );
+		SetEnemyMarker( true );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 5 );
+		SetCommonData( "ShowName", 7 );
+	}
+	@MainLoop{
+		if( count == 5 ){ DeleteEnemyShotToItem( ALL ); }
+		if( !OnEvent() ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 24, 0 );
+		count++;
+	}
+	@DrawLoop{
+		SetColor( 224, 112, 240 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( RIGHT, imgCutInMerryCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			Enemy();
+			TextOutB( 80, "\c[RED]お願いだからこれ以上行かないでよ！\n術の邪魔されたらもう・・・" );
+			Player();
+			TextOutB( 50, "\c[BLUE]だからやめさせに来たのよ！" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( RIGHT, imgCutInMerryCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			Enemy();
+			TextOutB( 80, "\c[RED]お願いだからこれ以上行かないでよ！\n術の邪魔されたらもう・・・" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOutB( 50, "\c[BLUE]分かってないな\n邪魔しに来たんだぜ" );
+		}
+		End();
+	}
+}

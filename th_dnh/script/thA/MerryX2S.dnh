@@ -1,0 +1,87 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Shot(){
+		SetShotDirectionType( PLAYER );
+		loop( 12 ){
+			ascent( let speed in 1..3 ){
+				CircleShot01( 5, 3 * speed, PURPLE12, 10 );
+				PlaySEEx( seShot1 );
+			}
+			Wait( 5 );
+		}
+	}
+	task Laser( let pattern ){
+		let pangle = GetAngleToPlayer();
+		let angle = 0;
+		SetShotDirectionType( ABSOLUTE );
+		while( angle < 360 ){
+			let fangle = angle + pangle;
+			CreateLaserA( 0, GetX(), GetY(), 512, 12, RED01, 50 );
+			SetLaserDataA( 0, 0, fangle, 0, 0, 0, 0 );
+			SetShotKillTime( 0, 180 );
+			CreateLaserA( 1, 0, 0, 512, 48, BLUE01, 20 );
+			SetLaserDataA( 1, 0, fangle, 0, 0, 0, 0 );
+			SetShotKillTime( 1, 60 );
+			AddShot( 50, 0, 1, 0 );
+			FireShot( 0 );
+			angle += 360 / trunc( pattern / 1.5 + 6 );
+		}
+		PlaySE( seLaser1 );
+	}
+	task Behavior(){
+		yield;
+		let pattern = 0;
+		loop{
+			PlaySEEx( sePower1 );
+			Concentration01( 90 );
+			Wait( 90 );
+			Shot();
+			Wait( 70 );
+			Laser( pattern );
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 2500 );
+		SetScore( 2560000 );
+		SetTimer( 55 );
+		SetInvincibility( 130 );
+		SetDamageRate( 100, 200 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 7 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 28, imgCutInMerry, 192, 256 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 109 );
+		EndSpell();
+		SetCommonData( "ShowName", -1 );
+		PlaySEEx( seBossExplode );
+		DropItem( 20, 64 );
+		DropExtend();
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+	@BackGround{ KhanBG( imgSpellKhan, 255 ); }
+}

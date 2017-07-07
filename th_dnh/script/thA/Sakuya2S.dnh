@@ -1,0 +1,87 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let BlackOutCount = -100;
+	let FreezeTime = 150;
+	let PrevTime = GetTimer();
+	task Behavior(){
+		Wait( 120 );
+		SetShotDirectionType( PLAYER );
+		let pattern = 0;
+		while( 1 ){
+			ascent( let i in 0..365 ){
+				let color = [ BLUE32, YELLOW32 ][ i % 2 ];
+				let speed = rand( 0.5, 5 );
+				CreateShotA( 0, GetX(), GetY(), 5 );
+				SetShotDataA( 0, 0, speed, rand( 60, 300 ), 0, -speed / 120, 0, color );
+				SetShotDataA( 0, 50, 0, NULL, 0, 0, 0, color );
+				SetShotDataA( 0, 170, 0, NULL, 10 * [ 1, -1 ][ i % 2 ], 0, 0, color );
+				SetShotDataA( 0, 190 + Smooth( 0, 120 + 18 * Level, i, 365 ), [ 3, 4, 5, 4 ][ Level ] + Smooth( 0, 4, i, 180 ), 0, 0, 0.1, 16, color );
+				FireShot( 0 );
+			}
+			PlaySEEx( seShot1 );
+			Wait( 50 );
+			BlackOutCount = count;
+			TimeStop( FreezeTime, 1, 0, 1 );
+			MotionBlur( SHOT, FreezeTime, 192 );
+			Concentration01( 130 );
+			PlaySEEx( sePower1 );
+			Wait( 150 );
+			ExMove( false, count );
+			loop( 6 ){
+				loop( [ 2, 5, 8, 8 ][ Level ] ){
+					let speed = rand( 1, 1.8 ) * [ 1, 1.5 ][ Level == 3 ];
+					let angle = GetAngleToPlayer() + rand( -80, 80 );
+					ascent( let i in 0..2 ){ RandShot( speed / [ 1, 2 ][ i ], angle, [ GREEN04, RED01 ][ i ] ); }
+				}
+				PlaySEEx( seShot2 );
+				Wait( 20 );
+			}
+			pattern++;
+		}
+	}
+	task RandShot( let speed, let angle, let color ){
+		let obj = SetShotObject( GetX(), GetY(), speed, angle, color, 5 );
+		while( !Obj_BeDeleted( obj ) ){
+			if( BlackOutCount + 1 == count ){ Obj_SetSpeed( obj, 0 ); }
+			if( BlackOutCount + FreezeTime == count ){
+				let gap = [ 0, 1, 8, 10 ][ Level ];
+				Obj_SetSpeed( obj, speed );
+				Obj_SetAngle( obj, Obj_GetAngle( obj ) + RandBlur( gap ) );
+			}
+			yield;
+		}
+	}
+	@Initialize{
+		SetLife( 398 );
+		SetScore( 1200000 );
+		SetTimer( 75 );
+		SetInvincibility( 130 );
+		SetDamageRate( 20, 8 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 128, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 3 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 3, imgCutInSakuya, 192, 320 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 20 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 12 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{ DrawBossChr( imgEnemySakuya, 1, 1, 44, 86, count ); }
+	@BackGround{ SakuyaBG( imgSpellRotateStone, imgSpellBlood, BlackOutCount, 150, count ); }
+}

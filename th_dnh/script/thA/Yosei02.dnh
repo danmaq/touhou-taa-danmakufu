@@ -1,0 +1,50 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	task Behavior(){
+		yield;
+		SetShotDirectionType( PLAYER );
+		SetMovePosition03( GetX(), GetClipMinY() + 96, 20, 4 );
+		WaitZeroSpeed();
+		let speed = 1.5;
+		loop( [ 5, 2 ][ Level == 0 ] ){
+			if( Level < 2 ){ CreateShot01( GetX(), GetY(), speed, 0, BLUE12, 10 ); }
+			else{ WayShot01( 10, 4, speed, BLUE12, 10 ); }
+			speed += 0.4;
+		}
+		PlaySEEx( seShot1 );
+		SetAngle( [ 230, 300 ][ GetX() < GetCenterX() ] );
+		while( GetSpeed() < 4 ){
+			SetSpeed( GetSpeed() + 0.3 );
+			Wait( 2 );
+		}
+	}
+	@Initialize{
+		SetLife( 30 );
+		SetDamageRate( 0, 1 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count == 95 ){ SetDamageRate( 100, 30 ); }
+		if( count == 30 && Level != 0 ){
+			let speed = 0.8;
+			loop( [ 1, 2 ][ Level == 3 ] ){
+				CircleShot01( [ 30, 10 ][ trunc( Level / 2 ) ], speed, GREEN04, 5 );
+				speed += 0.4;
+			}
+			PlaySEEx( seShot2 );
+		}
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 2, 32 ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+	}
+}

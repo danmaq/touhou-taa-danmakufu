@@ -1,0 +1,105 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Behavior(){
+		Wait( 100 );
+		SetShotDirectionType( PLAYER );
+		let pattern = 0;
+		while( 1 ){
+			let dir = [ 1, -1 ][ trunc( pattern / 4 ) % 2 ];
+			alternative( pattern % 4 )
+			case( 0 ){
+				ascent( let i in 0..5 ){
+					let speed = 2;
+					loop( [ 3, 6 ][ Level == 1 ] ){
+						if( Level < 2 ){ CreateShot01( GetX(), GetY(), speed, [ RandBlur( 45 ), 0 ][ dir == 1 ], BLUE01, 10 ); }
+						else{ WayShotGap01( [ 10, 7.5 ][ i % 2 ], 5, speed, BLUE01, 5, [ RandBlur( 10 ), 0  ][ dir == 1 ] ); }
+						speed += [ 0.4, 0.8 ][ trunc( Level / 2 ) ];
+					}
+					PlaySEEx( seShot1 );
+					Wait( 20 );
+				}
+			}
+			case( 1 ){
+				ascent( let i in 0..8 ){
+					let angle = 0;
+					while( angle < 360 ){
+						let speed = 1;
+						loop( [ 2, 3 ][ Level == 3 ] ){
+							CreateShotA( 0, GetX(), GetY(), 5 );
+							SetShotDataA( 0, 0, Smooth( 3, 1, i, 7 ) * speed, ( angle + i * 9 ) * dir, 0, Smooth( -0.1, -0.05, i, 7 ), 0, RED04 );
+							SetShotDataA( 0, 30, NULL, NULL, 0, Smooth( 0.15, 0.1, i, 7 ) * speed, Smooth( 2, 3, i, 7 ) * speed, RED04 );
+							FireShot( 0 );
+							speed += 0.4;
+						}
+						angle += [ 45, 40, 24, 20 ][ Level ];
+					}
+				}
+				PlaySEEx( seShot1 );
+				Wait( 30 );
+				PlaySEEx( seKira1 );
+			}
+			case( 2 ){
+				ascent( let i in 0..10 ){
+					let speed = 2;
+					loop( 3 ){
+						let space = 35 - Level * 10;
+						let width = [ 15, rand( space, space + 10 ) ][ dir == 1 ] - i;
+						WayShot01( width, width, speed, BLUE11, 5 );
+						speed += [ 0.6, 0.9 ][ trunc( Level / 2 ) ];
+					}
+					PlaySEEx( seShot3 );
+					Wait( 10 );
+				}
+			}
+			case( 3 ){
+				SetShotDirectionType( ABSOLUTE );
+				ascent( let i in 0..8 ){
+					let firstangle = GetAngleToPlayer();
+					let angle = 0;
+					while( angle < 360 ){
+						let speed = 1;
+						loop( [ 2, 3 ][ Level == 3 ] ){
+							CreateShotA( 0, GetX(), GetY(), 5 );
+							SetShotDataA( 0, 0, Smooth( 3, 1, i, 7 ) * speed, firstangle + ( angle + i * 2 ) * dir, 0, Smooth( -0.1, -0.05, i, 7 ), 0, RED21 );
+							SetShotDataA( 0, 30, NULL, firstangle + ( angle - i * 9 ) * dir, 0, Smooth( 0.15, 0.1, i, 7 ) * speed, Smooth( 1.8, 3, i, 7 ) * speed, RED21 );
+							FireShot( 0 );
+							speed += 0.4;
+						}
+						angle += [ 40, 36, 24, 20 ][ Level ];
+					}
+				}
+				PlaySEEx( seShot1 );
+				SetShotDirectionType( PLAYER );
+				Wait( 30 );
+				PlaySEEx( seKira1 );
+			}
+			Wait( 30 );
+			ExMove( false, count );
+			Wait( 50 );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 2222 );
+		SetTimer( 50 );
+		SetInvincibility( 30 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 20 );
+		yield;
+		count++;
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyAlice, 1, 1, 45, 80, count ); }
+}

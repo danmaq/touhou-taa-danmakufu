@@ -1,0 +1,62 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 0 );
+	let FadeTime = 0;
+	task Behavior(){
+		Wait( 100 );
+		SetShotDirectionType( ABSOLUTE );
+		let angle = 0;
+		while( angle < 360 ){
+			let pangle = angle + GetAngleToPlayer();
+			let speed = [ 10, 16, 20, 24 ][ Level ];
+			CreateShotA( 0, GetX(), GetY(), 0 );
+			SetShotDataA( 0, 0, 20, pangle, 0, 0, 20, ORANGE12 );
+			SetShotKillTime( 0, 3 );
+			alternative( Level )
+			case( 0, 1 ){
+				CreateShotA( 1, 0, 0, 0 );
+				SetShotDataA( 1, 0, 10, pangle, 0, -0.7, 0.8, ORANGE12 );
+				AddShot( 2, 0, 1, 0 );
+			}
+			case( 2, 3 ){
+				let dir = 1;
+				loop( 2 ){
+					CreateShotA( 1, 0, 0, 0 );
+					SetShotDataA( 1, 0, 10, pangle + 10 * dir, 0.9 * dir, -0.5, 0.8, ORANGE12 );
+					SetShotDataA( 1, 50, NULL, NULL, 0, -0.5, 0.8, ORANGE12 );
+					AddShot( 2, 0, 1, 0 );
+					dir = -dir;
+				}
+			}
+			FireShot( 0 );
+			angle += [ 30, 10, 10, 6 ][ Level ];
+		}
+		PlaySEEx( seShot3 );
+		Wait( 60 );
+		FadeTime = count;
+		Wait( 100 );
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 100 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count > 90 ){ Collision( 20, 0 ); }
+		SEShotHit( seDamage, count );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 2, 16 ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		if( count < 100 ){ SetAlpha( Smooth( 0, 255, count, 100 ) ); }
+		if( FadeTime != 0 ){ SetAlpha( Smooth( 255, 0, count - FadeTime, 100 ) ); }
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+		SetAlpha( 255 );
+	}
+}

@@ -1,0 +1,70 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let ShotSpeed = [ 1.3, 1.9, 2.6, 2.3 ][ Level ];
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		Wait( 60 );
+		let pattern = 0;
+		loop{
+			Wait( [ 20, 60 ][ pattern % 2 ] );
+			let dir = [ [ 1, -1 ][ trunc( pattern / 2 ) % 2 ], -1 ][ pattern == 0 ];
+			let anglegap = [ 20, 0 ][ pattern % 2 ];
+			while( anglegap <= 66 ){
+				let angle = 0;
+				while( angle < 360 ){
+					if( [ angle % 90 < 30, angle % 90 >= 60 ][ dir == -1 ] ){ ReflectShot( angle + anglegap * dir ); }
+					if( [ angle % 90 < 30, angle % 90 >= 60 ][ dir == 1 ] ){ CreateShot01( GetX(), GetY(), ShotSpeed, angle + anglegap * dir, BLUE32, 8 ); }
+					angle += 15;
+				}
+				PlaySEEx( seShot2 );
+				Wait( 8 );
+				anglegap += 6;
+			}
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	task ReflectShot( let angle ){
+		let ref = false;
+		let obj = Obj_Create( OBJ_SHOT );
+		Obj_SetX( obj, GetX() );
+		Obj_SetY( obj, GetY() );
+		Obj_SetSpeed( obj, ShotSpeed );
+		Obj_SetAngle( obj, angle );
+		ObjShot_SetGraphic( obj, RED32 );
+		ObjShot_SetDelay( obj, 8 );
+		while( !Obj_BeDeleted( obj ) ){
+			if( !ref ){ ref = ReflectObject( obj, false, Level == 3, true ); }
+			yield;
+		}
+	}
+	@Initialize{
+		SetLife( 2400 );
+		SetTimer( 45 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+}

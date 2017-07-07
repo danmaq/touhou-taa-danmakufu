@@ -1,0 +1,89 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Behavior(){
+		Wait( 60 );
+		let pattern = 0;
+		loop{
+			PlaySEEx( sePower1 );
+			Concentration01( 60 );
+			Wait( 60 );
+			SetShotDirectionType( ABSOLUTE );
+			let pangle = GetAngleToPlayer();
+			let space = [ 20, 12, 10, 10 ][ Level ];
+			ascent( let i in 0..2 ){
+				PlaySEEx( seLaser1 );
+				let angle = 0;
+				while( angle < 360 ){
+					let finalangle = angle * [ 1, -1 ][ i ] + pangle + truncEx( 180, space ) + ( space / 2 ) * i;
+					CreateLaserA( 0,GetX(), GetY(), 512, 16, [ BLUE21, RED21 ][ i ], 100 );
+					SetLaserDataA( 0, 0, finalangle, 0, 0, 0, 0 );
+					SetShotKillTime( 0, 300 - ( 40 - Level * 10 ) );
+					let dir = -1;
+					loop( 2 ){
+						CreateLaserA( 1, 0, 0, 448, 12, [ BLUE21, RED21 ][ i ], 60 );
+						SetLaserDataA( 1, 0, finalangle + [ 45, 90, 90, 60 ][ Level ] * dir, 0, 0, 0, 0 );
+						SetShotKillTime( 1, 240 - ( 40 - Level * 10 ) );
+						AddShot( 45, 0, 1, 32 );
+						dir = -dir;
+					}
+					FireShot( 0 );
+					yield;
+					angle += space;
+				}
+			}
+			PlaySEEx( seLaser1 );
+			local{
+				let dstx = GetX();
+				let dsty = GetY();
+				let len = 40;
+				dstx = dstx + len * [ -1, 1 ][ GetPlayerX() - GetX() > 0 ];
+				if( GetPlayerY() > GetCenterY() ){ dsty += 32 * [ -1, 1 ][ rand_int( 0, 1 ) ]; }
+				else{ dsty = dsty + len * [ -1, 1 ][ GetPlayerY() - GetY() > 0 ]; }
+				if( dstx < GetClipMinX() + 104 ){ dstx += 64; }
+				else if( dstx > GetClipMaxX() - 104 ){ dstx -= 64; }
+				if( dsty < GetClipMinY() + 16 ){ dsty += 64; }
+				else if( dsty > GetCenterY() - 112 ){ dsty -= 64; }
+				SetMovePosition03( dstx, dsty, 20, 1.6 );
+			}
+			Wait( [ [ 10, 0 ][ Level == 3 ], [ 70, 55 ][ Level == 3 ] ][ pattern < 3 ] );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 555 );
+		SetScore( 3650000 );
+		SetTimer( 70 );
+		SetInvincibility( 130 );
+		SetDamageRate( 16, 2 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 8 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 21, imgCutInKene, 192, 344 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 21 * 4 + Level );
+		EndSpell();
+		DropItem( 20, 64 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+	@BackGround{ KeneBG( imgSpellStar, imgSpellWheel, imgSpellKene, ALPHA, count ); }
+}

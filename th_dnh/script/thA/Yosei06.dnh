@@ -1,0 +1,58 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 0 );
+	task Behavior(){
+		yield;
+		SetShotDirectionType( PLAYER );
+		SetMovePosition03( GetX(), GetClipMinY() + 128, 20, 5 );
+		WaitSpeedDown( 0.3 );
+		let speed = 0.5;
+		loop( Level + 1 ){
+			CreateShot01( GetX(), GetY(), speed, 0, WHITE05, 5 );
+			speed += 0.4;
+		}
+		PlaySEEx( seShot1 );
+		SetSpeed( 0 );
+		Wait( 10 );
+		SetAngle( [ 150, 30, 145, 35 ][ Argv % 4 ] );
+		SetSpeed( 1.8 );
+	}
+	@Initialize{
+		SetLife( 3 );
+		Behavior();
+	}
+	@MainLoop{
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{
+		if( !IsOut( 32 ) && GetY() < GetCenterY() + 64 && ( Level != 0 || Argv % 2 == 0 ) ){
+			let color = [ PURPLE04, GREEN04, AQUA04 ][ Argv % 3 ];
+			let dir = 1;
+			loop( 2 ){
+				let speed = Level / 2 + 1;
+				loop( 2 ){
+					let limit = 2 + Level;
+					let angle = -2;
+					while( angle <= limit ){
+						CreateShot02( GetX() + 16 * dir, GetY(), 0, angle + dir, 0.1, speed, color, 15 );
+						angle += 2;
+					}
+					speed = speed / 2;
+				}
+				dir = -dir;
+			}
+			PlaySEEx( seShot3 );
+		}
+		if( count > 180 || Argv % 4 == 0 ){ DropItem( 1, 8 ); }
+	}
+	@DrawLoop{
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei1, count );
+	}
+}

@@ -1,0 +1,109 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	let uniquestr = "G_MERRYX1S";
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		CreateShadowInterface( uniquestr );
+		let pattern = 0;
+		loop{
+			let w = Smooth( 90, 40, pattern, 7 );
+			PlaySE( sePower1 );
+			Concentration01( w );
+			Wait( w );
+			CircleShotGap01( 45, 4.5, YELLOW03, 10, GetAngleToPlayer() );
+			PlaySE( seShot1 );
+			Wait( 10 );
+			CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, 0, 0 );
+			PlaySE( seShadow );
+			Wait( w / 2 );
+			let pangle = GetAngleToPlayer();
+			ascent( let i in 0..16 ){
+				CircleShotGap02( 8, 5, -0.1, Smooth( 0.5, 4.5, i, 15 ), PURPLE21, 20, pangle );
+				PlaySE( seShot1 );
+				Wait( 8 );
+			}
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 444 );
+		SetScore( 2560000 );
+		SetTimer( 60 );
+		SetInvincibility( 130 );
+		SetDamageRate( 15, 40 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 7 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 27, imgCutInMerry, 192, 256 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, 7 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 108 );
+		ReleaseShadowInterface( uniquestr );
+		EndSpell();
+		DropItem( 16, 64 );
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+	@BackGround{ KhanBG( imgSpellKhan, 255 ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let PrevLife;
+	task Obj( let angle ){
+		let obj = SetHiddenObject( GetX(), GetY(), 10, angle, 0, true, false );
+		yield;
+		ascent( let i in 0..2 ){ CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), [ 4, 4.5 ][ i ], angle, RED32, 15 ); }
+		Obj_Delete( obj );
+	}
+	task Behavior(){
+		yield;
+		SetMovePosition03( GetPlayerX(), GetPlayerY(), 20, 4.5 );
+		WaitZeroSpeed();
+		loop( 16 ){
+			let space = 12;
+			let angle = 0;
+			while( angle < 360 ){
+				Obj( angle + GetAngleToPlayer() + [ space / 2, 0 ][ IsHidden() ] );
+				angle += space;
+			}
+			PlaySEEx( seShot1 );
+			Wait( 8 );
+		}
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 500 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, "G_MERRYX1S", true );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleYellow, imgEnemyShadow, count ); }
+}

@@ -1,0 +1,73 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		let pattern = 0;
+		loop{
+			PlaySEEx( sePower1 );
+			Concentration01( 100 );
+			Wait( 100 );
+			let dir = [ 1, -1 ][ trunc( Level / 2 ) ];
+			loop( [ 1, 2 ][ Level == 3 ] ){
+				let angle = 0;
+				while( angle < 360 ){
+					CreateLaserB( 0, 160, 12, ORANGE21, 40 );
+					SetLaserDataB( 0, 0, 0, 0, 0, 0, 0, angle, 1 * [ 1, -1 ][ pattern % 2 ] * dir );
+					SetShotKillTime( 0, 240 );
+					ascent( let t in 0..18 ){
+						ascent( let l in 1..5 ){
+							ascent( let s in 0..[ 2, 1 ][ Level == 0 ] ){
+								CreateShotA( 1, 0, 0, 20 );
+								SetShotDataA( 1, 0, 0, 90 * [ 1, -1 ][ pattern % 2 ], 0, 0.02, 1.2 + s / 2, [ YELLOW12, ORANGE12 ][ s ] );
+								AddShot( t * 10, 0, 1, l * 32 );
+							}
+						}
+					}
+					FireShot( 0 );
+					angle += [ 72, 60, 45, 60 ][ Level ];
+				}
+				dir = -dir;
+			}
+			PlaySE( seLaser1 );
+			TaskPlay( seShot1, 18, 10 );
+			Wait( [ 120, 180 ][ pattern < 2 ] );
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 4000 );
+		SetScore( 1400000 );
+		SetTimer( 75 );
+		SetInvincibility( 130 );
+		SetDamageRate( 100, 10 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 5 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 7, imgCutInLily, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 24 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 28 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyLily, 1, 1, 58, 72, count ); }
+	@BackGround{ LilyBG( imgSpellBamboo, 255, 224, 192, count ); }
+}

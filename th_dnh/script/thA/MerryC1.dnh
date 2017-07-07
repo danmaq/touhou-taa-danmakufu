@@ -1,0 +1,101 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "MERRYC1";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		loop{
+			Wait( 60 );
+			local{
+				ascent( let i in 0..3 ){
+					Wait( 40 );
+					ExMove( false, count );
+					loop( 4 + i ){
+						SetShotDirectionType( PLAYER );
+						let speed = 1.8;
+						loop( 5 + Level ){
+							let space = rand( 20, 30 );
+							WayShot02( space * 2, space, speed, -0.005, speed - 1, PURPLE02, 30 );
+							speed += 0.3;
+						}
+						PlaySEEx( seShot1 );
+						Wait( 10 );
+					}
+					CreateEnemyFromScript( "Shade", GetX(), GetY(), 0, [ 0, 180 ][ i % 2 ], i );
+				}
+				Wait( 60 );
+			}
+			local{
+				ascent( let i in 0..60 ){
+					SetShotDirectionType( PLAYER );
+					let x = GetX() + RandBlur( 80 - i );
+					let y = GetY() + RandBlur( 80 - i );
+					let angle = 0;
+					while( angle < 360 ){
+						CreateShot02( x, y, 7, angle, -0.09, 2, BLUE04, 50 );
+						angle += 120;
+					}
+					if( GetCommonDataDefault( "GlobalCount", count ) % 3 == 0 ){ PlaySE( seKira1 ); }
+					if( i == 50 ){ CreateEnemyFromScript( "Shade", GetX(), GetY(), 0, 180, -1 ); }
+					Wait( 2 );
+				}
+				Wait( 60 );
+			}
+		}
+	}
+	@Initialize{
+		SetLife( 1800 );
+		SetTimer( 25 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, 0 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{
+		SetColor( 224, 112, 240 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+}
+script_enemy Shade{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let argv = GetArgument();
+	let RotateSpeed = 5 * [ 1, -1 ][ absolute( argv % 2 ) ];
+	task Behavior(){
+		ascent( let i in 0..[ 10, 33 ][ argv < 0 ] ){
+			SetShotDirectionType( ABSOLUTE );
+			ascent( let i in 0..( 1 + trunc( Level / 2 ) ) ){ CircleShotGap01( 120, [ 1, 1.5 ][ Level % 2 ] + i / 2, [ RED04, GREEN21 ][ argv < 0 ], 5, GetAngle() - count * RotateSpeed ); }
+			PlaySE( seShot1 );
+			Wait( 6 );
+		}
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 1 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, count * [ 3, 1 ][ argv < 0 ], count, "MERRYC1" );
+		count++;
+	}
+}

@@ -1,0 +1,7 @@
+#include_function ".\IMAGE\CUTIN\index.dnh"
+#include_function ".\IMAGE\ED\index.dnh"
+#include_function ".\IMAGE\ENEMY\index.dnh"
+#include_function ".\IMAGE\MAP\index.dnh"
+#include_function ".\IMAGE\SPELL\index.dnh"
+#include_function ".\IMAGE\STAGE\index.dnh"
+#include_function ".\IMAGE\SYSTEM\index.dnh"

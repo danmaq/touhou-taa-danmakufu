@@ -1,0 +1,55 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 64 );
+	task HiddenShot( let dir ){
+		let obj = SetHiddenObject( GetX(), GetY(), 5, GetAngleToPlayer() + 90 * dir, 0, true, false );
+		Wait( 2 );
+		SetShotDirectionType( PLAYER );
+		let halflevel = trunc( Level / 2 );
+		let speed = 1.2;
+		loop( [ 3, 5 ][ Level % 2 ] ){
+			WayShotObject01( obj, [ 1, 5 ][ halflevel ], [ 2, 10 ][ halflevel ], speed, [ BLUE04, RED04 ][ Argv < 0 ], 20 );
+			WayShotObject01( obj, 20, 20, speed, [ BLUE01, RED01 ][ Argv < 0 ], 16 );
+			speed += 0.5;
+		}
+		Obj_Delete( obj );
+	}
+	task Behavior(){
+		yield;
+		let dir = [ -1, 1 ][ GetX() > GetCenterX() ];
+		SetMovePosition03( GetCenterX() + 192 * dir - absolute( Argv ) * dir, GetY(), 24, 5 );
+		WaitSpeedDown( 0.12 );
+		let d = -1;
+		loop( 2 ){
+			HiddenShot( d );
+			d = -d;
+		}
+		PlaySEEx( seShot1 );
+		SetAngle( [ 300, 240 ][ dir == 1 ] );
+		while( GetSpeed() < 3 ){
+			SetSpeed( GetSpeed() + 0.1 );
+			Wait( 2 );
+		}
+	}
+	@Initialize{
+		SetLife( 30 );
+		SetDamageRate( 2, 2 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count == 50 ){ SetDamageRate( 100, 30 ); }
+		SEShotHit( seDamage, count );
+		Collision( 20, 0 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 1, 32 ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+	}
+}

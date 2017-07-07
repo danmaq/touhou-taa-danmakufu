@@ -1,0 +1,4 @@
+#include_function ".\IMAGE\ENEMY\BAT\index.dnh"
+#include_function ".\IMAGE\ENEMY\PHOENIX\index.dnh"
+#include_function ".\IMAGE\ENEMY\SENSE\index.dnh"
+#include_function ".\IMAGE\ENEMY\index_mini.dnh"

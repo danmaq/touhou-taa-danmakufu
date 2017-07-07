@@ -1,0 +1,137 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	let uniquestr = "G_RENKO8S";
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		PlaySEEx( sePower1 );
+		Concentration01( 120 );
+		Wait( 120 );
+		ascent( let j in 0..2 ){
+			ascent( let i in 0..4 ){
+				let x = GetCenterX() + [ 192, 96 ][ j ] * [ 1, -1 ][ trunc( i / 2 ) ];
+				let y = GetCenterY() + [ 144, 224 ][ j ] * [ 1, -1 ][ i % 2 ];
+				let angle = [ [ 90, 270 ][ trunc( i / 2 ) ], [ 180, 0 ][ i % 2 ] ][ j ];
+				CreateEnemyFromScript( "Shadow", x, y, 0, angle, j );
+			}
+		}
+		PlaySEEx( seShadow );
+		Wait( 300 );
+		let pattern = 0;
+		loop{
+			ExMove( false, count );
+			loop( 3 ){
+				SetShotDirectionType( PLAYER );
+				let speed = 0.6;
+				loop( 2 ){
+					CircleShot01( 10, speed, PURPLE12, 30 );
+					speed += 0.4;
+				}
+				PlaySEEx( seShot1 );
+				Wait( Max( 100 - pattern, 30 ) );
+			}
+			pattern++;
+		}
+	}
+	@Initialize{
+		LoadUserShotData( GetCurrentScriptDirectory() ~ "UserGraphicShot.dnh" );
+		SetLife( 500 );
+		SetScore( 7777777 );
+		SetTimer( 90 );
+		SetInvincibility( 130 );
+		SetDamageRate( 7, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 9 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 36, imgCutInRenko, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, 3 );
+		SEShotHitBoss( seDamage, count );
+		if( !OnBomb ){ Collision( 32, 0 ); }
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		CreateSpellResult( 117 );
+		EndSpell();
+		DropItem( 30, 64 );
+		if( GetPlayerLife() <= 1 ){ DropBomb(); }
+		DropExtend();
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		if( !OnBomb() ){ DrawBossChr( imgEnemyRenko, 1, 1, 43, 72, count ); }
+	}
+	@BackGround{ RenkoBG( imgSpellRenko ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let Argv = GetArgument();
+	let PrevLife;
+	task Shot( let angle ){
+		let obj = Obj_Create( OBJ_SHOT );
+		Obj_SetX( obj, GetX() );
+		Obj_SetY( obj, GetY() );
+		Obj_SetSpeed( obj, 3 );
+		Obj_SetAngle( obj, angle );
+		ObjShot_SetDelay( obj, 15 );
+		while( !Obj_BeDeleted( obj ) ){
+			let push = GetKeyState( VK_SLOWMOVE ) == KEY_HOLD || GetKeyState( VK_SLOWMOVE ) == KEY_PUSH;
+			Obj_SetCollisionToPlayer( obj, Argv % 2 == [ 0, 1 ][ push ] );
+			ObjShot_SetGraphic( obj, [ [ RED01, 1 ][ push ], [ 1, BLUE01 ][ push ] ][ Argv % 2 ] );
+			yield;
+		}
+	}
+	task MakeShot(){
+		let start = count + 80;
+		loop{
+			let max = 1664 / GetSpeed();
+			let gap = [ 0, Smooth( 0, 360, ( count - start ) % max, max ) ][ count > start ];
+			let angle = 0;
+			while( angle < 360 ){
+				Shot( angle + gap );
+				angle += 90;
+			}
+			PlaySEEx( seShot1 );
+			Wait( 8 );
+		}
+	}
+	task Behavior(){
+		Wait( 60 );
+		MakeShot();
+		Wait( 80 );
+		loop{
+			SetSpeed( Smooth( 0.9, 3, count, 4000 ) );
+			if( GetX() <= GetClipMinX() && GetY() <= GetClipMinY() ){ SetAngle( 0 ); }
+			if( GetX() >= GetClipMaxX() && GetY() <= GetClipMinY() ){ SetAngle( 90 ); }
+			if( GetX() >= GetClipMaxX() && GetY() >= GetClipMaxY() ){ SetAngle( 180 ); }
+			if( GetX() <= GetClipMinX() && GetY() >= GetClipMaxY() ){ SetAngle( 270 ); }
+			yield;
+		}
+	}
+	@Initialize{
+		SetLife( 5000 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, "G_RENKO8S", false );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

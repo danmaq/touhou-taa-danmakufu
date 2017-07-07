@@ -1,0 +1,143 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let suddentime = 0;
+	let bgm = false;
+	task Behavior(){
+		yield;
+		while( GetEventStep() != 1 ){ yield; }
+		suddentime = count;
+		SetEnemyMarker( true );
+		SetY( GetClipMinY() + 96 );
+		Wait( 60 );
+		SetCommonData( "ShowName", 6 );
+		PlayMusicEx( 9 );
+		Wait( 30 );
+		bgm = true;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetX( GetCenterX() );
+		SetY( -128 );
+		CreateEventFromScript( "Talk" );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() && bgm ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 24, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		SetAlpha( [ 0, Smooth( 0, 240, count - suddentime, 200 ) ][ suddentime != 0 ] );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]ここまで来ておいて" );
+			TextOut( "\c[BLUE]この館、実は無人でした・・・\nなんて言わせないでよね" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]この館は無人よ" );
+			SetStep( 1 );
+			Wait( 60 );
+			SetChar( RIGHT, imgCutInLeila );
+			SetGraphicRect( RIGHT, 1, 1, 192, 304 );
+			Enemy();
+			SetNameFromTexture( RIGHT, imgNameLeila );
+			TextOut( "\c[RED]人間「だった」ものなら\nいるかもしれないけど" );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]まさに幽霊屋敷ね" );
+			Enemy();
+			TextOut( "\c[RED]で、幽霊の館主に何の用かしら？" );
+			Player();
+			DeleteName( RIGHT );
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]ここから出てくる冷気のせいで\n温泉にも入れないのよ" );
+			TextOut( "\c[BLUE]あんたと姉妹が\nここでオドロオドロしてるから" );
+			TextOut( "\c[BLUE]霊気が冷気になって\n出て来てるんじゃないのかしら？" );
+			Enemy();
+			TextOut( "\c[RED]確かにここ１０日ほどこの館の床下から\n物凄い冷気が湧き出てきてるわ" );
+			Player();
+			TextOut( "\c[BLUE]地下に黒幕がいるのね、じゃ" );
+			Enemy();
+			TextOut( "\c[RED]ちょっと待ちなさいよ" );
+			Player();
+			SetChar( LEFT, imgCutInReimu2 );
+			TextOut( "\c[BLUE]何？・・・なるほど、\nあんたが番人ね" );
+			Enemy();
+			TextOut( "\c[RED]早とちりしないでもらえるかしら" );
+			TextOut( "\c[RED]この前、私の作り出した姉妹を\n酷い目に遭わせたのはあなたでしょ" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]あれが先に攻撃してきたのが悪い" );
+			Enemy();
+			TextOut( "\c[RED]敵討ちとかそういう物騒なのは\n余り好きじゃないけど" );
+			TextOut( "\c[RED]なんとなくむかついたわ" );
+			Player();
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]じゃあジャンケン５回勝負で\nいいかしら？" );
+			Enemy();
+			TextOut( "\c[RED]スペルカード５枚勝負よ！" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]またずいぶんデカい館だな・・・\n紅魔館といい勝負だぜ" );
+			TextOut( "\c[BLUE]にしてもここ人居るのか？\nそこらじゅう埃だらけじゃないか" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]この館は無人よ" );
+			SetStep( 1 );
+			Wait( 60 );
+			SetChar( RIGHT, imgCutInLeila );
+			SetGraphicRect( RIGHT, 1, 1, 192, 304 );
+			Enemy();
+			SetNameFromTexture( RIGHT, imgNameLeila );
+			TextOut( "\c[RED]人間「だった」ものなら\nいるかもしれないけど" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]人間でも以外でもいいから掃除しとけよ\n客が逃げるぜこりゃ" );
+			Enemy();
+			TextOut( "\c[RED]元々こんなところに客なんて来ないし" );
+			DeleteName( RIGHT );
+			TextOut( "\c[RED]あなただって一体何の用よ？" );
+			TextOut( "\c[RED]ここまで来て\n姉さんたちをいじめるつもり？" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]なんだよ、私そんな\nいじめっ子として有名なのか？" );
+			Enemy();
+			TextOut( "\c[RED]あなたのせいでパパからもらった\nクラリネットが壊れたって姉さん言ってた" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]クラリネット奏者なんていたっけ？" );
+			Enemy();
+			TextOut( "\c[RED]使ってたのよ、武器として" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]普通にぶん殴るための\n道具じゃあないぜ" );
+			Enemy();
+			TextOut( "\c[RED]で、壊れたクラリネットの分\n体で弁償してもらおうかしら" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]ほう、そのためにわざわざ\n冷気出しておびき寄せたのか？" );
+			Enemy();
+			TextOut( "\c[RED]それは私は関係ないわ。確かにここ数日\n床下から物凄い冷気が湧き出てるけど" );
+			TextOut( "\c[RED]・・・そうね、あなたを倒すには\nスペルカード５枚で十分かしら" );
+			Player();
+			TextOut( "\c[BLUE]多すぎだ\n２枚もありゃ十分だぜ" );
+		}
+		End();
+	}
+}

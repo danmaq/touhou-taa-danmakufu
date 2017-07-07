@@ -1,0 +1,72 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "LEILAB1";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		PlaySEEx( sePower1 );
+		Concentration01( 60 );
+		Wait( 60 );
+		let angle = 0;
+		while( angle < 360 ){
+			ascent( let i in 0..2 ){ CreateEnemyFromScript( "Shade", GetX(), GetY(), 0, angle, i ); }
+			angle += [ 120, 90, 72, 60 ][ Level ];
+		}
+		loop{
+			Wait( 240 );
+			ExMove( false, count );
+		}
+	}
+	@Initialize{
+		SetLife( 2200 );
+		SetTimer( 55 );
+		SetInvincibility( 50 );
+		SetDamageRate( 100, 40 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, 0 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{
+		SetAlpha( 240 );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+}
+script_enemy Shade{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let argv = GetArgument();
+	let RotateSpeed = 2 * [ 1, -1 ][ argv % 2 ];
+	task Behavior(){
+		loop{
+			Wait( 10 );
+			SetShotDirectionType( ABSOLUTE );
+			CircleShotGap01( 120, 1, [ RED21, ORANGE21 ][ argv % 2 ], 5, GetAngle() - count * RotateSpeed + 120 );
+			PlaySE( seShot1 );
+		}
+	}
+	@Initialize{
+		SetLife( 1 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( 160, 80 + count ), count, "LEILAB1" );
+		count++;
+	}
+}

@@ -1,0 +1,4 @@
+#include_function ".\IMAGE\CUTIN\index_mini.dnh"
+#include_function ".\IMAGE\ENEMY\index_mini.dnh"
+#include_function ".\IMAGE\SPELL\index.dnh"
+#include_function ".\IMAGE\SYSTEM\index_mini.dnh"

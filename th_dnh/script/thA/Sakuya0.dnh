@@ -1,0 +1,97 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let bgm = false;
+	task Behavior(){
+		yield;
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 8 );
+		CreateEventFromScript( "Talk" );
+		while( GetEventStep() != 1 ){ yield; }
+		PlayMusicEx( 5 );
+		Wait( 30 );
+		bgm = true;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetX( -64 );
+		SetY( GetCenterY() );
+		SetEnemyMarker( true );
+		Behavior();
+		SetCommonData( "ShowName", 3 );
+	}
+	@MainLoop{
+		if( !OnEvent() && bgm ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 32, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{ DrawBossChr( imgEnemySakuya, 1, 1, 44, 86, count ); }
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( RIGHT, imgCutInSakuya );
+			SetGraphicRect( RIGHT, 1, 1, 192, 320 );
+			Enemy();
+			TextOut( "\c[RED]ちょっと待ちな。" );
+			SetNameFromTexture( RIGHT, imgNameSakuya );
+			TextOut( "\c[RED]あんた、またウチで\nろくでもないことやらかす気ね？" );
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]おあいにくさま。今日は用ないわよ" );
+			Enemy();
+			TextOut( "\c[RED]あんたが外で弾幕散らす騒音が\n中まで聞こえてくるのよ" );
+			DeleteName( RIGHT );
+			TextOut( "\c[RED]今すぐ帰るか\nこの場で掃除されるか選びなさい" );
+			SetChar( LEFT, imgCutInReimu5 );
+			Player();
+			TextOut( "\c[BLUE]飛び越えて先へ進む選択肢はないのね？" );
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]大体、外の掃除は\n中国っぽい人の仕事じゃない？" );
+			Enemy();
+			TextOut( "\c[RED]あれが余りに使えないから\n私が掃除しに来たのよ" );
+			TextOut( "\c[RED]それにあれは人じゃないわ" );
+			SetStep( 1 );
+			TextOut( "\c[RED]さっき滅多刺しにして来たけど\nそれでも死ななかったし" );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]・・・戦う気満々ね。\n不死身の方が掃除人には向いてそうだけど" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( RIGHT, imgCutInSakuya );
+			SetGraphicRect( RIGHT, 1, 1, 192, 320 );
+			Enemy();
+			TextOut( "\c[RED]ちょっと待ちな。" );
+			SetNameFromTexture( RIGHT, imgNameSakuya );
+			TextOut( "\c[RED]あんた、またウチで\nろくでもないことやらかす気ね？" );
+			SetChar( LEFT, imgCutInMarisa4 );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			Player();
+			TextOut( "\c[BLUE]あー、さっきの中国っぽいやつの\n敵討ちでもしたいのか？" );
+			Enemy();
+			TextOut( "\c[RED]あんなのはどうでもいいわ。" );
+			DeleteName( RIGHT );
+			TextOut( "\c[RED]ただ、少々あんたがやかましいから\nお掃除しに来ただけに過ぎない" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]館の中の掃除は済んだのか？" );
+			Enemy();
+			TextOut( "\c[RED]あんたが外で弾幕散らす騒音が中まで\n聞こえてきて掃除に集中できやしないわ" );
+			TextOut( "\c[RED]と、言うわけで\n先に掃除されてもらおうかしら" );
+			Player();
+			TextOut( "\c[BLUE]あぁいいぜ。あんたを倒して後は魔砲で\nきれいさっぱり掃除しといてやるよ。" );
+			SetStep( 1 );
+			TextOut( "\c[BLUE]ナイフと違って回収する手間も省けて楽だぜ" );
+			Enemy();
+			TextOut( "\c[RED]今は低燃費の時代よ" );
+		}
+		End();
+	}
+}

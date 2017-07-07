@@ -1,0 +1,98 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	task Shot(){
+		Wait( 150 );
+		loop{
+			SetShotDirectionType( PLAYER );
+			CircleShot01( 12, 0.9, ORANGE21, 20 );
+			PlaySE( seShot2 );
+			Wait( 43 );
+		}
+	}
+	task Behavior(){
+		yield;
+		Shot();
+		loop{
+			PlaySE( sePower1 );
+			Concentration01( 120 );
+			Wait( 120 );
+			SetShotDirectionType( ABSOLUTE );
+			CreateEnemyFromScript( "Mother", GetX(), GetY(), 0, GetAngleToPlayer() + RandBlur( 36 ), 0 );
+			Wait( 300 );
+			ExMove( false, count );
+		}
+	}
+	@Initialize{
+		SetLife( 500 );
+		SetScore( 7777777 );
+		SetTimer( 70 );
+		SetInvincibility( 130 );
+		SetDamageRate( 13, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 9 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 29, imgCutInRenko, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		if( !OnBomb ){ Collision( 32, 16 ); }
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 110 );
+		EndSpell();
+		if( GetPlayerLife() <= 2 ){ DropBomb(); }
+		DropItem( 30, 64 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		if( !OnBomb() ){ DrawBossChr( imgEnemyRenko, 1, 1, 43, 72, count ); }
+	}
+	@BackGround{ RenkoBG( imgSpellRenko ); }
+}
+script_enemy Mother{
+#include_function ".\FUNC\Enemy.dnh"
+	let uniquestr = "G_RENKO1S";
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		let angle = 0;
+		while( angle < 360 ){
+			CreateLaserB( 0, 448, 16, WHITE21, 120 );
+			SetLaserDataB( 0, 0, 0, 0, 1, angle, 1, angle - 90, 2.5 );
+			SetLaserDataB( 0, 100, 0, NULL, 0, NULL, 1, NULL, 2 );
+			SetLaserDataB( 0, 200, 0, NULL, 0, NULL, 1, NULL, 1.5 );
+			SetLaserDataB( 0, 210, 0, NULL, 0, NULL, 1, NULL, 1.1 );
+			SetLaserDataB( 0, 230, 0, NULL, 0, NULL, 1, NULL, 1 );
+			SetShotKillTime( 0, 360 );
+			FireShot( 0 );
+			angle += 45;
+		}
+		PlaySE( seLaser1 );
+		Wait( 50 );
+		SetSpeed( 4 );
+		while( GetSpeed() > 0 && !IsOut( -32 ) ){ yield; }
+		SetSpeed( 0 );
+		Wait( 200 );
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 1 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( GetTimer() <= 0 ){ VanishEnemy(); }
+		SetSpeed( Max( GetSpeed() - 0.04, 0 ) );
+	}
+}

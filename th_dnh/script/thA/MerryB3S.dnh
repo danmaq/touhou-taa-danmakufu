@@ -1,0 +1,129 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let slow = false;
+	let Color = 255;
+	task Behavior(){
+		yield;
+		SetShotDirectionType( PLAYER );
+		Wait( 60 );
+		let pattern = 1;
+		loop{
+			Concentration01( 60 );
+			PlaySEEx( sePower1 );
+			loop( 12 ){
+				let gap = 0;
+				loop( 4 ){
+					CircleShotGap01( 60, 1.5, BLUE32, 20, count * [ 1, 0.8 ][ Level == 3 ] * [ 1, -1 ][ pattern % 2 ] + gap );
+					gap += 6;
+				}
+				PlaySEEx( seShot1 );
+				Wait( 5 );
+			}
+			slow = true;
+			ExMove( false, count );
+			Wait( 30 );
+			Slow( 1 );
+			Wait( 46 );
+			MakeShot( pattern );
+			slow = false;
+			Wait( 30 );
+			Slow( 0 );
+			pattern++;
+		}
+	}
+	task MakeShot( let pattern ){
+		let spacex = [ 24, 20, 16, 20 ][ Level ];
+		let spacey = [ 80, 64, 64, 80 ][ Level ];
+		local{
+			let y = 0;
+			while( y <= GetCenterY() ){
+				let x = [ 112, 96, 80, 48 ][ Level ];
+				while( x <= GetCenterX() ){
+					ascent( let i in 0..2 ){
+						Sudden( GetCenterX() + ( x + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], GetCenterY() + y, 0 );
+						Sudden( GetCenterX() + ( x + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], GetCenterY() - y, 0 );
+						Sudden( GetCenterX() + ( x + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], GetCenterY() + y, 1 );
+						Sudden( GetCenterX() + ( x + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], GetCenterY() - y, 1 );
+					}
+					x += spacex;
+				}
+				y += spacey;
+			}
+		}
+		local{
+			let x = 0;
+			while( x <= GetCenterX() ){
+				let y = [ 128, 104, 96, 64 ][ Level ];
+				while( y <= GetCenterY() ){
+					ascent( let i in 0..2 ){
+						Sudden( GetCenterX() + x, GetCenterY() + ( y + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], 2 );
+						Sudden( GetCenterX() - x, GetCenterY() + ( y + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], 2 );
+						Sudden( GetCenterX() + x, GetCenterY() + ( y + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], 3 );
+						Sudden( GetCenterX() - x, GetCenterY() + ( y + ( spacex / 2 ) * ( pattern % 2 ) ) * [ 1, -1 ][ i ], 3 );
+					}
+					y += spacex;
+				}
+				x += spacey;
+			}
+		}
+	}
+	task Sudden( let x, let y, let dir ){
+		if( !Near( x, GetCenterX(), 192 ) ){ return; }
+		let objcount = 0;
+		let color = [ RED21, BLUE21 ][ dir % 2 ];
+		let angle = [ 90, 270, 0, 180 ][ dir ];
+		let obj = SetShotObject( x, y, 0, angle, color, 0 );
+		Obj_SetAlpha( obj, 0 );
+		Obj_SetCollisionToPlayer( obj, false );
+		while( !Obj_BeDeleted( obj ) && objcount < 30 ){
+			Obj_SetAlpha( obj, Smooth( 0, 255, objcount, 30 ) );
+			Obj_SetSpeed( obj, Smooth( 0, 1, objcount, 30 ) );
+			yield;
+			objcount++;
+		}
+		if( Obj_BeDeleted( obj ) ){ return; }
+		SetShotDirectionType( ABSOLUTE );
+		CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), 1, angle, color, 0 );
+		Obj_Delete( obj );
+	}
+	@Initialize{
+		SetLife( 450 );
+		SetScore( 2300000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 18, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 7 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 18, imgCutInMerry, 192, 256 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		Color = MinMax( Color + [ 3, -5 ][ slow ], 96, 255 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 18 * 4 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+	@BackGround{ KhanBG( imgSpellKhan, Color ); }
+}

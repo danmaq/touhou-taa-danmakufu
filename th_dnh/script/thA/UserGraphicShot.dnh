@@ -1,0 +1,10 @@
+#UserShotData
+
+ShotImage = ".\IMAGE\SYSTEM\UserShot.png"
+
+ShotData{
+	id = 1
+	render = ALPHA
+	rect = ( 0, 0, 20, 20 )
+	delay_color = ( 153, 153, 153 )
+}

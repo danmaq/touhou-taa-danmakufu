@@ -1,0 +1,7 @@
+#include_function ".\FUNC\Shot&Enemy&Shadow.dnh"
+function GoneA( let deadline ){ if( IsOut( deadline ) ){ VanishEnemy(); } }
+function Gone(){ GoneA( 32 ); }
+function Collision( let a, let b ){
+	if( a > 0 ){ SetCollisionA( GetX(), GetY(), a ); }
+	if( b > 0 ){ SetCollisionB( GetX(), GetY(), b ); }
+}

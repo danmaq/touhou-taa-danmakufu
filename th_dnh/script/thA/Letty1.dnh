@@ -1,0 +1,111 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_LETTY1";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		loop{
+			Wait( 40 );
+			loop( 2 ){
+				Wait( 20 );
+				ExMove( false, count );
+				ascent( let x in 0..7 ){
+					SetShotDirectionType( PLAYER );
+					let speed = 1;
+					loop( [ 2, 4, 5, 6 ][ Level ] ){
+						CreateShot01( GetX(), GetY(), speed + 1.5, 0, WHITE22, 15 );
+						let dir = -1;
+						loop( 2 ){
+							CreateShot12( GetX(), GetY(), Smooth( 0, speed, x, 6 ) * dir + RandBlur( 2 ), rand( 0, -speed ), 0, 0.08, 10, 3, WHITE04, 15 );
+							dir = -dir;
+						}
+						speed += 0.5;
+					}
+					PlaySEEx( seShot2 );
+					Wait( 8 );
+				}
+				Wait( 50 );
+				ExMove( false, count );
+				let speed = 1;
+				loop( 10 ){
+					SetShotDirectionType( PLAYER );
+					CircleShot01( [ 20, 15, 15, 12 ][ Level ], speed, BLUE21, 30 );
+					PlaySEEx( seShot1 );
+					Wait( 5 );
+					speed += 0.6;
+				}
+			}
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, angle, 0 );
+				angle += [ 90, 90, 60, 45 ][ Level ];
+			}
+			PlaySEEx( seShadow );
+			Wait( 60 );
+			ExMove( false, count );
+		}
+	}
+	@Initialize{
+		SetLife( 2200 );
+		SetTimer( 40 );
+		SetInvincibility( 50 );
+		SetDamageRate( 100, 60 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+		SetShotAutoDeleteClip( 0, 192, 0, 0 );
+		SetCommonData( "ShowName", 4 );
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, [ -1, 7 ][ count > 130 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 15 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{ DrawBossChr( imgEnemyLetty, 1, 1, 31, 76, count ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_LETTY1";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let RotateSpeed = 1;
+	task Behavior(){
+		Wait( 20 );
+		loop( 14 ){
+			SetShotDirectionType( ABSOLUTE );
+			let speed = [ 2, 1.5 ][ Level == 0 ];
+			loop( Max( Level, 1 ) ){
+				WayShotGap02( 30, 30, 0, 0.1, speed, WHITE12, 5, GetAngle() - count * RotateSpeed + RandBlur( 30 ) );
+				speed += 0.8;
+			}
+			PlaySEEx( seShot1 );
+			Wait( [ 10, 5 ][ trunc( Level / 2 ) ] );
+		}
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 200 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( count * 2, 160 ), count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

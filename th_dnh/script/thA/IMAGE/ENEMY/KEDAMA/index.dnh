@@ -1,0 +1,8 @@
+let imgEnemyKedamaAqua = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\Aqua.png";
+let imgEnemyKedamaBlue = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\Blue.png";
+let imgEnemyKedamaGreen = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\Green.png";
+let imgEnemyKedamaPurple = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\Purple.png";
+let imgEnemyKedamaRed = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\Red.png";
+let imgEnemyKedamaOrange = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\Orange.png";
+let imgEnemyKedamaWhite = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\White.png";
+let imgEnemyKedamaYellow = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\KEDAMA\Yellow.png";

@@ -1,0 +1,33 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		Wait( 120 );
+		Concentration01( 180 );
+		PlaySEEx( sePower1 );
+		Wait( 180 );
+		AddLife( -1 );
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetInvincibility( 30 );
+		SetDamageRate( 0, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		SetCommonData( "BGStep", 2 );
+		Behavior();
+	}
+	@MainLoop{
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 0 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		PlaySEEx( seKira1 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+}

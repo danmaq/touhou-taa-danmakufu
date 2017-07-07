@@ -1,0 +1,91 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 3 );
+	let uniquestr = "G_CAVEDA1";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		PlaySEEx( sePower1 );
+		Concentration01( 90 );
+		Wait( 90 );
+		ascent( let i in 0..2 + trunc( Level / 2 ) ){
+			Wait( 10 );
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, angle, i );
+				angle += 60;
+			}
+			PlaySEEx( seShadow );
+		}
+		loop{
+			Wait( 360 );
+			ExMove( false, count );
+		}
+	}
+	@Initialize{
+		SetLife( 2600 );
+		SetTimer( 60 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 6 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, [ -1, 50 ][ count > 300 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_CAVEDA1";
+	let Level = GetCommonDataDefault( "Level", 3 );
+	let Argv = GetArgument() + 1;
+	let PrevLife;
+	task Behavior(){
+		Wait( Argv * 5 + 60 );
+		loop{
+			ascent( let i in 0..Max( Level + 1 - Argv, 1 ) ){
+				CircleShotGap01(
+					120,
+					Smooth( 0.4, [ 1.2, 1.4, 1.5, 1.8 ][ Level ], count, 180 ) + i / 3,
+					[ BLUE04, PURPLE04, RED04, ORANGE04, YELLOW04 ][ ( Argv - 1 ) % 5 ],
+					10,
+					[ count * GetDir( GetX() - GetCommonData( uniquecode ~ "X" ) ), 0 ][ count < 240 ] + 90
+				);
+			}
+			PlaySEEx( seShot1 );
+			Wait( 20 );
+		}
+	}
+	@Initialize{
+		SetLife( 2000 );
+		SetDamageRate( 100, 10 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( 0, Argv * 48, count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, true );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleRed, imgEnemyShadow, count ); }
+}

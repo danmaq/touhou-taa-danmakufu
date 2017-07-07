@@ -1,0 +1,72 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		while( 1 ){
+			Concentration01( 120 );
+			PlaySEEx( sePower1 );
+			ascent( let pattern in 0..6 ){
+				Wait( [ 120, 80 ][ pattern != 0 && Level >= 2 ] );
+				let playerangle = GetAngleToPlayer();
+				if( pattern == 0 ){
+					let space = [ 30, 30, 16, 20 ][ trunc( Level / 2 ) ];
+					CircleShot02( space, 10, -0.4, 1, GREEN22, 10 );
+					if( Level != 0 ){ CircleShotGap02( space, 10, -0.36, 1.2, GREEN22, 10, space / 2 ); }
+					PlaySEEx( seShot1 );
+				}
+				let angle = [ 10, 20 ][ pattern % 2 ];
+				loop( [ 6, 10, 16, 60 ][ Level ] ){
+					let speed = 2;
+					loop( 8 + Level ){
+						let dir = 1;
+						loop( 2 ){
+							CreateShot01( GetX(), GetY(), speed, playerangle + angle * dir, BLUE01, 5 );
+							dir = -dir;
+						}
+						speed += 0.3;
+					}
+					PlaySEEx( seShot2 );
+					Wait( [ 5, 4, 3, 2 ][ Level ] );
+					angle += [ 5, 7 ][ Level == 3 ] * [ 1, -1 ][ pattern % 2 ];
+				}
+				ExMove( false, count );
+			}
+		}
+	}
+	@Initialize{
+		SetLife( 400 );
+		SetScore( 360000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 18, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "BGStep", 4 );
+		SetCommonData( "ShowName", 1 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 0, imgCutInAlice, 192, 320 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 20 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 0 + Level );
+		EndSpell();
+		DropItem( 8, 64 );
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyAlice, 1, 1, 45, 80, count ); }
+	@BackGround{ AliceBG( imgSpellAlice, imgSpellBigCircle, count ); }
+}

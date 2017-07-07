@@ -1,0 +1,64 @@
+function truncEx( let expr1, let expr2 ){ return trunc( expr1 / expr2 ) * expr2; }
+function GetDir( let expr ){ return [ [ 0, 1 ][ expr > 0 ], -1 ][ expr < 0 ]; }
+function Max( let expr1, let expr2 ){ return [ expr2, expr1 ][ expr1 > expr2 ]; }
+function Min( let expr1, let expr2 ){ return [ expr1, expr2 ][ expr1 > expr2 ]; }
+function Hypot( let x, let y ){	return ( ( x ^ 2 ) + ( y ^ 2 ) ) ^ 0.5; }
+function Shift( let expr, let bit ){ return expr * 2 ^ bit; }
+function MinMax( let expr, let limit1, let limit2 ){ return Max( Min( expr, Max( limit1, limit2 ) ), Min( limit1, limit2 ) ); }
+function MinMaxLoop( let expr, let limit1, let limit2 ){
+	if( limit1 > limit2 ){
+		let limittemp = limit1;
+		limit1 = limit2;
+		limit2 = limittemp;
+	}
+	if( expr < limit1 ){ expr = limit2; }
+	else if( expr > limit2 ){ expr = limit1; }
+	return expr;
+}
+function Smooth( let start, let end, let now, let limit ){
+	if( now >= limit ){ return end; }
+	if( now <= 0 ){ return start; }
+	return start + ( end - start ) * MinMax( now, 0, limit ) / limit;
+}
+function Accelerate( let start, let end, let now, let limit ){
+	if( now >= limit ){ return end; }
+	if( now <= 0 ){ return start; }
+	return start + ( end - start ) * Shift( ( now + 1 ) * now, -1 ) / Shift( ( limit + 1 ) * limit, -1 ); }
+function SlowDown( let start, let end, let now, let limit ){
+	if( now >= limit ){ return end; }
+	if( now <= 0 ){ return start; }
+	return start + ( end - start ) * Shift( ( Shift( limit, 1 ) - now + 1 ) * now, -1 ) / Shift( ( limit + 1 ) * limit, -1 );
+}
+function SplineFakeFSF( let start, let end, let now, let limit ){
+	if( now >= limit ){ return end; }
+	if( now <= 0 ){ return start; }
+	let center = start + ( end - start ) / 2;
+	return [ SlowDown( start, center, now, limit / 2 ), Accelerate( center, end, now, limit ) ][ now > limit / 2 ];
+}
+function SplineFakeSFS( let start, let end, let now, let limit ){
+	if( now >= limit ){ return end; }
+	if( now <= 0 ){ return start; }
+	let center = start + ( end - start ) / 2;
+	let limithalf = limit / 2;
+	return [ Accelerate( start, center, now, limithalf ), SlowDown( center, end, now - limithalf, limithalf ) ][ now >= limithalf ];
+}
+function Near( let expr1, let expr2, let len ){ return absolute( expr1 - expr2 ) < len; }
+function IsReimu(){ return GetPlayerType() == REIMU_A || GetPlayerType() == REIMU_B; }
+function IsMarisa(){ return GetPlayerType() == MARISA_A || GetPlayerType() == MARISA_B; }
+function SearchArray( let array, let char ){
+	let total = length( array );
+	let pos = 0;
+	while( pos < total && array[ pos ] != char ){ pos++; }
+	return pos;
+}
+function StringToStringInt( let str ){ return str[ 0 .. SearchArray( str, '.' ) ]; }
+function ToStringInt( let num ){ return StringToStringInt( ToString( num ) ); }
+function CharToInteger( let char ){ return char - 48; }
+function StringToInteger( let str ){
+	let strint = StringToStringInt( str );
+	let bytes = length( str );
+	let res = 0;
+	ascent( let grade in 0..bytes ){ res += CharToInteger( strint[ grade ] ) * 10 ^ grade; }
+	return res;
+}
+function LoadGraphicList( let list ){ ascent( let i in 0..length( list ) ){ LoadGraphic( list[ i ] ); } }

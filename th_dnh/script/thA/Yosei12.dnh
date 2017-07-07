@@ -1,0 +1,58 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 2 );
+	task Behavior(){
+		yield;
+		let dir = [ -1, 1 ][ GetX() > GetCenterX() ];
+		Wait( 30 );
+		SetShotDirectionType( ABSOLUTE );
+		if( Level < 2 ){ Lump( 0 ); }
+		else{
+			let limit = [ 20, 40 ][ Level == 3 ];
+			let angle = -limit;
+			while( angle <= limit ){
+				Lump( angle );
+				angle += 20;
+			}
+		}
+		PlaySE( seShot1 );
+		Wait( 60 );
+		while( GetY() < GetClipMaxY() - 180 ){
+			loop( ( Level + 1 ) * 4 ){
+				let speed = rand( 0, 0.5 );
+				CreateShot02( GetX(), GetY(), 0, GetAngleToPlayer() + RandBlur( [ 3, 5, 8, 10 ][ Level ] ), 0.01, speed + Level / 2, PURPLE31, 15 );
+			}
+			PlaySE( seShot1 );
+			Wait( [ 30, 60 ][ Level == 0 ] );
+		}
+	}
+	function Lump( let masterangle ){
+		let maxangle = [ 10, 16, 13, 16 ][ Level ];
+		loop( ( Level + 2 ) * 8 ){
+			let angle = RandBlur( maxangle );
+			let speed = rand( 4, 6 ) + Smooth( 2, 0, absolute( angle ), maxangle ) - [ 0, 1 ][ Level == 0 ];
+			CreateShotA( 0, GetX(), GetY(), 5 );
+			SetShotDataA( 0, 0, speed, 90 + masterangle + angle, 0 - GetDir( trunc( angle ) ), -0.01, speed - 1, ORANGE04 );
+			SetShotDataA( 0, trunc( absolute( angle ) ), NULL, NULL, 0, -0.01, speed - 1, ORANGE04 );
+			FireShot( 0 );
+		}
+	}
+	@Initialize{
+		SetLife( 133 );
+		SetDamageRate( 100, 100 );
+		Behavior();
+	}
+	@MainLoop{
+		SEShotHit( seDamage, count );
+		Collision( 20, 0 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 1, 32 ); }
+	@DrawLoop{
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei1, count );
+	}
+}

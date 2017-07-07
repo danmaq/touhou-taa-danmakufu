@@ -1,0 +1,3 @@
+#include_function ".\FUNC\Shot&Enemy&Shadow.dnh"
+function Gone(){ GoneA( 32 ); }
+function GoneA( let deadline ){ if( IsOut( deadline ) ){ End(); } }

@@ -1,0 +1,278 @@
+function GetStage4BGLoadList(){ return [ imgMapSnow, imgMapChirch, imgMapFloor, imgMapWood1, imgMapWood2 ]; }
+function GetStage4LeilaLoadList(){ return [ imgCutInLeila, imgCutInLeilaCry, imgNameLeila, imgEnemyLeila, imgSpellChirch, imgSpellLuna, imgSpellRedWall ]; }
+task Stage4(){
+	MuteMusic();
+	let loadgraphiclist = [ imgStage[ 3 ] ];
+	loadgraphiclist = loadgraphiclist ~ GetStage4BGLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStage4LeilaLoadList();
+	let loadenemylist = [ _enemyBlur, enemyYosei09, enemyYosei15, enemyYosei20, enemyYosei21, enemyKedama02, enemyKedama03, enemyDoll01, enemyDoll02, enemyDoll04, bossLeilaBE ];
+	if( GetCommonDataDefault( "Practice", false ) ){ StageLoad( DefaultStageLoadGraphicList ~ loadgraphiclist, DefaultStageLoadSEList, loadenemylist ); }
+	else{ StageLoad( loadgraphiclist, [], loadenemylist ); }
+	Ready( seOk );
+	Stage4LoopInit();
+	ForbidBomb( false );
+	ForbidShot( false );
+	SetCommonData( "Result", false );
+	SetCommonData( "Stage", 3 );
+	SetCommonData( "BGStep", 0 );
+	PlayMusicEx( 8 );
+	MusicRelease[ 8 ] = true;
+	StageRelease[ 3 ] = true;
+	CreateSaveData();
+	SaveEx();
+	Wait( 90 );
+	SetCommonData( "StageTitle", true );
+	Wait( 400 );
+	SetCommonData( "StageTitle", false );
+	Wait( 200 );
+	CreateEnemyFromFile( enemyYosei09, GetCenterX() + 96, 0, 0, 0, 0 );
+	Wait( 300 );
+	local{
+		ascent( let i in 0..16 ){
+			CreateEnemyFromFile( [ enemyKedama02, enemyKedama03 ][ trunc( i / 2 ) % 2 ], GetCenterX() + 202 * [ 1, -1 ][ i % 2 ], GetCenterY() - 96, 0, sin( GetCommonData( "NowCount" ) ) * 45 + [ 180, 0 ][ i % 2 ], i );
+			Wait( 20 );
+		}
+	}
+	Wait( 60 );
+	CreateEnemyFromFile( enemyYosei09, GetCenterX() + 96, 0, 0, 0, 0 );
+	Wait( 123 );
+	CreateEnemyFromFile( enemyYosei09, GetCenterX() + 128, 0, 0, 0, 0 );
+	Wait( 123 );
+	CreateEnemyFromFile( enemyYosei09, GetCenterX() - 64, 0, 0, 0, 0 );
+	Wait( 450 );
+	Doll1();
+	Wait( 400 );
+	local{
+		ascent( let i in 0..3 ){
+			loop( 8 ){
+				if( i != 0 ){ CreateEnemyFromFile( [ enemyKedama02, enemyKedama03 ][ i == 2 ], GetClipMinX() - 16, GetCenterY() - [ 32, 64 ][ i == 1 ], 0, [ 0, 315 ][ i == 2 ], GetCommonData( "NowCount" ) ); }
+				Wait( 10 );
+			}
+			Wait( 140 );
+			loop( 6 ){
+				CreateEnemyFromFile( [ enemyKedama02, enemyKedama03 ][ i == 2 ], GetClipMaxX() + 16, GetCenterY() - [ 32, 64 ][ i == 1 ], 0, [ 180, 225 ][ i == 2 ], GetCommonData( "NowCount" ) );
+				Wait( 10 );
+			}
+			Wait( 51 );
+			loop( 6 ){
+				CreateEnemyFromFile( [ enemyKedama02, enemyKedama03 ][ i == 2 ], GetClipMinX() - 16, GetCenterY() - [ 32, 64 ][ i == 1 ], 0, [ 0, 315 ][ i == 2 ], GetCommonData( "NowCount" ) );
+				Wait( 10 );
+			}
+			Wait( 51 );
+		}
+	}
+	Wait( 60 );
+	DeleteEnemyShotToItem( ALL );
+	CreateEnemyFromFile( enemyDoll02, GetCenterX() + 160, 0, 0, 0, 0 );
+	Wait( 400 );
+	CreateEnemyFromFile( enemyDoll02, GetCenterX() - 128, 0, 0, 0, 0 );
+	Wait( 440 );
+	CreateEnemyFromFile( enemyDoll02, GetCenterX() + 128, 0, 0, 0, 0 );
+	Wait( 440 );
+	CreateEnemyFromFile( enemyDoll02, GetCenterX() - 96, 0, 0, 0, 0 );
+	Wait( 100 );
+	CreateEnemyFromFile( enemyDoll02, GetCenterX() + 96, 0, 0, 0, 0 );
+	Wait( 360 );
+	let bossstart = GetCommonData( "NowCount" );
+	CreateEnemyBossFromFile( bossLeilaA, GetCenterX(), GetClipMinY() + 96, 0, 0, 0 );
+	WaitZeroEnemy();
+	Wait( 300 );
+	while( GetCommonData( "NowCount" ) < bossstart + 700 ){ yield; }
+	while( truncEx( GetCommonData( "NowCount" ), 444 ) + 444 <= bossstart + 1600 ){
+		let dir = -1;
+		loop( 2 ){
+			Doll1_2( dir );
+			Wait( 94 );
+			CreateEnemyFromFile( enemyYosei20, GetCenterX() - 96 * dir, 0, 0, 0, 0 );
+			Wait( 350 );
+			dir = -dir;
+		}
+	}
+	local{
+		let dir = -1;
+		loop( 2 ){
+			Doll1_2( dir );
+			Wait( 100 );
+			CreateEnemyFromFile( enemyYosei09, GetCenterX() + 96 * dir, 0, 0, 0, 0 );
+			Wait( 150 );
+			ascent( let i in 0..2 ){
+				CreateEnemyFromFile( enemyDoll04, GetCenterX() - [ 80, 144 ][ i ] * dir, GetCenterY() - 128, 0, 0, 0 );
+				Wait( 50 );
+			}
+			Wait( 94 );
+			dir = -dir;
+		}
+	}
+	Wait( 222 );
+	local{
+		ascent( let i in 0..4 ){
+			loop( 8 ){
+				if( i != 0 ){ CreateEnemyFromFile( [ enemyKedama02, enemyKedama03 ][ i % 2 ], GetClipMinX() - 16, GetCenterY() - [ 32, 64 ][ i % 2 ], 0, [ 0, 315 ][ i % 2 ], GetCommonData( "NowCount" ) ); }
+				Wait( 10 );
+			}
+			if( i == 0 ){ YoseiSlide(); }
+			if( i == 2 ){ YoseiSlide2(); }
+			Wait( 140 );
+			loop( 6 ){
+				CreateEnemyFromFile( [ enemyKedama02, enemyKedama03 ][ i % 2 ], GetClipMaxX() + 16, GetCenterY() - [ 32, 64 ][ i % 2 ], 0, [ 180, 225 ][ i % 2 ], GetCommonData( "NowCount" ) );
+				Wait( 10 );
+			}
+			Wait( 52 );
+			loop( 6 ){
+				CreateEnemyFromFile( [ enemyKedama02, enemyKedama03 ][ i % 2 ], GetClipMinX() - 16, GetCenterY() - [ 32, 64 ][ i % 2 ], 0, [ 0, 315 ][ i % 2 ], GetCommonData( "NowCount" ) );
+				Wait( 10 );
+			}
+			Wait( 52 );
+		}
+	}
+	Wait( 300 );
+	DeleteEnemyShotToItem( ALL );
+	local{
+		let x = GetClipMinX() + 96;
+		while( x <= GetClipMaxX() - 96 ){
+			CreateEnemyFromFile( enemyDoll02, x, 0, 0, 0, 0 );
+			x += 96;
+		}
+	}
+	Wait( 777 );
+	MusicRelease[ 9 ] = true;
+	CreateSaveData();
+	SaveEx();
+	CreateEnemyBossFromFile( bossLeilaB, GetCenterX(), GetClipMinY() + 96, 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SetCommonData( "ShowName", -1 );
+	CreateEnemyFromFile( bossLeilaBE, -128, -128, 0, 0, 0 );
+	ForbidBomb( true );
+	WaitZeroEnemy();
+	StageHighScore[ 3 ] = GetCommonDataDefault( "ResultTotal", 0 );
+	CreateSaveData();
+	SaveEx();
+	if( GetCommonDataDefault( "Practice", false ) ){
+		Clear();
+		return;
+	}
+	DeleteGraphicList( loadgraphiclist, [] );
+	ClearByteCodeCash();
+	Stage5();
+	task Doll1(){
+		ascent( let i in 0..3 ){
+			loop( 3 ){
+				CreateEnemyFromFile( enemyDoll01, GetCenterX() + sin( GetCommonData( "NowCount" ) * 5 ) * 128, GetCenterY() - 128 + cos( GetCommonData( "NowCount" ) * 2 ) * 64, 0, 0, 0 );
+				Wait( 111 );
+			}
+			loop( 2 ){
+				if( i != 2 ){ CreateEnemyFromFile( enemyDoll01, GetCenterX() + sin( GetCommonData( "NowCount" ) * 5 ) * 128, GetCenterY() - 128 + cos( GetCommonData( "NowCount" ) * 2 ) * 64, 0, 0, 0 ); }
+				Wait( 55 );
+			}
+		}
+	}
+	task Doll1_2( let dir ){
+		loop( 5 ){
+			CreateEnemyFromFile( enemyDoll01, GetCenterX() + 96 * dir + sin( GetCommonData( "NowCount" ) / 1.6 * dir ) * 64, GetCenterY() - 80 + cos( GetCommonData( "NowCount" ) / 2 * dir ) * 16, 0, 0, 0 );
+			Wait( 55 );
+		}
+	}
+	task YoseiSlide(){
+		loop( 2 ){
+			let dir = -1;
+			loop( 2 ){
+				ascent( let i in 0..5 ){
+					CreateEnemyFromFile( enemyYosei15, GetCenterX() + 192 * dir, GetClipMinY() + 32 + ( 5 - i ) * 24, 0, 0, ( ( 5 - i ) * 64 + i % 2 ) * -1 );
+					Wait( 7 );
+				}
+				Wait( 187 );
+				dir = -dir;
+			}
+		}
+	}
+	task YoseiSlide2(){
+		loop( 2 ){
+			let dir = -1;
+			loop( 2 ){
+				ascent( let i in 0..5 ){
+					CreateEnemyFromFile( enemyYosei21, GetCenterX() + 192 * dir, GetClipMinY() + 32 + ( 5 - i ) * 24, 0, 0, ( ( 5 - i ) * 64 + i % 2 ) * -1 );
+					Wait( 28 );
+				}
+				Wait( 82 );
+				dir = -dir;
+			}
+		}
+	}
+}
+function Stage4LoopInit(){
+	SetCommonData( "PrevBG", [ 0, 0 ] );
+	SetCommonData( "BGViewTo", [ 0, 0, 0 ] );
+	ClearBGEffect();
+}
+function Stage4Loop( let count ){
+	if( count < 2700 ){
+		let x = [ rand( -200, 50 ), RandBlur( 100 ) ][ count > 1900 ];
+		let y = RandBlur( 200 ) + SplineFakeSFS( 288, -224, count - 800, 1200 );
+		let z = rand( 200, 600 ) - Max( count - 2000, 0 ) * Accelerate( 0, 1.5, count - 2000, 200 );
+		let VectorX = [ rand( 1, 4 ), rand( Smooth( 1, -1, count - 1900, 200 ), Smooth( 4, 1, count - 1900, 200 ) ) ][ count > 1900 ];
+		let VectorZ = [ -rand( 1, 5 ), -rand( Smooth( 1, 4, count - 1900, 200 ), Smooth( 5, 9, count - 1900, 200 ) ) ][ count > 1900 ];
+		AddBGEffect( x, y, z, VectorX, -rand( 1, 3 ), VectorZ, 250, 0 );
+	}
+	if( count == 2700 ){ ClearBGEffect(); }
+}
+function Stage4BG( let count ){
+	if( count >= 2700 ){
+		let lcount = count - 2700;
+		SetFog( Smooth( 0, 300, lcount, 600 ), Smooth( 0, 600, lcount, 600 ), 0, 0, 0 );
+		SetViewFrom( SlowDown( 600, 500, lcount, 600 ), [ 90, 90 - sin( ( count - 3900 ) / 5 ) * 10 ][ count >= 3900 ], SlowDown( 8, 3, lcount, 600 ) );
+		SetViewTo( [ 0, MinMax( -sin( ( count - 3900 ) / 5 ) * 88, -80, 80 ) ][ count >= 3900 ], 133, -lcount % 510 );
+		let z = -1020;
+		loop( 4 ){
+			let dir = -1;
+			loop( 2 ){
+				SetGraphicAngle( 90, 0, 0 );
+				SetGraphicRect( 1, 1, 512, 512 );
+				SetTexture( imgMapFloor );
+				DrawGraphic3D( 250 * dir, 0, z );
+				let bz = 0;
+				loop( 2 ){
+					SetGraphicAngle( 180, 90, 0 );
+					SetGraphicRect( 1, 1, 90, 63 );
+					SetTexture( imgMapWood2 );
+					DrawGraphic3D( 65 * dir, 31, z + bz - 44 );
+					SetGraphicScale( 1, 0.5 );
+					SetGraphicAngle( 90, 0, 0 );
+					SetGraphicRect( 1, 1, 256, 101 );
+					SetTexture( imgMapWood1 );
+					DrawGraphic3D( 192 * dir, 48, z + bz - 26 );
+					SetGraphicScale( 1, 1 );
+					SetGraphicAngle( 180, 0, 0 );
+					DrawGraphic3D( 192 * dir, 51, z + bz );
+					bz -= 255;
+				}
+				dir = -dir;
+			}
+			z += 510;
+		}
+	}
+	if( count < 2700 ){
+		SetFog( Smooth( 0, 300, count, 500 ), Smooth( 400, 700, count, 500 ), 0, 0, 0 );
+		SetViewFrom( SlowDown( 512, 448, count, 1000 ), 90, Smooth( 16, 8, count, 2000 ) );
+		SetViewTo( 0, SplineFakeSFS( 288, -224, count - 800, 1200 ), -Max( count - 1900, 0 ) * Accelerate( 0, 1.5, count - 1900, 200 ) );
+		let rgb = Smooth( 255, 0, count - 1900, 750 );
+		SetColor( rgb, rgb, rgb );
+		SetGraphicAngle( 180, 0, 0 );
+		SetGraphicRect( 1, 1, 512, 1024 );
+		SetTexture( imgMapChirch );
+		DrawGraphic3D( 0, 0, 0 );
+		if( GetCommonDataDefault( "BGEEnable", true ) ){
+			SetTexture( imgMapSnow );
+			SetGraphicRect( 1, 1, 128, 128 );
+			SetGraphicScale( 0.1, 0.1 );
+			ascent( let i in 0..length( BGEffectX ) ){
+				SetGraphicAngle( 180, 0, count * 3 + i * 2 );
+				SetAlpha( [ BGEffectLife[ i ], Smooth( 0, 255, 250 - BGEffectLife[ i ], 64 ) ][ BGEffectLife[ i ] > 192 ] );
+				DrawGraphic3D( BGEffectX[ i ], BGEffectY[ i ], BGEffectZ[ i ] );
+			}
+		}
+	}
+	SetColor( 255, 255, 255 );
+	SetGraphicScale( 1, 1 );
+	SetGraphicAngle( 0, 0, 0 );
+}

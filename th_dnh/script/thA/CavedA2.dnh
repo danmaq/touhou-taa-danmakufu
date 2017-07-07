@@ -1,0 +1,112 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 3 );
+	let uniquestr = "G_CAVEDA2";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let dir = -1;
+		loop( 2 ){
+			CreateEnemyFromScript( "Obj", GetX(), GetY(), 0, 0, dir );
+			dir = -dir;
+		}
+		Wait( 10 );
+		let pattern = 0;
+		loop{
+			let angle = 0;
+			while( angle <= 180 ){
+				ascent( let i in 0..2 ){ CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, [ angle + 180, 360 - angle ][ i ], [ 1, -1 ][ i ] ); }
+				PlaySEEx( seShadow );
+				Wait( 16 );
+				angle += [ 60, 36, 30, 45 ][ Level ];
+			}
+			Wait( 96 );
+			SetShotDirectionType( PLAYER );
+			CircleShot01( [ [ 60, 36, 24, 20 ][ Level ], [ 30, 24, 15, 12 ][ Level ] ][ pattern % 4 == 0 ], 0.8, RED03, 30 );
+			PlaySEEx( seShot3 );
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 6000 );
+		SetTimer( 80 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 4 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		SetShotAutoDeleteClip( 64, 64, 64, 64 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, [ -1, 10 ][ count > 130 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{
+		SetGraphicRect( 0, 0, 256, 256 );
+		SetAlpha( Smooth( 255, 192, count, 200 ) );
+		SetGraphicScale( Accelerate( 2, 1, count, 60 ), Accelerate( 0, 1, count, 60 ) );
+		DrawChr( imgEnemyPhoenix[ count % 10 ], count );
+		SetGraphicScale( 1, 1 );
+		SetAlpha( 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_CAVEDA2";
+	let Level = GetCommonDataDefault( "Level", 3 );
+	let Argv = GetArgument();
+	let PrevLife;
+	let RotateSpeed = 2 * GetDir( Argv );
+	task Behavior(){
+		Wait( 30 );
+		loop( 8 ){
+			SetShotDirectionType( ABSOLUTE );
+			SetShotColor( 255, 192, 192 );
+			ascent( let speed in 1..[ 2, 3 ][ Level == 3 ] ){ CircleShotGap01( 180, speed / 2, RED04, 20, count * RotateSpeed ); }
+			SetShotColor( 255, 255, 255 );
+			PlaySEEx( seShot1 );
+			Wait( 20 );
+		}
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 200 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( count * 2, 160 ), count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}
+script_enemy Obj{
+	let Argv = GetArgument();
+	let uniquestr = "G_CAVEDA2";
+	@Initialize{
+		SetDamageRateEx( 100, 100, 10, 5 );
+		SetLife( 32767 );
+	}
+	@MainLoop{
+		SetX( GetCommonData( uniquestr ~ "X" ) + 128 * Argv );
+		SetY( GetCommonData( uniquestr ~ "Y" ) - 144 );
+		SetCollisionA( GetX(), GetY(), 96 );
+	}
+}

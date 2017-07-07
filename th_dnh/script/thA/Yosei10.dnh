@@ -1,0 +1,83 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let uniquecode = RandBlur( 32767 );
+	let uniquestr = ToString( uniquecode );
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let firstx = GetX();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetShotDirectionType( ABSOLUTE );
+		SetMovePosition03( GetCenterX(), GetCenterY() - 64, 20, 4 );
+		let angle = 0;
+		while( angle < 360 ){
+			CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, angle, uniquecode );
+			angle += 60;
+		}
+		PlaySE( seShadow );
+		Wait( 280 );
+		SetSpeed( 2 );
+		SetAngle( [ 310, 240 ][ firstx < GetCenterX() ] );
+	}
+	@Initialize{
+		SetLife( 360 );
+		SetDamageRate( 1, 1 );
+		SetMovePosition03( GetCenterX(), GetCenterY() - 96, 7, 20 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 130 ){ SetDamageRate( 100, 10 ); }
+		TaskShadowInterface( uniquestr, [ -1, 30 ][ count > 130 ] );
+		SEShotHit( seDamage, count );
+		Collision( 40, 0 );
+		Gone();
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		DropItem( 3, 48 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let RotateSpeed = 6;
+	task Behavior(){
+		Wait( 20 );
+		loop{
+			SetShotDirectionType( ABSOLUTE );
+			CreateShot01( GetX(), GetY(), [ 0.8, 1.2 ][ trunc( Level / 2 ) ], GetAngle() - count * RotateSpeed + 70, RED04, 5 );
+			let speed = [ 1.2, 1.8 ][ trunc( Level / 2 ) ];
+			ascent( let i in 0..[ 2, 3, 3, 4 ][ Level ] ){
+				CreateShot01( GetX(), GetY(), speed, GetAngle() - count * RotateSpeed + 70 + count * 0.05 + i * 5, BLUE04, 10 );
+				speed += 0.4;
+			}
+			if( count > 120 && Level != 0 ){ WayShotGap01( [ 10, 15 ][ trunc( Level / 2 ) ], [ 10, 5 ][ Level == 3 ], 0.7, RED12, 5, GetAngle() - count * RotateSpeed + 90 ); }
+			PlaySE( seShot1 );
+			Wait( round( Smooth( [ 20, 16, 16, 12 ][ Level ], 8, count, 320 ) ) );
+		}
+	}
+	@Initialize{
+		SetLife( 200 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( count, 80 ), count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

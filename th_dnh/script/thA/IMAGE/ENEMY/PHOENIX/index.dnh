@@ -1,0 +1,12 @@
+let imgEnemyPhoenix = [
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\0.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\1.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\2.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\3.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\4.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\5.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\6.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\7.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\8.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\PHOENIX\9.png"
+];

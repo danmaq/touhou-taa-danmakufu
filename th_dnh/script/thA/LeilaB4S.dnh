@@ -1,0 +1,80 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		Wait( 30 );
+		Concentration01( 100 );
+		PlaySEEx( sePower1 );
+		SetShotDirectionType( PLAYER );
+		Wait( 50 );
+		let pattern = 0;
+		loop{
+			Wait( 50 );
+			local{
+				let speed = 0.8;
+				loop( [ 10, 6 ][ Level == 0 ] ){
+					let anglegap = RandBlur( 15 );
+					let angle = 0;
+					while( angle < 360 ){
+						let finalangle = angle + anglegap + 30;
+						CreateShotA( 0, GetX(), GetY(), 5 );
+						SetShotDataA( 0, 0, speed, finalangle, 0, -speed / 50, 0, YELLOW04 );
+						SetShotDataA( 0, 50, 0, finalangle + 30 * [ 1, -1 ][ pattern % 2 ], [ 1, -1 ][ pattern % 2 ], speed / 50, speed / 2, YELLOW04 );
+						SetShotDataA( 0, 130, NULL, NULL, 0, speed / 50, speed / 2, YELLOW04 );
+						FireShot( 0 );
+						angle += [ 60, 60, 45, 30 ][ Level ];
+					}
+					speed += 0.3;
+				}
+			}
+			local{
+				let speed = 5;
+				loop( [ 3, 5, 6, 6 ][ Level ] ){
+					CircleShotGap02( [ 60, 72, 45, 36 ][ Level ], speed, -speed / 50, speed / 10, YELLOW01, 10, rand( -15, 15 ) );
+					speed += 1;
+				}
+			}
+			PlaySEEx( seShot3 );
+			if( pattern % 3 == 2 ){ ExMove( false, count ); }
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 400 );
+		SetScore( 1200000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 15, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 6 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 13, imgCutInLeila, 192, 304 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 13 * 4 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{
+		SetAlpha( 240 );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+	@BackGround{ LeilaBG( imgSpellChirch, imgSpellLuna, imgSpellRedWall, count ); }
+}

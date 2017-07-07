@@ -1,0 +1,201 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	let TimerMax = 133;
+	let maxframe = TimerMax * 60;
+	let WallList = [];
+	function Concentration( let timeredist ){
+		if( timeredist && GetTimer() <= 30 ){ return; }
+		Concentration01( 120 );
+		PlaySEEx( sePower1 );
+		Wait( 120 );
+	}
+	task Wall( let x, let y, let angle, let len ){
+		let obj = Obj_Create( OBJ_LASER );
+		Obj_SetSpeed( obj, 0 );
+		Obj_SetAngle( obj, angle );
+		Obj_SetAutoDelete( obj, false );
+		ObjShot_SetGraphic( obj, GREEN02 );
+		ObjShot_SetDelay( obj, 100 );
+		ObjShot_SetBombResist( obj, true );
+		ObjLaser_SetLength( obj, len );
+		ObjLaser_SetWidth( obj, 12 );
+		ObjLaser_SetSource( obj, false );
+		WallList = WallList ~ [ obj ];
+		loop{
+			Obj_SetX( obj, x + [ Max( Smooth( 0, 64, count, maxframe ), Accelerate( 0, 40, 10000 - GetLife(), 10000 ) ) * [ 1, -1 ][ angle == 90 ], 0 ][ angle % 180 == 0 ] );
+			Obj_SetY( obj, y + [ Max( Smooth( 0, 64, count, maxframe ), Accelerate( 0, 40, 10000 - GetLife(), 10000 ) ) * [ -1, 1 ][ angle == 0 ], 0 ][ angle % 180 == 90 ] );
+			yield;
+		}
+	}
+	task Move(){
+		loop{
+			Wait( 360 );
+			let dstx = GetX();
+			let dsty = GetY();
+			let len = 40;
+			dstx = dstx + len * [ -1, 1 ][ GetPlayerX() - GetX() > 0 ];
+			if( GetPlayerY() > GetCenterY() ){ dsty += 32 * [ -1, 1 ][ rand_int( 0, 1 ) ]; }
+			else{ dsty = dsty + len * [ -1, 1 ][ GetPlayerY() - GetY() > 0 ]; }
+			if( dstx < GetClipMinX() + 80 && dstx > GetClipMinX() + 44 ){ dstx = GetClipMinX() + 81; }
+			if( dstx > GetClipMaxX() - 80 && dstx < GetClipMaxX() - 44 ){ dstx = GetClipMaxX() - 81; }
+			if( dstx > GetClipMinX() + 80 && dstx < GetClipMaxX() - 80 ){
+				if( dsty < GetClipMinY() + 64 ){ dsty += 96; }
+				else if( dsty > GetCenterY() ){ dsty -= 96; }
+				SetMovePosition03( dstx, dsty, 20, 1.6 );
+			}
+		}
+	}
+	task Laser( let angle, let delay ){
+		let obj = SetShotObject( GetX(), GetY(), 2, angle, YELLOW21, delay );
+		while( !Obj_BeDeleted( obj ) ){
+			ascent( let i in 0..length( WallList ) ){
+				if( Collision_Obj_Obj( WallList[ i ], obj ) ){
+					let ref = angle;
+					alternative( Obj_GetAngle( WallList[ i ] ) )
+					case( 0, 180 ){ ref = -ref; }
+					case( 90, 270 ){ ref = 180 - ref; }
+					let speed = 1;
+					loop( 3 ){
+						WayShotObjectGap01( obj, 30, 30, speed, GREEN21, 5, ref );
+						speed += 0.4;
+					}
+					CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), 1.4, angle, YELLOW21, 0 );
+					Obj_Delete( obj );
+				}
+			}
+			yield;
+		}
+	}
+	task RefShot( let angle ){
+		let obj = SetShotObject( GetX(), GetY(), 1, angle, WHITE12, 20 );
+		while( !Obj_BeDeleted( obj ) ){
+			ascent( let i in 0..length( WallList ) ){
+				if( Collision_Obj_Obj( WallList[ i ], obj ) ){
+					let ref = angle;
+					alternative( Obj_GetAngle( WallList[ i ] ) )
+					case( 0, 180 ){ ref = -ref; }
+					case( 90, 270 ){ ref = 180 - ref; }
+					CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), 1, ref, WHITE12, 0 );
+					Obj_Delete( obj );
+				}
+			}
+			yield;
+		}
+	}
+	task ShotLaser3Way( let angle ){
+		ascent( let gap in 0..3 ){
+			ascent( let delay in 0..3 ){ Laser( angle + gap * 10, delay * 10 ); }
+			PlaySEEx( seShot1 );
+			Wait( 15 );
+		}
+	}
+	task LaserLoop(){
+		PlaySEEx( seShot1 );
+		yield;
+		let pattern = 0;
+		loop{
+			ShotLaser3Way( count / 3 );
+			Wait( 100 );
+			pattern++;
+		}
+	}
+	task RefShotLoop(){
+		PlaySEEx( seShot1 );
+		yield;
+		let pattern = 0;
+		loop{
+			let angle = 0;
+			while( angle < 360 ){
+				RefShot( angle );
+				angle += 20;
+			}
+			PlaySEEx( seShot1 );
+			Wait( 50 );
+			pattern++;
+		}
+	}
+	task WayShotLoop(){
+		PlaySEEx( seShot1 );
+		yield;
+		let pattern = 0;
+		loop{
+			WayShotGap01( 30, 30, 0.3, PURPLE04, 20, count / 2 );
+			PlaySEEx( seShot1 );
+			Wait( 40 );
+			pattern++;
+		}
+	}
+	task CircleShotLoop(){
+		PlaySEEx( seShot1 );
+		yield;
+		let pattern = 0;
+		loop{
+			CircleShotGap02( 20, 8, -0.5, 1, BLUE02, 20, 10 );
+			PlaySEEx( seShot1 );
+			Wait( 65 );
+			pattern++;
+		}
+	}
+	task Behavior(){
+		yield;
+		Concentration( true );
+		let angle = 0;
+		while( angle < 360 ){
+			Wall(
+				[ GetClipMinX(), GetClipMaxX(), GetClipMaxX(), GetClipMinX() ][ angle / 90 ],
+				[ GetClipMinY(), GetClipMinY(), GetClipMaxY(), GetClipMaxY() ][ angle / 90 ], angle, [ 400, 464 ][ ( angle / 90 ) % 2 ]
+			);
+			angle += 90;
+		}
+		PlaySEEx( seLaser1 );
+		Wait( 60 );
+		Move();
+		Concentration( true );
+		LaserLoop();
+		while( GetTimer() > 30 && GetLife() > 9000 ){ loop( 5 ){ yield; } }
+		Concentration( true );
+		RefShotLoop();
+		while( GetTimer() > 30 && GetLife() > 7000 ){ loop( 5 ){ yield; } }
+		Concentration( true );
+		WayShotLoop();
+		while( GetTimer() > 30 && GetLife() > 4000 ){ loop( 5 ){ yield; } }
+		Concentration( false );
+		CircleShotLoop();
+	}
+	@Initialize{
+		SetLife( 12000 );
+		SetScore( 20000000 );
+		SetTimer( TimerMax );
+		SetInvincibility( 300 );
+		SetDamageRate( 90, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( [ 60, 1 ][ GetCommonDataDefault( "SpellPractice", false ) ], 240, 2 );
+		SetCommonData( "ShowName", 9 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 38, imgCutInRenko, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		if( GetLife() <= 0 ){ if( count % 15 == 0 ){ PlaySEEx( seShot1 ); } }
+		else{ yield; }
+		SEShotHitBoss( seDamage, count );
+		if( !OnBomb ){ Collision( 32, 16 ); }
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 119 );
+		EndSpell();
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		if( !OnBomb() ){ DrawBossChr( imgEnemyRenko, 1, 1, 43, 72, count ); }
+	}
+	@BackGround{ RenkoBG( imgSpellRenko ); }
+}

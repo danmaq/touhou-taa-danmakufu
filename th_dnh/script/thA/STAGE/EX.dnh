@@ -1,0 +1,247 @@
+function GetStageEXBGLoadList(){ return [ imgMapPollEx, imgMapRockEx, imgMapLight1 ]; }
+function GetStageEXRenkoLoadList(){ return [ imgSpellRenko, imgCutInRenko, imgCutInRenkoCry, imgNameRenko, imgEnemyRenko, imgSystemCircleBig ]; }
+task StageEX(){
+	MuteMusic();
+	let loadgraphiclist = [ imgStage[ 6 ] ];
+	loadgraphiclist = loadgraphiclist ~ GetStageEXBGLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStage5MerryLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStageEXRenkoLoadList();
+	let loadenemylist = [ _enemyBlur, enemyYoseiX01, enemyYoseiX02, enemyYoseiX03, enemyYoseiX04, enemyYoseiX05, enemyYoseiX06, enemyYoseiX07, enemyYoseiX08, enemyYoseiX09, enemyYoseiX10, enemyDollX01 ];
+	StageLoad( DefaultStageLoadGraphicList ~ loadgraphiclist, DefaultStageLoadSEList, loadenemylist );
+	StageEXLoopInit();
+	ForbidBomb( false );
+	ForbidShot( false );
+	SetCommonData( "Result", false );
+	SetCommonData( "Stage", 6 );
+	SetCommonData( "BGStep", 0 );
+	PlayMusicEx( 15 );
+	MusicRelease[ 15 ] = true;
+	CreateSaveData();
+	SaveEx();
+	Wait( 130 );
+	SetCommonData( "StageTitle", true );
+	Wait( 360 );
+	SetCommonData( "StageTitle", false );
+	Wait( 120 );
+	SetCommonData( "BGStep", 1 );
+	Wait( 120 );
+	SetCommonData( "BGStep", 2 );
+//	/*
+	Rush1();
+	Wait( 120 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() + 128, 0, 0, 0, 0 );
+	Wait( 8 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() + 80, 0, 0, 0, 0 );
+	Wait( 180 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() - 128, 0, 0, 0, 0 );
+	Wait( 8 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() - 80, 0, 0, 0, 0 );
+	Wait( 180 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() + 128, 0, 0, 0, 0 );
+	Wait( 8 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() + 80, 0, 0, 0, 0 );
+	Wait( 20 );
+	CreateEnemyFromFile( enemyYoseiX04, GetCenterX() - 80, 0, 0, 0, 0 );
+	Wait( 160 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() - 128, 0, 0, 0, 0 );
+	Wait( 8 );
+	CreateEnemyFromFile( enemyYoseiX03, GetCenterX() - 80, 0, 0, 0, 0 );
+	Wait( 20 );
+	CreateEnemyFromFile( enemyYoseiX04, GetCenterX() + 80, 0, 0, 0, 0 );
+	Wait( 220 );
+	Rush2();
+	Wait( 200 );
+	CreateEnemyBossFromFile( bossMerryX, GetCenterX(), GetCenterY() - 96, 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SaveEx();
+	Wait( 240 );
+	local{
+		ascent( let n in 0..4 ){
+			ascent( let i in 0..3 ){
+				CreateEnemyFromFile( [ enemyYoseiX04, enemyYoseiX07 ][ n == 3 ], GetCenterX() + ( 32 + ( 2 - i ) * 48 ) * [ 1, -1 ][ n % 2 ], 0, 0, 0, [ 0, 1 ][ i == 2 ] );
+				Wait( 6 );
+			}
+			Wait( [ 190, 30 ][ n == 3 ] );
+		}
+		ascent( let i in 0..6 ){
+			CreateEnemyFromFile( enemyYoseiX08, GetCenterX() + 192, GetClipMinY() + 32 + ( i * 96 ) % 128, 0, 0, 128 + sin( i * 320 ) * 80 );
+			Wait( 4 );
+		}
+	}
+	Wait( 100 );
+	local{
+		ascent( let i in 0..2 ){
+			Rush1YoseiBasic( enemyYoseiX09, [ -1, 1 ][ i % 2 ] );
+			Wait( 250 );
+		}
+	}
+	Wait( 180 );
+	DollX1();
+	Wait( 340 );
+	ascent( let l in 0..3 ){
+		ascent( let i in 0..6 ){
+			CreateEnemyFromFile( enemyYoseiX08, GetCenterX() + 192 * [ -1, 1 ][ l % 2 ], GetClipMinY() + 32 + ( i * 96 ) % 128, 0, 0, 128 + sin( i * 320 ) * 80 );
+			Wait( 4 );
+		}
+		Wait( [ 130, 30 ][ l == 2 ] );
+	}
+	ascent( let i in 0..3 ){
+		CreateEnemyFromFile( enemyYoseiX07, GetCenterX() + ( 32 + ( 2 - i ) * 48 ), 0, 0, 0, [ 0, 1 ][ i == 2 ] );
+		Wait( 6 );
+	}
+	Wait( 240 );
+//	*/
+	local{
+		let xtable = [
+			GetClipMaxX() - 48,	GetClipMaxX() - 32,	GetClipMinX() + 40,	GetCenterX(),		GetClipMinX() + 96,
+			GetCenterX() - 16,	GetCenterX() + 32,	GetClipMinX() + 16,	GetClipMaxX() - 16,	GetClipMinX() + 16,
+			GetCenterX() - 64,	GetCenterX() + 64,	GetCenterX(),		GetClipMaxX() - 64,	GetClipMinX() + 64
+		];
+		let ytable = [
+			GetClipMinY() + 32,	GetClipMinY() + 64,	GetClipMinY() + 40,	GetClipMinY() + 48,	GetClipMinY() + 16,
+			GetClipMinY() + 48,	GetClipMinY() + 64,	GetClipMinY() + 16,	GetClipMinY() + 16,	GetClipMinY(),
+			GetClipMinY() + 96,	GetClipMinY() + 96,	GetClipMinY(),		GetClipMinY() + 64,	GetClipMinY() + 64
+		];
+		ascent( let i in 0..15 ){
+			CreateEnemyFromFile( enemyDollX01, xtable[ i ], ytable[ i ], 0, 0, 0 );
+			Wait( 5 );
+		}
+	}
+	Wait( 360 );
+	local{
+		ascent( let i in 0..4 ){
+			Rush1YoseiSide( enemyYoseiX01, [ -1, 1 ][ i % 2 ], 8, i == 3 );
+			Wait( [ 200, 160 ][ i == 2 ] );
+		}
+	}
+	WaitZeroEnemy();
+	Wait( 300 );
+	MusicRelease[ 16 ] = true;
+	CreateSaveData();
+	SaveEx();
+	CreateEnemyBossFromFile( bossRenko, GetCenterX(), GetCenterY() - 96, 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SaveEx();
+	CreateEnemyFromFile( bossRenkoE, -128, -128, 0, 0, 0 );
+	ForbidBomb( true );
+	WaitZeroEnemy();
+	Clear();
+	function Rush2(){
+		ascent( let i in 0..2 ){
+			Rush1YoseiSide( [ enemyYoseiX05, enemyYoseiX06 ][ i % 2 ], [ -1, 1 ][ i % 2 ], [ 12, 8 ][ i % 2 ], false );
+			Wait( [ 260, 160 ][ i % 2 ] );
+		}
+	}
+	function Rush1(){
+		ascent( let i in 0..4 ){
+			Rush1YoseiSide( enemyYoseiX01, [ -1, 1 ][ i % 2 ], 12, false );
+			Wait( [ 120, 100 ][ i == 3 ] );
+			Rush1YoseiBasic( enemyYoseiX02, [ 1, -1 ][ i % 2 ] );
+			Wait( [ 260, 200 ][ i == 2 ] );
+		}
+	}
+	task Rush1YoseiSide( let file, let dir, let num, let ex ){
+		ascent( let i in 0..num ){
+			CreateEnemyFromFile( [ file, enemyYoseiX10 ][ ex && i == num - 1 ], GetCenterX() + 192 * dir, GetClipMinY() + 32 + ( i * 96 ) % 224, 0, 0, 128 + sin( i * 320 ) * 80 );
+			Wait( 20 );
+		}
+	}
+	task Rush1YoseiBasic( let file, let dir ){
+		ascent( let argv in 0..12 ){
+			Wait( 10 );
+			CreateEnemyFromFile( file, GetCenterX() + argv * 444 * dir % 192, 0, 0, 0, argv );
+			Wait( 10 );
+		}
+	}
+	task DollX1(){
+		let start = GetCommonData( "NowCount" );
+		ascent( let i in 0..2 ){
+			loop( 3 ){
+				CreateEnemyFromFile(
+					enemyDollX01, GetCenterX() + sin( ( GetCommonData( "NowCount" ) - start )  * 5 ) * 128, GetCenterY() - 128 + cos( ( GetCommonData( "NowCount" ) - start ) * 2 ) * 64, 0, 0, 0
+				);
+				Wait( 86 );
+			}
+			loop( 2 ){
+				CreateEnemyFromFile(
+					enemyDollX01, GetCenterX() + sin( ( GetCommonData( "NowCount" ) - start ) * 5 ) * 128, GetCenterY() - 128 + cos( ( GetCommonData( "NowCount" ) - start ) * 2 ) * 64, 0, 0, 0
+				);
+				Wait( 43 );
+			}
+		}
+	}
+}
+function StageEXLoopInit(){
+	ClearBGEffect();
+	SetCommonData( "PrevBG", [ 0, 0 ] );
+	SetCommonData( "BGViewTo", [ 0, 0, 0 ] );
+}
+function StageEXLoop( let count ){
+	let speed = [ 0.8, 0.4, 4, 3 ];
+	let step = GetCommonDataDefault( "BGStep", 0 );
+	let prev = GetCommonData( "PrevBG" );
+	let to = GetCommonData( "BGViewTo" );
+	if( step != prev[ 0 ] ){
+		prev = [ step, count ];
+		SetCommonData( "PrevBG", prev );
+	}
+	let bgphasecount = count - prev[ 1 ];
+	to[ 2 ] = to[ 2 ] - Smooth( speed[ Max( step - 1, 0 ) ], speed[ step ], bgphasecount, 150 );
+	if( step == 2 ){ to[ 0 ] = SlowDown( 0, -66, bgphasecount, 100 ); }
+	SetCommonData( "BGViewTo", to );
+}
+function StageEXBG( let count ){
+	let to = GetCommonData( "BGViewTo" );
+	SetFog( Smooth( 0, 700, count, 150 ), Smooth( 0, 1000, count, 300 ), 16, 0, 32 );
+	SetPerspectiveClip( 10, 2000 );
+	SetViewFrom( 500, 90, 20 );
+	SetViewTo( to[ 0 ], to[ 1 ], to[ 2 ] );
+	SetTexture( imgMapBlack );
+	SetGraphicRect( 0, 0, 512, 512 );
+	SetGraphicScale( 10, 10 );
+	SetGraphicAngle( 0, 0, 0 );
+	DrawGraphic3D( 0, 0, to[ 2 ] - 1400 );
+	SetGraphicAngle( 90, 0, 0 );
+	DrawGraphic3D( 0, -500, to[ 2 ] );
+	SetGraphicScale( 1, 1 );
+	SetColor( 192, 160, 255 );
+	local{
+		let z = truncEx( to[ 2 ], 512 ) - 1536;
+		loop( [ 4, 5 ][ count < 300 ] ){
+			SetTexture( imgMapBlack );
+			SetGraphicRect( 0, 0, 512, 512 );
+			SetGraphicAngle( -10, 90, 0 );
+			SetGraphicScale( 1, 3 );
+			DrawGraphic3D( 103, -50, z );
+			SetGraphicScale( 1, 1 );
+			SetTexture( imgMapRockEx );
+			SetGraphicRect( 0, 0, 512, 512 );
+			SetGraphicAngle( -10, 90, 0 );
+			DrawGraphic3D( 100, -50, z );
+			SetTexture( imgMapLight1 );
+			SetAlpha( [ 255, 224 ][ count % 2 ] );
+			SetGraphicRect( 0, 0, 128, 128 );
+			SetGraphicAngle( 0, 0, 0 );
+			DrawGraphic3D( 70, -50, z );
+			z += 512;
+		}
+	}
+	local{
+		SetTexture( imgMapPollEx );
+		SetGraphicRect( 0, 0, 512, 48 );
+		let z = truncEx( to[ 2 ], 512 ) - 1344;
+		loop( [ 4, 5 ][ count < 300 ] ){
+			SetGraphicAngle( 0, 0, 20 );
+			DrawGraphic3D( -160, 0, z );
+			SetGraphicScale( 3, 1 );
+			SetGraphicAngle( 30, 0, 85 );
+			DrawGraphic3D( -200, -100, z - 130 );
+			SetGraphicScale( 1, 1 );
+			z += 512;
+		}
+	}
+	SetColor( 255, 255, 255 );
+	SetGraphicAngle( 0, 0, 0 );
+}

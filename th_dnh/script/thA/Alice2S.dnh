@@ -1,0 +1,117 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let uniquestr = "G_ALICE2S";
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let pattern = 0;
+		while( 1 ){
+			SetShotDirectionType( PLAYER );
+			Concentration01( 120 );
+			PlaySEEx( sePower1 );
+			Wait( 120 );
+			let angle = 0;
+			while( angle < 360 ){
+				if( pattern % 2 == 0 || Level == 3 ){ CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, angle, 0 ); }
+				if( pattern % 2 == 1 || Level == 3 ){ CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, angle, 1 ); }
+				angle += [ 180, 120 ][ trunc( Level / 2 ) ];
+			}
+			PlaySEEx( seShadow );
+			loop( 3 ){
+				if( GetLife() <= 0 ){ return; }
+				Wait( 90 );
+				ExMove( false, count );
+				Wait( 90 );
+				SetShotDirectionType( PLAYER );
+				let speed = 0.6;
+				loop( [ 0, 1, 2, 2 ][ Level ] ){
+					WayShot01( 12, [ 6, 4 ][ trunc( Level / 2 ) ], speed, WHITE04, 10 );
+					speed += 0.4
+				}
+			}
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 365 );
+		SetScore( 675000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 13, 7 );
+		SetEffectForZeroLife( [ 60, 1 ][ GetCommonDataDefault( "SpellPractice", false ) ], 0, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetCommonData( "ShowName", 1 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 1, imgCutInAlice, 192, 320 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		if( GetLife() <= 0 ){
+			SetCommonData( uniquestr, 0 );
+			if( count % 15 == 0 ){ PlaySEEx( seShot1 ); }
+		}
+		else{ yield; }
+		TaskShadowInterface( uniquestr, [ -1, 5 ][ count > 130 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 20 );
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 4 + Level );
+		EndSpell();
+		SetCommonData( "ShowName", -1 );
+		ReleaseShadowInterface( uniquestr );
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyAlice, 1, 1, 45, 80, count ); }
+	@BackGround{ AliceBG( imgSpellAlice, imgSpellBigCircle, count ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_ALICE2S";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let ParentX = GetCommonData( uniquecode ~ "X" );
+	let ParentY = GetCommonData( uniquecode ~ "Y" );
+	let NowAngle = GetAngle();
+	let Argv = GetArgument();
+	task Behavior(){
+		Wait( 20 );
+		SetShotDirectionType( ABSOLUTE );
+		loop( 15 ){
+			loop( 6 ){
+				let speed = 1.2;
+				loop( [ 1, 2, 2, 2 ][ Level ] ){
+					WayShotGap01( 30, 60, speed, [ BLUE21, RED21 ][ Argv ], 5, NowAngle + 180 );
+					speed += 0.8;
+				}
+				PlaySEEx( seShot1 );
+				Wait( 5 );
+			}
+			Wait( 5 );
+		}
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 950 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		MoveRotate( [ 2.5, 1 ][ trunc( Level / 2 ) ], Min( count, 80 ), count, uniquecode );
+		NowAngle = atan2( GetY() - GetCommonData( uniquecode ~ "Y" ), GetX() - GetCommonData( uniquecode ~ "X" ) ) + 90 * [ -1, 1 ][ Argv ];
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, true );
+		yield;
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleRed, imgEnemyShadow, count ); }
+}

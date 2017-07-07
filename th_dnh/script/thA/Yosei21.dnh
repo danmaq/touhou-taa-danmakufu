@@ -1,0 +1,47 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 64 );
+	task Behavior(){
+		yield;
+		let dir = [ -1, 1 ][ GetX() > GetCenterX() ];
+		SetMovePosition03( GetCenterX() + 192 * dir - absolute( Argv ) * dir, GetY(), 24, 5 );
+		WaitSpeedDown( 0.3 );
+		ascent( let i in 0..2 ){
+			ascent( let l in 0..30 ){
+				Wait( 3 );
+				SetShotDirectionType( PLAYER );
+				CircleShotGap01( [ 120, 72 ][ trunc( Level / 2 ) ], Smooth( 1, [ 3.8, 4.5, 4.8, 6 ][ Level ], l, 29 ) + RandBlur( 0.3 ), ORANGE04, 5, RandBlur( 3 + Level * 2 ) );
+				PlaySEEx( seShot1 );
+			}
+			if( i == 0 ){ CircleShot01( 15, 2, WHITE04, 30 ); }
+			PlaySEEx( seShot3 );
+			Wait( 30 );
+		}
+		SetAngle( [ 300, 240 ][ dir == 1 ] );
+		while( GetSpeed() < 3 ){
+			SetSpeed( GetSpeed() + 0.1 );
+			Wait( 2 );
+		}
+	}
+	@Initialize{
+		SetLife( 30 );
+		SetDamageRate( 2, 2 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count == 50 ){ SetDamageRate( 100, 30 ); }
+		SEShotHit( seDamage, count );
+		Collision( 20, 0 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 2, 32 ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+	}
+}

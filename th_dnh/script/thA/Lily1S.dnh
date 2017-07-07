@@ -1,0 +1,72 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	function BuckShot( let colorcode ){
+		loop( 5 ){ CreateShot01( GetX(), GetY(), rand( 4.5, 5.5 ), rand( 0, 360 ), [ AQUA03, ORANGE03, GREEN03, RED03, YELLOW03 ][ colorcode ], 30 ); }
+		loop( 10 ){ CreateShot01( GetX(), GetY(), rand( 3.5, 4.5 ), rand( 0, 360 ), [ AQUA02, ORANGE02 , GREEN02, RED02, YELLOW02 ][ colorcode ], 30 ); }
+		loop( 17 ){ CreateShot01( GetX(), GetY(), rand( 3, 4 ), rand( 0, 360 ), [ AQUA01, ORANGE01 , GREEN01, RED01, YELLOW01 ][ colorcode ], 30 ); }
+		loop( 33 ){ CreateShot01( GetX(), GetY(), rand( 2.5, 3.5 ), rand( 0, 360 ), [ AQUA04, ORANGE04 , GREEN04, RED04, YELLOW04 ][ colorcode ], 30 ); }
+		loop( 50 ){ CreateShot01( GetX(), GetY(), rand( 2, 3 ), rand( 0, 360 ), [ AQUA05, ORANGE05 , GREEN05, RED05, YELLOW05 ][ colorcode ], 30 ); }
+	}
+	task Cyclone( let colorcode ){
+		let pangle = GetAngleToPlayer();
+		let halflevel = trunc( Level / 2 );
+		ascent( let i in 0..50 ){
+			CircleShotGap01( [ 60, 45, 45, 36 ][ Level ], Smooth( 1, 7, i, 50 ), [ AQUA12,  ORANGE12, GREEN12, RED12, YELLOW12 ][ colorcode ], 20, i * [ 5, -6 ][ halflevel ] );
+			PlaySEEx( seShot2 );
+			Wait( 3 );
+		}
+	}
+	task Behavior(){
+		Wait( 60 );
+		let pattern = 0;
+		SetShotDirectionType( ABSOLUTE );
+		loop{
+			PlaySEEx( sePower1 );
+			Concentration01( 60 );
+			Wait( 60 );
+			loop( Max( Level, 1 ) ){ BuckShot( pattern % 5 ); }
+			PlaySEEx( seShot1 );
+			ExMove( false, count );
+			if( Level >= 2 ){ Cyclone( ( pattern + 3 ) % 5 ); }
+			Wait( 60 );
+			Cyclone( ( pattern + 3 ) % 5 );
+			Wait( 120 );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 420 );
+		SetScore( 1000000 );
+		SetTimer( 60 );
+		SetInvincibility( 130 );
+		SetDamageRate( 20, 10 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 5 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 6, imgCutInLily, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 24 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 24 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyLily, 1, 1, 58, 72, count ); }
+	@BackGround{ LilyBG( imgSpellBamboo, 192, 255, 224, count ); }
+}

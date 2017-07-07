@@ -1,0 +1,30 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		PlaySEEx( seBossExplode );
+		Wait( 60 );
+		SetMovePosition01( GetClipMaxX() + 128, 0, 5 );
+		yield;
+		WaitZeroSpeed();
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetInvincibility( 130 );
+		SetDamageRate( 0, 0 );
+		SetEnemyMarker( false );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+}

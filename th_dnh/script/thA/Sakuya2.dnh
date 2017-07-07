@@ -1,0 +1,54 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Behavior(){
+		Wait( 180 );
+		let pattern = 0;
+		let speed = 2.7;
+		loop{
+			ascent( let i in 0..3 ){
+				loop( 8 ){
+					let angle = 0;
+					while( angle < 360 ){
+						CreateShotA( 0, GetX(), GetY(), 0 );
+						SetShotDataA( 0, 0, speed, angle + GetAngleToPlayer(), 0, 0, speed, RED32 );
+						ascent( let j in 0..10 ){
+							CreateShotA( 1, 0, 0, 0 );
+							SetShotDataA( 1, 0, 0, angle + GetAngleToPlayer() + [ 0, -20, 20 ][ i ] * ( pattern + 1 ), 0, 0, 0, PURPLE32 );
+							SetShotDataA( 1, 100, NULL, NULL, 0, 0.02, 3, PURPLE32 );
+							AddShot( 30 + j * 20, 0, 1, 0 );
+						}
+						FireShot( 0 );
+						angle += [ 60, 45, 30, 20 ][ Level ];
+					}
+					PlaySEEx( seShot1 );
+					Wait( 12 );
+				}
+				ExMove( false, count );
+				Wait( [ 60, 24, 140 - Level * 10 ][ i ] );
+			}
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 2400 );
+		SetTimer( 55 );
+		SetInvincibility( 30 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 20 );
+		count++;
+	}
+	@DrawLoop{ DrawBossChr( imgEnemySakuya, 1, 1, 44, 86, count ); }
+}

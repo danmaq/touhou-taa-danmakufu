@@ -1,0 +1,138 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let bgm = false;
+	task Behavior(){
+		yield;
+		while( GetEventStep() != 1 ){ yield; }
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetCommonData( "ShowName", 5 );
+		while( GetEventStep() != 2 ){ yield; }
+		PlayMusicEx( 7 );
+		Wait( 30 );
+		bgm = true;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetX( GetCenterX() );
+		SetY( -128 );
+		LoadGraphic( imgEnemyLily );
+		CreateEventFromScript( "Talk" );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() && bgm ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 48, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyLily, 1, 1, 58, 72, count ); }
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]確かこの辺だったはずなんだけど…" );
+			SetChar( LEFT, imgCutInReimu3 );
+			TextOut( "\c[BLUE]ああもう、こんなに雪だらけだったら\n温泉もなにも分からないじゃないの！" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]ここには温泉はないですよ？" );
+			SetStep( 1 );
+			Wait( 60 );
+			SetChar( RIGHT, imgCutInLily );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Enemy();
+			SetNameFromTexture( RIGHT, imgNameLily );
+			TextOut( "\c[RED]いえ、もうここにあるものは既に\n温泉ではない、と言った方がいいかしら" );
+			SetChar( LEFT, imgCutInReimu4 );
+			Player();
+			TextOut( "\c[BLUE]何で春の妖精がこんな\n場違いな季節と場所にいるのよ？" );
+			Enemy();
+			TextOut( "\c[RED]だって、また空高く行けば\n暖かくなるかと思ったんです・・・" );
+			DeleteName( RIGHT );
+			Player();
+			TextOut( "\c[BLUE]あの馬鹿幽霊のせいで間違った知識\n植え付けられたのね、かわいそうに" );
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]で、どういうこと？\nここが温泉じゃなくなったって" );
+			Enemy();
+			TextOut( "\c[RED]余りに寒かったから、近くに湯気の\n立つ水辺があったから・・・くしゅん！" );
+			Player();
+			TextOut( "\c[BLUE]・・・真水だった、って\n言いたいわけね" );
+			Enemy();
+			TextOut( "\c[RED]くすん・・・\n風邪ひいちゃいました" );
+			Player();
+			TextOut( "\c[BLUE]感染さないでよね" );
+			TextOut( "\c[BLUE]と、まぁそれはともかく、\nなんでこんなことしたの？" );
+			Enemy();
+			TextOut( "\c[RED]へ？" );
+			Player();
+			SetChar( LEFT, imgCutInReimu3 );
+			TextOut( "\c[BLUE]どーせあんた、春をばらまくために\nこの辺の春を吸いとったんでしょ！" );
+			Enemy();
+			TextOut( "\c[RED]ひどい！\nそんな言い掛かりつけて私を・・・" );
+			SetStep( 2 );
+			TextOut( "\c[RED]こうなったら・・・\n風邪感染しちゃいますよ？" );
+			SetChar( LEFT, imgCutInReimu );
+			Player();
+			TextOut( "\c[BLUE]その前に殺すわ" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]全く酷いもんだ。\nこんな雪だらけじゃ茶も取れやしないぜ" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]全く酷いです・・・\n春を求めてここまで来たのに" );
+			SetStep( 1 );
+			Wait( 100 );
+			SetChar( RIGHT, imgCutInLily );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Enemy();
+			SetNameFromTexture( RIGHT, imgNameLily );
+			TextOut( "\c[RED]こんな寒いんじゃ\n風邪引いちゃいますよ" );
+			Player();
+			TextOut( "\c[BLUE]普通高所は寒いんだがな" );
+			Enemy();
+			TextOut( "\c[RED]えー？でもこの前雲の上まで行ったら\nすごい暖かかったじゃないですかー" );
+			DeleteName( RIGHT );
+			Player();
+			TextOut( "\c[BLUE]昨日暖かくても、\n今日暖かいとは限らないぜ" );
+			TextOut( "\c[BLUE]それに暖かかったのは\nいつぞやの馬鹿幽霊共の所為だ" );
+			Enemy();
+			TextOut( "\c[RED]そうなんですかー" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]で、なんでこんな雪だらけなんだ？" );
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]いくら冬の始めとは言え\n積もりすぎだろ、こりゃ" );
+			Enemy();
+			TextOut( "\c[RED]そんなの私が聞きたいですよー" );
+			Player();
+			TextOut( "\c[BLUE]そうだな、じゃあ\nこの名探偵魔理沙様が推理してみようか" );
+			TextOut( "\c[BLUE]お前が高山茶を食ってたら\nいつの間にか食い尽くしてしまった" );
+			TextOut( "\c[BLUE]一帯だけ禿山になって不自然に思った\nお前は春も食いつくし豪雪を降らせた" );
+			Enemy();
+			TextOut( "\c[RED]・・・・・・" );
+			Player();
+			TextOut( "\c[BLUE]だが残念だな、この\n早すぎる豪雪の方がよっぽど不自然だ" );
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]よって、高山茶殺人事件の犯人はお前だ！" );
+			Enemy();
+			TextOut( "\c[RED]・・・殺人事件って何ですか・・・" );
+			Player();
+			SetStep( 2 );
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]どうだ、まいったか！\nさぁ罪人はこの場で御用だぜ" );
+			Enemy();
+			TextOut( "\c[RED]そもそも私そんな\n大食いキャラなんかじゃありません！" );
+		}
+		End();
+	}
+}

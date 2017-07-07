@@ -1,0 +1,29 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		PlaySEEx( seBossExplode );
+		Wait( 60 );
+		SetMovePosition01( GetClipMinX() + 32, -32, 5 );
+		yield;
+		WaitZeroSpeed();
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetInvincibility( 130 );
+		SetDamageRate( 0, 0 );
+		SetEnemyMarker( false );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		SetAlpha( 240 );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+}

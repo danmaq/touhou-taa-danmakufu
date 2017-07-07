@@ -1,0 +1,8 @@
+#ScriptPathData
+#ScriptPath[.\Alice0.dnh]
+#ScriptPath[.\Alice1.dnh]
+#ScriptPath[.\Alice1S.dnh]
+#ScriptNextStep
+#ScriptPath[.\Alice2.dnh]
+#ScriptPath[.\Alice2S.dnh]
+#EndScriptPathData

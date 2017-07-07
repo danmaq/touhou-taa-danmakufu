@@ -1,0 +1,52 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	task Behavior(){
+		Wait( 150 );
+		let pattern = 3;
+		SetShotDirectionType( PLAYER );
+		loop{
+			loop( 20 ){
+				let speed = 1.5;
+				loop( 2 ){
+					let dir = -1;
+					loop( 2 ){
+						CircleShotGap01( 90, speed, [ RED11, ORANGE11, YELLOW11, GREEN11, AQUA11, BLUE11, PURPLE11 ][ pattern % 7 ], 15, pattern * 4.7 * dir );
+						dir = -dir;
+					}
+					speed += 1.5;
+				}
+				PlaySEEx( seShot1 );
+				Wait( 6 );
+				pattern++;
+			}
+			CircleShot01( 6, 1, WHITE04, 30 );
+			PlaySEEx( seShot3 );
+			ExMove( false, count );
+		}
+	}
+	@Initialize{
+		SetLife( 2600 );
+		SetTimer( 60 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 5 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyRenko, 1, 1, 43, 72, count );
+	}
+}

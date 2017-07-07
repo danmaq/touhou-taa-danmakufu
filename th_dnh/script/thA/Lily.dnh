@@ -1,0 +1,13 @@
+#ScriptPathData
+#ScriptPath[.\Lily0.dnh]
+#ScriptPath[.\Lily1.dnh]
+#ScriptPath[.\Lily1S.dnh]
+#ScriptNextStep
+#ScriptPath[.\Lily2S.dnh]
+#ScriptNextStep
+#ScriptPath[.\Lily3.dnh]
+#ScriptPath[.\Lily3S.dnh]
+#ScriptNextStep
+#ScriptPath[.\Lily4_.dnh]
+#ScriptPath[.\Lily4S.dnh]
+#EndScriptPathData

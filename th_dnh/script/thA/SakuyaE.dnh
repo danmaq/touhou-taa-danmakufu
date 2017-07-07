@@ -1,0 +1,59 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		PlaySEEx( seBossExplode );
+		CreateEventFromScript( "Talk" );
+		while( GetEventStep() != 1 ){ yield; }
+		SetCommonData( "Result", true );
+		let clear = 20000000;
+		let point = GetPoint() * 50000 - GetCommonDataDefault( "ResultPoint", 0 );
+		let graze = GetGraze() * 500 - GetCommonDataDefault( "ResultGraze", 0 );
+		let rank = [ 50, 100, 120, 150 ][ GetCommonDataDefault( "Level", 1 ) ];
+		let total = ( clear + point + graze ) * ( rank / 100 );
+		SetCommonData( "ResultClear", clear );
+		SetCommonData( "ResultPoint", point );
+		SetCommonData( "ResultGraze", graze );
+		SetCommonData( "ResultRank", rank );
+		SetCommonData( "ResultTotal", total );
+		AddScore( total );
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetX( -128 );
+		SetY( -128 );
+		LoadSE( seBossExplode );
+		ForbidBomb( true );
+		ForbidShot( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( !OnEvent() ){ VanishEnemy(); }
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu3 );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]‚Ù‚ç‚ ‚ñ‚½‚Í’†‚Ì‘|œ‚Å‚à\n‚µ‚Ä‚½•û‚ª‚¢‚¢‚¶‚á‚È‚¢" );
+			SetChar( LEFT, imgCutInReimu );
+			SetStep( 1 );
+			TextOut( "\c[BLUE]¡ –‚—¹‚ª“ü‚è‚ñ‚Å‚¨ì—l‚Í‹C‰»‚µ‚Ä\n–…—l‚Í”j‰ó‚ÌŒÀ‚è‚ğs‚­‚µ‚Ä‚é‚íA‚«‚Á‚Æ" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]‚³‚ÄA–Ê“|‚¾‚¯‚Çg–‚ŠÙ‚Ì‘|œ‚Å‚à‚·‚é‚©\n’ƒ“E‚İ‚µ‚Ä‹A‚Á‚Ä‚«‚Ä‚©‚ç‚¾‚¯‚Ç‚È" );
+			SetStep( 1 );
+			TextOut( "\c[BLUE]‚ ‚ŸA‚¨‚Ü‚¯‚É‹A‚é ‚É‚Í\n–Y‚ê‚Ä‚é‚©‚à‚µ‚ê‚È‚¢‚¯‚Ç‚È" );
+		}
+		End();
+	}
+}

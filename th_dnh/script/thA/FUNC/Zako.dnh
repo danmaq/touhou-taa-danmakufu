@@ -1,0 +1,19 @@
+#include_function ".\FUNC\Enemy.dnh"
+function DrawYosei( let file, let count ){
+	let x = [ ( trunc( count / 5 ) % 3 ), 1 ][ GetSpeed() >= 2 ] * 32;
+	SetGraphicRect( x, 0, x + 32, 30 );
+	DrawChr( file, count );
+}
+task KedamaWay( let sefile, let type, let level ){
+	loop( 12 ){
+		SetShotDirectionType( PLAYER );
+		let speed = [ 2.6, 2 ][ level % 2 ];
+		loop( 3 + level * 2 ){
+			CircleShotGap01( [ 120, 90, 72, 60 ][ level ], speed, [ RED05, BLUE05 ][ type % 2 ], 10, [ 0, [ 60, 45, 36, 30 ][ level ] ][ type % 2 ] );
+			speed += 0.5;
+		}
+		PlaySEEx( sefile );
+		if( GetY() > GetClipMaxX() - 80 ){ return; }
+		Wait( 24 );
+	}
+}

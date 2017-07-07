@@ -1,0 +1,120 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task WaitEvent4(){
+		while( GetEventStep() != 4 ){ yield; }
+		SetCommonData( "EDFade", GetCommonDataDefault( "NowCount", 0 ) );
+		yield;
+	}
+	task Behavior(){
+		WaitEvent4();
+		if( Continued() ){ return; }
+		while( GetEventStep() != 1 ){ yield; }
+		SetCommonData( "EDStep", [ 1, GetCommonDataDefault( "NowCount", 0 ) ] );
+		while( GetEventStep() != 2 ){ yield; }
+		SetCommonData( "EDStep", [ 2, GetCommonDataDefault( "NowCount", 0 ) ] );
+		while( GetEventStep() != 3 ){ yield; }
+		SetCommonData( "EDStep", [ 3, GetCommonDataDefault( "NowCount", 0 ) ] );
+		yield;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		CreateEventFromScript( [ "Good", "Bad" ][ Continued() ] );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() ){ VanishEnemy(); }
+		yield;
+		count++;
+	}
+	@Finalize{
+		DeleteCommonData( "EDStep" );
+		DeleteCommonData( "EDFade" );
+	}
+}
+script_event Bad{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			TextOut( "\c[WHITE]誰も来ない、冬の山奥の神社。" );
+			TextOut( "\c[WHITE]朝、霊夢が目を覚ますと\n外は既に雪が降り始めていた。" );
+			TextOut( "\c[BLUE]「・・・そういえば私、\n何してたんだっけ」" );
+			TextOut( "\c[WHITE]何かをしようとしていたが、何も\n覚えていない。体もピンピンしているし" );
+			TextOut( "\c[WHITE]天候も平年並みか若干暖かめ。\n特に異常らしい異常は見当たらない。" );
+			TextOut( "\c[BLUE]「ま、いっか。\nこれから長い冬眠の季節ね」" );
+			TextOut( "\c[WHITE]そう漏らすと霊夢は、越冬のため\n里で買い込んだ食材を整理し始めた。" );
+			SetStep( 4 );
+			TextOutB( 300, "\c[WHITE]ＥＮＤＩＮＧ　Ｎｏ１（ＢＡＤ　ＥＮＤ）\nノーコンティニューでクリアしよう！" );
+		}
+		case( MARISA_A, MARISA_B ){
+			TextOut( "\c[WHITE]誰も来ない、冬の森の奥にある小さな館。\n刹那、窓から七色の閃光がほとばしる。" );
+			TextOut( "\c[BLUE]「・・・ゲホっ、で、出来たぜ・・・」" );
+			TextOut( "\c[WHITE]やっと目的の符が完成した・・・が、\n何かを忘れているような気がする。" );
+			TextOut( "\c[WHITE]魔理沙はそれを思い出そうと\nお茶を沸かし一息で飲みきる。" );
+			TextOut( "\c[BLUE]「・・・ま、いっか。思い出せないほど\nどうでもいいことなんだろうな」" );
+			TextOut( "\c[WHITE]そう漏らすと魔理沙は早速符の実験をしに\n雪の降り出した外へ飛び出していった。" );
+			SetStep( 4 );
+			TextOutB( 300, "\c[WHITE]ＥＮＤＩＮＧ　Ｎｏ２（ＢＡＤ　ＥＮＤ）\nノーコンティニューでクリアしよう！" );
+		}
+		End();
+	}
+}
+script_event Good{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			TextOut( "\c[WHITE]誰も来ない、冬の山奥の神社。" );
+			TextOut( "\c[WHITE]外は既に雪が降り始め、\n本格的に冬になろうとしていた。" );
+			SetStep( 1 );
+			TextOut( "\c[BLUE]「はぁ、真相はこうだったのね」" );
+			TextOut( "\c[BLUE]「結局、温泉に入ることなく\n元気になっちゃったじゃないの」" );
+			TextOut( "\c[BLUE]「楽しみにしてたのにちょっと残念ね」" );
+			TextOut( "\c[RED]「お、入浴中だったのか」" );
+			SetStep( 2 );
+			TextOut( "\c[BLUE]「入浴中と分かってて覗かない！\nおまけに他人も巻き込んで覗かせない！」" );
+			TextOut( "\c[RED]「いや、先刻こいつが私の家にやって来て\n『帰れなくなった』って」" );
+			TextOut( "\c[RED]「で、入浴中悪いんだけど、\nちょっとだけ結界開けてやれないか？」" );
+			TextOut( "\c[BLUE]「あー、それ入浴中でも以外でも無理よ。\n私の力でどうこうできる代物じゃないわ」" );
+			TextOut( "\c[PURPLE]「・・・修行不足」\n\c[BLUE]「そこの外人は後で覚悟してなさい」" );
+			SetStep( 3 );
+			TextOut( "\c[BLUE]「・・・で、なんで二人揃って\n勝手に人の風呂に入ってるのかしらね」" );
+			TextOut( "\c[RED]「外寒いぜ」\n\c[PURPLE]「外寒いし」" );
+			TextOut( "\c[BLUE]「やっぱ二人とも後で覚悟してなさい」" );
+			TextOut( "\c[WHITE]幻想郷の時は永遠に止まったまま。" );
+			TextOut( "\c[WHITE]動き出すことも巻き戻ることも\n未来永劫無いだろう。" );
+			TextOut( "\c[WHITE]それでこそ幻想郷だし、今後も幻想郷は\nそうであるべきだと思う。" );
+			SetStep( 4 );
+			TextOutB( 300, "\c[WHITE]ＥＮＤＩＮＧ　Ｎｏ３（ＧＯＯＤＥＮＤ）" );
+		}
+		case( MARISA_A, MARISA_B ){
+			TextOut( "\c[WHITE]幻想郷に雪が降り出した。" );
+			TextOut( "\c[WHITE]同時に外の世界でも\n雪が舞い始めようとしていた。" );
+			SetStep( 1 );
+			TextOut( "\c[BLUE]「おー、久々だなこの光景も・・・\nもう十年は経つかな、いやそれ以上かな」" );
+			TextOut( "\c[BLUE]「それにしてもだいぶ変わったもんだな。\nというか覚えてないけど」" );
+			TextOut( "\c[RED]「そこ、田舎者丸出ししてない！」\n\c[BLUE]「悪かったな田舎者で」" );
+			SetStep( 2 );
+			TextOut( "\c[RED]「はい、これあげるわ。田舎者の\n口には合わないかもしれないけど」" );
+			TextOut( "\c[BLUE]「おー、サンキュ」\n\c[RED]「まぁ、冬にアイスってのも変だけどね」" );
+			TextOut( "\c[BLUE]「ところで、これは食い物なのか？」\n\c[RED]「・・・田舎者」" );
+			SetStep( 3 );
+			TextOut( "\c[BLUE]「そういやもう一人居るとか言ってたけど\nそいつはどうしてるんだ？」" );
+			TextOut( "\c[RED]「あぁ、今別件で動いてるから」\n\c[BLUE]「また幻想郷に来るのか？」" );
+			TextOut( "\c[RED]「さぁ、あいつは動き出すそのときまで\n何も言わないからよく分からないわ」" );
+			TextOut( "\c[BLUE]「・・・なんか外の世界も悪くないな」\n\c[RED]「そうかしら？」" );
+			TextOut( "\c[BLUE]「あぁ、もうちょっと空気うまければな」\n\c[RED]「あなたみたいな田舎も捨てがたいわよ」" );
+			TextOut( "\c[GREEN]「あ、魔女のコスプレだー写真いいー？」\n\c[BLUE]「おー、なんか人気者だなー」" );
+			TextOut( "\c[BLUE]「いっちょ星の舞でも見せてやろうか」\n\c[RED]「それはやめてね、混乱の元だから」" );
+			TextOut( "\c[WHITE]外の世界は常に進化し続けている。" );
+			TextOut( "\c[WHITE]また幻想郷も外の世界とはまた方向が\n異なれどやはり進化し続けている。" );
+			TextOut( "\c[WHITE]この進化は今も今後も、誰にも止めたり\n戻したりはけっして出来ないだろう。" );
+			SetStep( 4 );
+			TextOutB( 300, "\c[WHITE]ＥＮＤＩＮＧ　Ｎｏ４（ＧＯＯＤＥＮＤ）" );
+		}
+		End();
+	}
+}

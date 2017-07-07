@@ -1,0 +1,97 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task BigBall(){
+		let pattern = 0;
+		loop{
+			Wait( GetTimer() + 5 );
+			let size = rand( [ 72, 76, 104, 112 ][ Level ], [ 128, 144, 144, 160 ][ Level ] );
+			let x = [ GetPlayerX(), GetX() ][ pattern == 0 ];
+			let y = [ rand( GetClipMinY(), GetCenterY() - 64 ), GetY() ][ pattern == 0 ];
+			CreateLaserA( 0, x, y, size, size, RED03, 5 );
+			SetLaserDataA( 0, 0, 90, 0, 0, 0, 90 );
+			ascent( let i in 1..50 ){
+				SetLaserDataA( 0, i, NULL, 0, 0, Accelerate( 0, [ 2, 3.3, 3.6, 4 ][ Level ], i, 50 ), 90 );
+				yield;
+			}
+			FireShot( 0 );
+			PlaySEEx( seShot1 );
+			pattern++;
+		}
+	}
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		PlaySEEx( sePower1 );
+		Concentration01( 130 );
+		BigBall();
+		Wait( 130 );
+		let halflevel = trunc( Level / 2 );
+		loop{
+			let dir = -1;
+			loop( 2 ){
+				let pangle = GetAngleToPlayer();
+				ascent( let pattern in 0..6 ){
+					if( pattern % [ 3, 2 ][ halflevel ] == 0 ){ CircleShotGap01( [ 20, 15, 15, 12 ][ Level ], 1, RED01, 10, GetAngleToPlayer() ); }
+					let gap = 0;
+					loop( 2 ){
+						let angle = -7;
+						while( angle < 360 ){
+							let speed = 3;
+							loop( 2 ){
+								CreateShotA( 1, GetX(), GetY(), 30 );
+								SetShotDataA( 1, 0, speed, angle + gap + pangle - count * dir, 3 * dir, -0.2, speed / 2, PURPLE01 );
+								SetShotDataA( 1, 60 + trunc( pattern * 1.5 ), NULL, NULL, 0, -0.3, speed / 4, PURPLE01 );
+								FireShot( 1 );	//	0‚ÍBigBall()‚ÅŽg—p‚³‚ê‚Ä‚¢‚é
+								speed += 3;
+							}
+							angle += [ 72, 60 ][ halflevel ];
+						}
+						gap += 14;
+					}
+					PlaySEEx( seShot3 );
+					Wait( 6 );
+				}
+				dir = -dir;
+			}
+			Wait( 50 );
+		}
+	}
+	@Initialize{
+		SetLife( 400 );
+		SetScore( 1600000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 15, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( [ 60, 1 ][ GetCommonDataDefault( "SpellPractice", false ) ], 0, 0 );
+		SetCommonData( "ShowName", 6 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 14, imgCutInLeila, 192, 304 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		if( GetLife() <= 0 ){ if( count % 15 == 0 ){ PlaySEEx( seShot1 ); } }
+		else{ yield; }
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 14 * 4 + Level );
+		EndSpell();
+	}
+	@DrawLoop{
+		SetAlpha( 240 );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+	@BackGround{ LeilaBG( imgSpellChirch, imgSpellLuna, imgSpellRedWall, count ); }
+}

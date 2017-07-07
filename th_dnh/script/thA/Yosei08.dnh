@@ -1,0 +1,80 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquecode = RandBlur( 32767 );
+	let uniquestr = ToString( uniquecode );
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetShotDirectionType( PLAYER );
+		SetMovePosition03( GetX(), GetCenterY() + 64, 20, 4 );
+		yield;
+		while( GetSpeed() > 0.3 ){
+			CreateShot01( GetX(), GetY(), 1.3, 0, BLUE12, 5 );
+			PlaySEEx( seShot1 );
+			Wait( [ 10, 8, 5, 3 ][ Level ] );
+		}
+		SetSpeed( 0 );
+		Wait( 10 );
+		let dir = 1;
+		loop( 2 ){
+			CreateEnemyFromScript( "Shadow", GetX(), GetY(), 2, GetAngleToPlayer() + 8 * dir, uniquecode );
+			dir = -dir;
+		}
+		PlaySEEx( seShadow );
+		SetAngle( [ 230, 300 ][ GetX() < GetCenterX() ] );
+		while( GetSpeed() < 4 ){
+			SetSpeed( GetSpeed() + 0.3 );
+			Wait( 2 );
+		}
+	}
+	@Initialize{
+		SetLife( 30 );
+		SetDamageRate( 1, 1 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 30 && Level >= 2 ){
+			let speed = 0.6;
+			loop( [ 1, 2 ][ Level == 3 ] ){
+				CircleShot01( 10, speed, BLUE11, 5 );
+				speed += 0.4;
+			}
+			PlaySEEx( seShot2 );
+		}
+		if( count == 95 ){ SetDamageRate( 100, 50 ); }
+		TaskShadowInterface( uniquestr, 25 );
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		DropItem( 1, 32 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let PrevLife;
+	@Initialize{
+		SetLife( 30 );
+		PrevLife = GetLife();
+	}
+	@MainLoop{
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

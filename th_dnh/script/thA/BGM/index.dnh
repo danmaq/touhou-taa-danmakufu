@@ -1,0 +1,21 @@
+let bgmList = [
+	GetCurrentScriptDirectory() ~ "BGM\Mute.wav",
+	GetCurrentScriptDirectory() ~ "BGM\thA01.wav",	//	Title
+	GetCurrentScriptDirectory() ~ "BGM\thA02.wav",	//	Stage1
+	GetCurrentScriptDirectory() ~ "BGM\thA03.wav",	//	Boss
+	GetCurrentScriptDirectory() ~ "BGM\thA04.wav",	//	Stage2
+	GetCurrentScriptDirectory() ~ "BGM\thA05.wav",	//	Boss
+	GetCurrentScriptDirectory() ~ "BGM\thA06.wav",	//	Stage3
+	GetCurrentScriptDirectory() ~ "BGM\thA07.wav",	//	Boss
+	GetCurrentScriptDirectory() ~ "BGM\thA08.wav",	//	Stage4
+	GetCurrentScriptDirectory() ~ "BGM\thA09.wav",	//	Boss
+	GetCurrentScriptDirectory() ~ "BGM\thA10.wav",	//	Stage5
+	GetCurrentScriptDirectory() ~ "BGM\thA11.wav",	//	Boss
+	GetCurrentScriptDirectory() ~ "BGM\thA12.wav",	//	Stage6
+	GetCurrentScriptDirectory() ~ "BGM\thA13.wav",	//	Boss
+	GetCurrentScriptDirectory() ~ "BGM\thA14.wav",	//	BossLS
+	GetCurrentScriptDirectory() ~ "BGM\thA15.wav",	//	StageE
+	GetCurrentScriptDirectory() ~ "BGM\thA16.wav",	//	Boss
+	GetCurrentScriptDirectory() ~ "BGM\thA17.wav",	//	ED
+	GetCurrentScriptDirectory() ~ "BGM\thA18.wav",	//	StaffRoll
+];

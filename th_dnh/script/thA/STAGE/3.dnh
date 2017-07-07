@@ -1,0 +1,235 @@
+function GetStage3BGLoadList(){ return [ imgMapSnowField, imgMapSnowTree, imgMapGround, imgMapSnow ]; }
+function GetStage3LettyLoadList(){ return [ imgCutInLetty, imgEnemyLetty, imgSpellIceWall ]; }
+function GetStage3LilyLoadList(){ return [ imgCutInLily, imgCutInLilyCry, imgNameLily, imgEnemyLily, imgSpellBamboo ]; }
+task Stage3(){
+	MuteMusic();
+	let loadgraphiclist = [ imgStage[ 2 ] ];
+	loadgraphiclist = loadgraphiclist ~ GetStage3BGLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStage3LettyLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStage3LilyLoadList();
+	let loadenemylist = [ _enemyBlur, enemyYosei15, enemyYosei16, enemyYosei17, enemyYosei18, enemyYosei19, enemyKedama06, bossLilyE ];
+	if( GetCommonDataDefault( "Practice", false ) ){ StageLoad( DefaultStageLoadGraphicList ~ loadgraphiclist, DefaultStageLoadSEList, loadenemylist ); }
+	else{ StageLoad( loadgraphiclist, [], loadenemylist ); }
+	Ready( seOk );
+	ForbidBomb( false );
+	ForbidShot( false );
+	Stage3LoopInit();
+	SetCommonData( "Result", false );
+	SetCommonData( "Stage", 2 );
+	SetCommonData( "BGStep", 0 );
+	PlayMusicEx( 6 );
+	MusicRelease[ 6 ] = true;
+	StageRelease[ 2 ] = true;
+	CreateSaveData();
+	SaveEx();
+	Wait( 130 );
+	SetCommonData( "StageTitle", true );
+	Wait( 360 );
+	SetCommonData( "StageTitle", false );
+	Wait( 150 );
+	YoseiSlide( 2, enemyYosei15 );
+	Wait( 130 );
+	KedamaRush( 500, 20, 2, 45 );
+	Wait( 300 );
+	YoseiLineRush( 300 );
+	Wait( 400 );
+	YoseiSlide( 1, enemyYosei16 );
+	Wait( 400 );
+	YoseiDual( 800 );
+	Wait( 240 );
+	KedamaRush( 500, 10, 3.6, 30 );
+	Wait( 660 );
+	CreateEnemyBossFromFile( bossLetty, GetCenterX(), GetClipMinY() - 64, 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SaveEx();
+	KedamaRush( 1000, 40, 2, 45 );
+	Wait( 100 );
+	YoseiBasic();
+	Wait( 500 );
+	YoseiDual( 500 );
+	Wait( 500 );
+	local{
+		let x = GetClipMinX() + 16;
+		while( x < GetClipMaxX() - 16 ){
+			CreateEnemyFromFile( enemyYosei17, x, 0, 0, 0, 0 );
+			x += 64;
+		}
+	}
+	WaitZeroEnemy();
+	SetCommonData( "BGStep", 1 );
+	Wait( 150 );
+	MusicRelease[ 7 ] = true;
+	CreateSaveData();
+	SaveEx();
+	CreateEnemyBossFromFile( bossLily, GetCenterX(), GetClipMinY() - 64, 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SetCommonData( "ShowName", -1 );
+	CreateEnemyFromFile( bossLilyE, -128, -128, 0, 0, 0 );
+	ForbidBomb( true );
+	WaitZeroEnemy();
+	StageHighScore[ 2 ] = GetCommonDataDefault( "ResultTotal", 0 );
+	CreateSaveData();
+	SaveEx();
+	if( GetCommonDataDefault( "Practice", false ) ){
+		Clear();
+		return;
+	}
+	DeleteGraphicList( loadgraphiclist, [] );
+	ClearByteCodeCash();
+	Stage4();
+	task YoseiSlide( let l, let file ){
+		let dir = -1;
+		loop( l ){
+			loop( 2 ){
+				ascent( let i in 0..5 ){
+					CreateEnemyFromFile( file, GetCenterX() + 192 * dir, GetClipMinY() + 32 + ( 5 - i ) * 24, 0, 0, ( 5 - i ) * 64 + i % 2 );
+					Wait( 8 );
+				}
+				Wait( 120 );
+				dir = -dir;
+			}
+			Wait( 120 );
+		}
+	}
+	task YoseiLine( let x, let dir ){
+		let xx = -48 * dir;
+		loop( 3 ){
+			CreateEnemyFromFile( enemyYosei17, x + xx, 0, 0, 0, 0 );
+			Wait( 5 );
+			xx += 48 * dir;
+		}
+	}
+	task YoseiLineRush( let time ){
+		ascent( let i in 0..trunc( time / 100 ) ){
+			YoseiLine( GetCenterX() + sin( GetCommonData( "NowCount" ) * 1.5 ) * 128, [ 1, -1 ][ i % 2 ] );
+			Wait( [ 70, 30 ][ i % 2 ] );
+		}
+	}
+	task YoseiDual( let time ){
+		ascent( let i in 0..trunc( time / 100 ) ){
+			let dir = -1;
+			loop( 2 ){
+				CreateEnemyFromFile( enemyYosei18, GetCenterY() + 32 * dir, 0, 0, 0, 0 );
+				dir = -dir;
+			}
+			Wait( 100 );
+		}
+	}
+	task YoseiBasic(){
+		ascent( let i in 0..6 ){
+			ascent( let argv in 0..12 ){
+				CreateEnemyFromFile( enemyYosei19, GetCenterX() + GetCommonData( "NowCount" ) * [ -2, 2 ][ i % 2 ] % 192, 0, 0, 0, argv );
+				Wait( 10 );
+			}
+			Wait( [ 30, 60 ][ i % 2 ] );
+		}
+	}
+	task KedamaRush( let time, let space, let speed, let angle ){
+		ascent( let i in 0..trunc( time / space ) ){
+			CreateEnemyFromFile( enemyKedama06, rand( GetClipMinX(), GetClipMaxX() ), 0, speed, 90 + RandBlur( angle ), i );
+			Wait( space );
+		}
+	}
+}
+function Stage3LoopInit(){
+	ClearBGEffect();
+	SetCommonData( "PrevBG", [ 0, 0 ] );
+	SetCommonData( "BGViewTo", [ 0, 50, 0 ] );
+}
+function Stage3Loop( let count ){
+	let speed = [ 0.7, 0.3 ];
+	let step = GetCommonDataDefault( "BGStep", 0 );
+	let prev = GetCommonData( "PrevBG" );
+	let to = GetCommonData( "BGViewTo" );
+	if( step != prev[ 0 ] ){
+		prev = [ step, count ];
+		SetCommonData( "PrevBG", prev );
+	}
+	let bgphasecount = count - prev[ 1 ];
+	let zspeed = Smooth( speed[ Max( step - 1, 0 ) ], speed[ step ], bgphasecount, 300 );
+	to[ 1 ] = to[ 1 ] + zspeed / 3.4375;
+	to[ 2 ] = to[ 2 ] - zspeed;
+	SetCommonData( "BGViewTo", to );
+	if( count % trunc( Smooth( 60, 5, count, 3600 ) ) == 0 ){
+		AddBGEffect( RandBlur( 200 ), rand( 50, 300 ) + to[ 1 ], to[ 2 ] - rand( 50, 300 ), RandBlur( 2 ), -rand( 0, 2 ), rand( 1, 2.5 ), 250, 0 );
+	}
+}
+function Stage3BG( let count ){
+	let to = GetCommonData( "BGViewTo" );
+	let zangle = SlowDown( 0, 40, count, 600 );
+	SetPerspectiveClip( 10, 2000 );
+	SetFog( Smooth( 0, 500, count, 600 ), Smooth( 0, 1000, count, 600 ), 255, 255, 255 );
+	SetViewFrom( Smooth( 300, 600, count, 1000 ), 90, zangle );
+	SetViewTo( to[ 0 ], to[ 1 ], to[ 2 ] );
+
+	let z = truncEx( to[ 2 ], 1650 );
+	let y = ( -z / 1650 ) * 480;
+	if( count < 500 ){
+		SetTexture( imgMapWhite );
+		SetGraphicScale( 100, 100 );
+		SetGraphicAngle( 0, 0, 0 );
+		DrawGraphic3D( 0, 500, to[ 2 ] - 1000 );
+	}
+	loop( 2 ){
+		SetGraphicRect( 0, 0, 512, 512 );
+		SetGraphicScale( 4, 1 );
+		SetTexture( imgMapGround );
+		SetGraphicAngle( 120, 330, 0 );
+		DrawGraphic3D( -240, y, z );
+		SetTexture( imgMapSnowField );
+		SetGraphicAngle( 90, 0, 30 );
+		DrawGraphic3D( 0, y + 120, z - 400 );
+		DrawGraphic3D( 250, y + 120, z - 846 );
+		SetTexture( imgMapGround );
+		SetGraphicAngle( 120, -350, 0 );
+		DrawGraphic3D( 50, y + 240, z - 800 );
+		SetTexture( imgMapSnowField );
+		SetGraphicAngle( 90, 0, 170 );
+		DrawGraphic3D( 0, y + 360, z - 1270 );
+		DrawGraphic3D( -100, y + 360, z - 1770 );
+		SetTexture( imgMapSnowTree );
+		SetGraphicRect( 0, 0, 128, 128 );
+		SetGraphicAngle( 180 - zangle, 0, 0 );
+		Tree( 160, y, z + 200 );
+		Tree( -240, y, z );
+		Tree( -50, y + 50, z );
+		Tree( 120, y + 120, z - 150 );
+		Tree( -200, y + 120, z - 240 );
+		Tree( 60, y + 120, z - 350 );
+		Tree( 220, y + 120, z - 380 );
+		Tree( -100, y + 120, z - 420 );
+		Tree( -300, y + 150, z - 500 );
+		Tree( 100, y + 160, z - 600 );
+		Tree( -180, y + 180, z - 700 );
+		Tree( 250, y + 220, z - 750 );
+		Tree( 50, y + 240, z - 800 );
+		Tree( -210, y + 330, z - 960 );
+		Tree( 20, y + 360, z - 1120 );
+		Tree( -180, y + 360, z - 1200 );
+		z -= 1650;
+		y += 480;
+	}
+	if( GetCommonDataDefault( "BGEEnable", true ) ){
+		SetTexture( imgMapSnow );
+		SetGraphicRect( 0, 0, 128, 128 );
+		SetGraphicScale( 0.3, 0.3 );
+		ascent( let i in 0..length( BGEffectX ) ){
+			SetGraphicAngle( 180 - zangle, 0, count * 3 + i * 2 );
+			SetAlpha( [ BGEffectLife[ i ], Smooth( 0, 255, 250 - BGEffectLife[ i ], 64 ) ][ BGEffectLife[ i ] > 192 ] );
+			DrawGraphic3D( BGEffectX[ i ], BGEffectY[ i ], BGEffectZ[ i ] );
+		}
+	}
+	SetGraphicAngle( 0, 0, 0 );
+	SetGraphicScale( 1, 1 );
+	function Tree( let x, let y, let z ){
+		ascent( let height in 0..3 ){
+			SetAlpha( Smooth( 192, 255, height, 2 ) );
+			let ex = Smooth( 1, 0.36, height, 2 );
+			SetGraphicScale( ex, ex );
+			DrawGraphic3D( x + Smooth( 0, 10, absolute( x ), 300 ) * height * GetDir( x ), 65 + height * 40 + y, z );
+		}
+		SetAlpha( 255 );
+	}
+}

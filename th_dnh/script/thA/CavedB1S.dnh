@@ -1,0 +1,88 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let timer = 500;
+	let DeadTime = -1;
+	task Shot( let pattern ){
+		let angle = 0;
+		while( angle < 360 ){
+			ascent( let i in 0..2 ){
+				let fangle = angle + pattern * 4 * [ 1, -1 ][ i ];
+				CreateShotA( 0, GetX(), GetY(), 5 );
+				SetShotDataA( 0, 0, 2.8, fangle, 0, -0.03, 0, [ RED21, BLUE21 ][ i ] );
+				SetShotDataA( 0, 50, NULL, NULL, 0, -0.01, 0, [ RED21, BLUE21 ][ i ] );
+				SetShotDataA( 0, 56, NULL, NULL, 0, 0, 0, [ RED21, BLUE21 ][ i ] );
+				SetShotDataA( 0, 133, NULL, NULL, 0, -0.01, 0, [ RED21, BLUE21 ][ i ] );
+				SetShotDataA( 0, timer, NULL, fangle + 180 + ( pattern % 7 ) * 2 * [ 1, -1 ][ i ], 0, 0.0086, 2.4, [ RED21, BLUE21 ][ i ] );
+				SetShotKillTime( 0, 777 );
+				FireShot( 0 );
+			}
+			angle += [ 120, 90, 72, 60 ][ Level ];
+		}
+		PlaySEEx( seShot1 );
+		if( pattern % 2 == 0 ){ return; }
+		Wait( timer );
+		PlaySEEx( seKira1 );
+	}
+	task Behavior(){
+		Wait( 30 );
+		SetShotAutoDeleteClip( 128, 128, 128, 128 );
+		let pattern = 0;
+		loop{
+			Concentration01( 120 );
+			PlaySEEx( sePower1 );
+			Wait( 120 );
+			loop( 84 ){
+				if( pattern % 7 > 1 ){ Shot( pattern ); }
+				Wait( 5 );
+				pattern++;
+			}
+		}
+	}
+	@Initialize{
+		SetLife( 7777 );
+		SetScore( 11000000 );
+		SetTimer( 50 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 100 );
+		SetMovePosition03( GetCenterX(), GetCenterY(), 20, 3.5 );
+		SetEffectForZeroLife( [ 60, 1 ][ GetCommonDataDefault( "SpellPractice", false ) ], 240, 2 );
+		SetCommonData( "ShowName", 8 );
+		LastSpell();
+		SetDurableSpellCard();
+		SetShotAutoDeleteClip( 192, 192, 192, 192 );
+		StartSpell( 26, imgCutInKene, 192, 344 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		if( GetLife() <= 0 ){
+			if( DeadTime < 0 ){ DeadTime = count; }
+			if( count % 15 == 0 ){ PlaySEEx( seShot1 ); }
+		}
+		else{ yield; }
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		if( GotSpellCardBonus() && PrevTime > 1 ){ DropItem( 101 + Level * 33, 384 ); }
+		CreateSpellResult( 26 * 4 + Level );
+		EndSpell();
+	}
+	@DrawLoop{
+		SetColor( 192, 0, 0 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		SetRenderState( SUBTRACT );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+		SetRenderState( ALPHA );
+	}
+	@BackGround{ KeneBG( imgSpellStar, imgSpellWheel, imgSpellKene, ALPHA, count ); }
+}

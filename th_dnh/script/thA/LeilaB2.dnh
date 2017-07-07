@@ -1,0 +1,96 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_LEILAB2";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		Wait( 60 );
+		let angle = 0;
+		while( angle < 360 ){
+			ascent( let i in 0..2 ){ CreateEnemyFromScript( "Shade", GetX(), GetY(), 0, angle, i ); }
+			angle += [ 180, 120, 90, 72 ][ Level ];
+		}
+		loop{
+			Wait( 200 );
+			ExMove( false, count );
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 2, angle, 0 );
+				angle += 45;
+			}
+			PlaySEEx( seShadow );
+		}
+	}
+	@Initialize{
+		SetLife( 2300 );
+		SetTimer( 55 );
+		SetInvincibility( 50 );
+		SetDamageRate( 100, 40 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetShotAutoDeleteClip( 64, 64, 64, 64 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, 0 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{
+		SetAlpha( 240 );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+}
+script_enemy Shade{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let argv = GetArgument();
+	let RotateSpeed = 3 * [ 1, -1 ][ argv % 2 ];
+	task Behavior(){
+		let pattern = 0;
+		loop{
+			Wait( 24 );
+			SetShotDirectionType( ABSOLUTE );
+			CircleShotGap01( [ 180, 120 ][ pattern % 5 - Level == 0 ], 1, [ PURPLE03, BLUE03 ][ argv % 2 ], 5, GetAngle() - count * RotateSpeed + 120 );
+			PlaySE( seShot1 );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 1 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( 160, 80 + count ), count, "G_LEILAB2" );
+		count++;
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let PrevLife;
+	@Initialize{
+		SetLife( 70 );
+		PrevLife = GetLife();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, "G_LEILAB2", true );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleRed, imgEnemyShadow, count ); }
+}

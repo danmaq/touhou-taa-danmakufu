@@ -1,0 +1,46 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	task Behavior(){
+		yield;
+		let dir = [ -1, 1 ][ GetX() < GetCenterX() ];
+		let halflevel = trunc( Level / 2 );
+		SetMovePosition03( GetX() - 64 * dir, GetClipMinY() + 32, 20, 3 );
+		WaitSpeedDown( 0.6 );
+		loop( 12 ){
+			SetShotDirectionType( PLAYER );
+			let angle = RandBlur( 80 );
+			let speed = 1.5;
+			loop( 1 + halflevel ){
+				WayShotGap01( [ 2, 1 ][ Level == 0 ], [ 2, 1 ][ Level == 0 ], speed, WHITE04, 15, angle );
+				speed += 0.7;
+			}
+			PlaySEEx( seShot1 );
+			Wait( [ 12, 10, 10, 8 ][ Level ] );
+		}
+		SetAngle( 90 );
+		while( GetSpeed() < 5 ){
+			SetSpeed( GetSpeed() + 0.03 );
+			yield;
+		}
+	}
+	@Initialize{
+		SetLife( 20 );
+		SetDamageRate( 1, 10 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 50 ){ SetDamageRate( 100, 100 ); }
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		count++;
+	}
+	@Finalize{ DropItem( [ 1, 3 ][ count > 240 ], 32 ); }
+	@DrawLoop{
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei2, count );
+	}
+}

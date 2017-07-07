@@ -1,0 +1,148 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let uniquecode = RandBlur( 32767 );
+	let uniquestr = ToString( uniquecode );
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgument();
+	let firstx = GetX();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetShotDirectionType( ABSOLUTE );
+		SetMovePosition03( GetX(), GetCenterY() - 64, 20, 4 );
+		local{
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, angle, uniquecode );
+				angle += 60;
+			}
+		}
+		local{
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow2", GetX(), GetY(), 0, angle, uniquecode );
+				angle += 72;
+			}
+		}
+		PlaySEEx( seShadow );
+		Wait( 80 );
+		local{
+			let angle = GetAngleToPlayer();
+			loop( 10 ){
+				if( Argv != 0 ){ CircleShotGap01( 90, 2, BLUE03, 25, angle ); }
+				angle += 13;
+				Wait( 20 );
+			}
+		}
+		Wait( 200 );
+		SetSpeed( 2 );
+		SetAngle( [ 310, 240 ][ firstx < GetCenterX() ] );
+	}
+	@Initialize{
+		SetLife( 120 );
+		SetDamageRate( 1, 1 );
+		SetMovePosition03( GetCenterX(), GetCenterY() - 96, 7, 20 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 130 ){ SetDamageRate( 100, 10 ); }
+		TaskShadowInterface( uniquestr, [ -1, 10 ][ count > 130 ] );
+		SEShotHit( seDamage, count );
+		Collision( 40, 0 );
+		Gone();
+		if( IsBossExisting() ){ VanishEnemy(); }
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		DropItem( 4, 48 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei2, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let RotateSpeed = 3;
+	task ObjShot( let angle ){
+		let color = YELLOW12;
+		let speed = [ 1.5, 2.4, 3, 3 ][ Level ];
+		let obj = SetShotObject( GetX(), GetY(), speed, GetAngle() - count * RotateSpeed + 40 + angle / 6, color, 16 );
+		loop( 40 ){
+			if( Obj_BeDeleted( obj ) ){ return; }
+			yield;
+		}
+		PlaySEEx( seKira1 );
+		CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), speed, angle + GetAngleToPlayerObject( obj ), color, 0 );
+		Obj_Delete( obj );
+	}
+	task Behavior(){
+		Wait( 20 );
+		loop( 20 ){
+			SetShotDirectionType( ABSOLUTE );
+			let limit = [ 120, 120, 144, 160 ][ Level ];
+			let angle = -limit;
+			while( angle <= limit ){
+				ObjShot( angle );
+				angle += [ 120, 120, 72, 40 ][ Level ];
+			}
+			PlaySEEx( seShot1 );
+			Wait( 16 );
+		}
+	}
+	@Initialize{
+		SetLife( 200 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( count, 80 ), count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}
+script_enemy Shadow2{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let RotateSpeed = -2;
+	task Behavior(){
+		Wait( 20 );
+		loop( 20 ){
+			SetShotDirectionType( ABSOLUTE );
+			let speed = [ 2, 1.5 ][ Level == 0 ];
+			loop( Max( Level, 1 ) ){
+				CreateShot01( GetX(), GetY(), speed, GetAngle() - count * RotateSpeed + 70, RED02, 15 );
+				speed += 0.8;
+			}
+			PlaySEEx( seShot1 );
+			Wait( 16 );
+		}
+	}
+	@Initialize{
+		SetLife( 200 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( count * 2, 133 ), count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

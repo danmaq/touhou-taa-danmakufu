@@ -1,0 +1,17 @@
+#include_function ".\IMAGE\ENEMY\KEDAMA\index.dnh"
+let imgEnemyAlice = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Alice.png";
+let imgEnemyChina = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\China.png";
+let imgEnemyDaiyosei = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Daiyosei.png";
+let imgEnemyKene = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Kene.png";
+let imgEnemyLeila = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Leila.png";
+let imgEnemyLetty = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Letty.png";
+let imgEnemyLily = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Lily.png";
+let imgEnemyMerry = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Merry.png";
+let imgEnemyRenko = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Renko.png";
+let imgEnemySakuya = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Sakuya.png";
+let imgEnemyShadow = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Shadow.png";
+let imgEnemyYosei1 = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Yosei1.png";
+let imgEnemyYosei2 = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Yosei2.png";
+let imgEnemyYosei3 = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Yosei3.png";
+let imgEnemyYosei4 = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Yosei4.png";
+let imgEnemyYosei5 = GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\Yosei5.png";

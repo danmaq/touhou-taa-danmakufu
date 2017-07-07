@@ -1,0 +1,47 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 0 );
+	task Behavior(){
+		yield;
+		SetShotDirectionType( PLAYER );
+		SetMovePosition03( [ GetClipMinX() - 64, GetClipMaxX() + 64 ][ GetX() < GetCenterX() ], GetY() + 192, 20, Smooth( 4, 5.5, GetCommonDataDefault( "GlobalCount", 0 ) % 29, 29 ) );
+		while( !Near( GetX(), GetCenterX(), 64 ) && Level != 3 ){ yield; }
+		loop( [ 1, 1, 2, 3 ][ Level ] ){
+			while( rand( 0, 100 ) < 98 - Level * 10 ){ yield; }
+			let speed = [ 1, 2 ][ Level == 3 ];
+			loop( Level + 1 ){
+				alternative( count % 2 )
+				case( 0 ){
+					WayShot01( 45, 30, speed, WHITE12, 5 );
+					if( Level >= 2 ){ WayShot01( 60, 30, speed + 0.25, WHITE12, 5 ); }
+				}
+				case( 1 ){
+					CircleShot02( [ 60, 30 ][ Level == 2 ], 5 + speed * 2, [ -0.3, -1 ][ Level == 3 ], speed / [ 1, 2 ][ Level == 3 ], YELLOW12, 5 );
+					if( Level >= 2 ){ CircleShotGap02( [ 60, 30 ][ Level == 2 ], 5.25 + speed * 2, [ -0.3, -1 ][ Level == 3 ], speed + 0.25 / [ 1, 2 ][ Level == 3 ], YELLOW12, 5, [ 30, 15 ][ Level == 2 ] ); }
+				}
+				speed += 0.5;
+			}
+			PlaySEEx( seShot1 );
+		}
+	}
+	@Initialize{
+		SetLife( 20 );
+		Behavior();
+	}
+	@MainLoop{
+		SEShotHit( seDamage, count );
+		Collision( 20, 0 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ if( Argv % 3 == 0 ){ DropItem( 1, 0 ); } }
+	@DrawLoop{
+		SetGraphicAngle( 0, 0, -count * 8 );
+		SetGraphicRect( 0, 0, 32, 32 );
+		DrawChr( imgEnemyKedamaGreen, count );
+		SetGraphicAngle( 0, 0, 0 );
+	}
+}

@@ -1,0 +1,147 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let bgm = false;
+	task Behavior(){
+		yield;
+		while( GetEventStep() != 1 ){ yield; }
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		while( GetEventStep() != 2 ){ yield; }
+		SetCommonData( "ShowName", 8 );
+		while( GetEventStep() != 3 ){ yield; }
+		PlayMusicEx( 13 );
+		Wait( 30 );
+		bgm = true;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetX( GetCenterX() );
+		SetY( -128 );
+		CreateEventFromScript( "Talk" );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() && bgm ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 24, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]さぁ、出てきなさい。" );
+			TextOut( "\c[BLUE]警備やってる人間とやらは死んだわ。\nこの魔方陣を壊されちゃ困るでしょ？" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]流石にこの術に\n人間を巻き込むのは無理があったか" );
+			SetStep( 1 );
+			Wait( 100 );
+			SetChar( RIGHT, imgCutInKene );
+			SetGraphicRect( RIGHT, 1, 1, 192, 344 );
+			Enemy();
+			SetNameFromTexture( RIGHT, imgNameKene );
+			SetStep( 2 );
+			TextOut( "\c[RED]出てきたぞ。\n何の用だ、いつぞやの紅白よ" );
+			Player();
+			TextOut( "\c[BLUE]冷気の出しすぎで、困る" );
+			Enemy();
+			TextOut( "\c[RED]安心しろ、もうあとわずかで完成する" );
+			Player();
+			DeleteName( RIGHT );
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]一体全体何をたくらんでいるのかしら？" );
+			Enemy();
+			TextOut( "\c[RED]この術が完成すれば時は全て停止し、\nそして逆流を始める" );
+			TextOut( "\c[RED]その時の逆流は、\n百年余の歴史をなかったことにし" );
+			TextOut( "\c[RED]幻想郷が隔離される前の時代に戻った時\n再び何事もなかったかのように流れ出す" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]今日の歴史食いはかなりオオゴトね\nそんなことをして何のためになるの？" );
+			Enemy();
+			TextOut( "\c[RED]外界の人間はもはや幻想郷どころか\n天地全てを滅ぼす程の武器を持っている" );
+			TextOut( "\c[RED]あれにはもう手の施しようが無い・・・\nだから過去に戻し全てをやり直すのだ" );
+			Player();
+			TextOut( "\c[BLUE]そう、そして今あるものは\n全て消え去るのね" );
+			Enemy();
+			TextOut( "\c[RED]幻想郷の未来のためには\nやむをえない犠牲だ" );
+			Player();
+			TextOut( "\c[BLUE]私はそんな完璧な世界の\n幻想郷なんて幻想郷とは呼べないわ" );
+			TextOut( "\c[BLUE]それに幻想郷が外界に干渉してはならない\nそれが暗黙の了解じゃないのかしら？" );
+			Enemy();
+			SetStep( 3 );
+			TextOut( "\c[RED]五月蝿い、お前に外界の兵器の\n恐ろしさが分かるものか" );
+			Player();
+			TextOut( "\c[BLUE]幻想郷を今滅ぼそうとしているのは\n外界の人間じゃない、あんただ！" );
+			MoveChar( LEFT, FRONT );
+			MoveChar( RIGHT, FRONT );
+			TextOut( "\c[BLUE]幻想郷の明日は今一度やり直される！\n\c[RED]幻想郷の明日は戻りも進みもしない！" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]あー、こいつかな・・・\n件の幻想郷を氷付けにする魔方陣か" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]それに触るな！" );
+			SetStep( 1 );
+			Wait( 100 );
+			SetChar( RIGHT, imgCutInKene );
+			SetGraphicRect( RIGHT, 1, 1, 192, 344 );
+			Enemy();
+			SetNameFromTexture( RIGHT, imgNameKene );
+			SetStep( 2 );
+			TextOut( "\c[RED]まったく、\nあの警備はなにやってるんだ" );
+			Player();
+			TextOut( "\c[BLUE]さっき殺してきたぜ" );
+			Enemy();
+			TextOut( "\c[RED]ただでさえ少ない人間だ\nあまりむやみに減らすな" );
+			Player();
+			DeleteName( RIGHT );
+			TextOut( "\c[BLUE]んで、お前のその術のせいで\n向こうの山が凍りついて" );
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]高山茶が採れなくなってしまったんだが\nその責任はどう取ってもらおうか" );
+			Enemy();
+			TextOut( "\c[RED]安心しろ、もうあと僅かで終わる" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]氷付けにして幻想郷丸ごと\nコレクションにするんだな？" );
+			Enemy();
+			TextOut( "\c[RED]違う。この術が完成すれば\n時は止まり、逆流を始める" );
+			TextOut( "\c[RED]その時の逆流は、\n百年余の歴史をなかったことにし" );
+			TextOut( "\c[RED]幻想郷が隔離される前の時代に戻った時\n再び何事もなかったかのように流れ出す" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]今日はかなり大食いなんだな\n太るぜ" );
+			Enemy();
+			TextOut( "\c[RED]太りすぎたのは外界の人間だ" );
+			TextOut( "\c[RED]外界の人間はもはや幻想郷どころか\n天地全てを滅ぼす程の武器を持っている" );
+			TextOut( "\c[RED]あそこまで太ってしまうと\nもう手の施しようが無い" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]で、過去に戻ってやり直す\n・・・ということか？" );
+			TextOut( "\c[BLUE]過去の過ちを正し完璧な世界を\n創造したとして、その世界の何が楽しい？" );
+			Enemy();
+			SetStep( 3 );
+			TextOut( "\c[RED]五月蝿い、お前に外界の兵器の\n恐ろしさが分かるものか" );
+			Player();
+			TextOut( "\c[BLUE]私にはお前がこれからやることの方が\n余程恐ろしく感じるぜ" );
+			MoveChar( LEFT, FRONT );
+			MoveChar( RIGHT, FRONT );
+			TextOut( "\c[BLUE]幻想郷の明日は今一度やり直される！\n\c[RED]幻想郷の明日は降水確率ゼロ％だぜ！" );
+		}
+		End();
+	}
+}

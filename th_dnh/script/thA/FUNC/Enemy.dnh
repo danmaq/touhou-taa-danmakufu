@@ -1,0 +1,31 @@
+#include_function ".\FUNC\Enemy&Shadow.dnh"
+function LinkageDamage( let uniquestr, let percentage ){
+	let damagetotal = GetCommonData( uniquestr ~ "D" );
+	if( damagetotal != 0 ){ AddLife( -( damagetotal * percentage / 100 ) ); }
+	SetCommonData( uniquestr ~ "D", 0 );
+}
+function CreateShadowInterface( let uniquestr ){
+	SetCommonData( uniquestr, 1 );
+	SetCommonData( uniquestr ~ "D", 0 );
+	TaskShadowInterface( uniquestr, -1 );
+}
+function TaskShadowInterface( let uniquestr, let linkdamage ){
+	SetCommonData( uniquestr ~ "X", GetX() );
+	SetCommonData( uniquestr ~ "Y", GetY() );
+	if( linkdamage >= 0 ){ LinkageDamage( uniquestr, linkdamage ); }
+}
+function ReleaseShadowInterface( let uniquestr ){
+	SetCommonData( uniquestr, [ 0, 2 ][ BeVanished() ] );
+//	DeleteCommonData( uniquestr ~ "X" );
+//	DeleteCommonData( uniquestr ~ "Y" );
+//	DeleteCommonData( uniquestr ~ "D" );
+}
+function SEShotHit( let se, let count ){ if( GetHitCount() != 0 && count % 3 == 0 ){ PlaySEEx( se ); } }
+function _DropItem( let type, let num, let width ){
+	if( BeVanished() || GetCommonDataDefault( "SpellPractice", false ) ){ return; }
+	let w = width / 2;
+	loop( num ){ CreateItem( type, GetX() + [ rand( -w, w ), 0 ][ num == 1 ], GetY() + [ rand( -w, w ), 0 ][ num == 1 ] ); }
+}
+function DropItem( let num, let width ){ _DropItem( ITEM_SCORE, num, width ); }
+function DropBomb(){ _DropItem( ITEM_BOMB, 1, 0 ); }
+function DropExtend(){ _DropItem( ITEM_1UP, 1, 0 ); }

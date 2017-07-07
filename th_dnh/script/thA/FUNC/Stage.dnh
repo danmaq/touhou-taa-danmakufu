@@ -1,0 +1,236 @@
+#include_function ".\FUNC\Stage&Shot&Enemy&Shadow.dnh"
+#include_function ".\IMAGE\index.dnh"
+#include_function ".\index_zako.dnh"
+#include_function ".\index_boss.dnh"
+function MenuSelect( let value, let sefile, let max ){
+	let res = value;
+	if( IsPushDirKey() ){
+		PlaySEEx( sefile );
+		res = MinMaxLoop( value + [ 1, -1 ][ GetKeyState( VK_UP ) == KEY_PUSH || GetKeyState( VK_LEFT ) == KEY_PUSH ], 0, max );
+	}
+	return res;
+}
+function Extend( let players ){ CreateEnemyFromFile( _enemyExtend, GetPlayerX(), GetPlayerY(), 0, 0, players ); }
+function MotionBlurStage( let frame ){ CreateEnemyFromFile( _enemyBlur, 0, 0, 0, 0, frame ); }
+function LoadProgress( let now, let GraphicFileList, let SEFileList, let EnemyFileList ){
+	let graphiclistlen = length( GraphicFileList );
+	let selistlen = length( SEFileList );
+	let enemylistlen = length( EnemyFileList );
+	let total = graphiclistlen + selistlen + enemylistlen;
+	if( total - now <= 0 ){
+		SetCommonData( "LoadingProgress", -1 );
+		return;
+	}
+	SetCommonData( "LoadingProgress", Smooth( 100, 0, total - now, total ) );
+	if( now < graphiclistlen ){ LoadGraphic( GraphicFileList[ now ] ); }
+	else if( now - graphiclistlen < selistlen ){
+		// « ª‚Ìif‚Æ“‡‚µ‚Ä‚Í‚¢‚¯‚È‚¢¨SEEnable‚ªFalse‚Ìê‡æ‚É“Gƒf[ƒ^‚ð“Ç‚à‚¤‚Æ‚µ‚Ä‚µ‚Ü‚¤‚½‚ß
+		if( GetCommonDataDefault( "SEEnable", true ) ){ LoadSE( SEFileList[ now - graphiclistlen ] ); }
+	}
+	else{ CompileEnemyFromFile( EnemyFileList[ now - ( graphiclistlen + selistlen ) ] ); }
+}
+function StageLoad( let graphiclist, let selist, let enemylist ){
+	let num = 0;
+	while( num == 0 || GetCommonDataDefault( "LoadingProgress", -1 ) != -1 ){
+		LoadProgress( num, graphiclist, selist, enemylist );
+		yield;
+		num++;
+	}
+}
+function DrawProgress( let ImageProgressBar, let ImageProgressBG, let ImageNumSmall, let width, let height, let BottomMargin ){
+	let progress = GetCommonDataDefault( "LoadingProgress", -1 );
+	if( progress == -1 ){ return; }
+	let widthhalf = width / 2;
+	_DrawChrRect( ImageProgressBG, GetCenterX(), GetClipMaxY() - BottomMargin, 0, 0, width, height );
+	SetGraphicExpansion( Smooth( 0, 1, progress, 100 ), 1 );
+	_DrawChr( ImageProgressBar, GetCenterX() - Smooth( widthhalf, 0, progress, 100 ), GetClipMaxY() - BottomMargin );
+	SetGraphicExpansion( 1, 1 );
+	DrawNumSmall( ImageNumSmall, progress, GetCenterX() + widthhalf, GetClipMaxY() - BottomMargin + 20 );
+}
+function SetMainMenuRect( let num, let lineheight, let width, let height ){ SetGraphicRect( 0, num * lineheight, width, height + num * lineheight ); }
+function DrawMainMenu( let file, let num, let gap ){
+	SetMainMenuRect( num, 51, 256, 50 );
+	_DrawChr( file, GetCenterX() + gap + num * 4, 224 + num * 40 );
+}
+function DrawMenuHeading( let file, let num, let now ){
+	SetAlpha( Smooth( 0, 255, now, 20 ) );
+	SetMainMenuRect( num, 50.4, 256, 50 );
+	_DrawChr( file, GetClipMaxX() - Smooth( 112, 128, now, 20 ), GetClipMinY() + 26 );
+	SetAlpha( 255 );
+}
+function DrawBoolean( let file, let bool, let x, let y ){
+	SetMainMenuRect( !bool, 37.35, 128, 38 );
+	_DrawChr( file, x, y );
+}
+function _DrawNum( let file, let num, let x, let y, let width, let height, let srcy, let gradespace ){
+	let str = ToStringInt( num );
+	let bytes = length( str );
+	ascent( let pos in 0..bytes ){
+		let xx = CharToInteger( str[ bytes - 1 - pos ] ) * width;
+		_DrawChrRect( file, x - pos * gradespace, y, xx + 1, 1 + srcy, xx + width + 1, height + srcy );
+	}
+}
+function DrawNum( let file, let num, let x, let y ){ _DrawNum( file, num, x, y, 25.3, 44, 0, 26 ); }
+function DrawNumMiddle( let file, let num, let x, let y ){ _DrawNum( file, num, x, y, 12, 22, 0, 12 ); }
+function DrawNumSmall( let file, let num, let x, let y ){ _DrawNum( file, num, x, y, 8, 16, 0, 7 ); }
+function DrawResultNum( let file, let num, let line, let y ){
+	let height = 24;
+	_DrawNum( file, num, GetClipMaxX() - 32, y, 15, 24, 24 * [ 0, 0, 0, 1, 1, 1, 2, 2, 3 ][ line ], 13 );
+}
+function FadeMainMenu( let file, let num, let now ){
+	SetAlpha( Smooth( 255, 0, now, 20 ) );
+	DrawMainMenu( file, num, 48 );
+	SetAlpha( 255 );
+}
+function DrawSpell( let imgname, let imgbonus, let imgnum ){
+	let spell = GetCommonDataDefault( "Spell", [ -32767, 0, 0 ] );
+	if( spell[ 0 ] >= 0 ){
+		let bonus = GetCommonDataDefault( "SpellBonus", [ 0, 32767 ] );
+		let cutin = GetCommonDataDefault( "SpellCutIn", "" );
+		let playhistory = GetCommonData( "SpellPlayHistory" );
+		let gethistory = GetCommonData( "SpellGetHistory" );
+		let alpha = Smooth( 0, 255, bonus[ 1 ], 90 );
+		if( bonus[ 1 ] < 200 ){
+			let ex = Accelerate( 1, 3, bonus[ 1 ] - 130, 50 );
+			if( bonus[ 1 ] < 100 ){ SetAlpha( alpha ); }
+			else{ SetAlpha( Smooth( 255, 0, bonus[ 1 ] - 130, 50 ) ); }
+			SetGraphicScale( ex, ex );
+			_DrawChrRect( cutin, GetClipMaxX() - SlowDown( 384, 96, bonus[ 1 ], 90 ), GetCenterY(), 0, 0, spell[ 1 ], spell[ 2 ] );
+			SetGraphicScale( 1, 1 );
+			if( bonus[ 1 ] - 130 > 0 ){ _DrawChr( cutin, GetClipMaxX() - 96, GetCenterY() ); }
+		}
+		let srcx;
+		let srcy;
+		let orgno;
+		if( spell[ 0 ] < 27 ){
+			let level = GetCommonDataDefault( "Level", 0 );
+			srcx = level * 256;
+			srcy = spell[ 0 ] * 24;
+			orgno = spell[ 0 ] * 4 + level;
+		}
+		else{
+			let num = spell[ 0 ] - 27;
+			srcx = ( num % 4 ) * 256;
+			srcy = trunc( num / 4 ) * 24 + 648;
+			orgno = spell[ 0 ] + 81;
+		}
+		let dstx = GetClipMinX() + SlowDown( 512, 128, bonus[ 1 ], 90 );
+		let dsty = GetCenterY() - SplineFakeSFS( 0, 184, bonus[ 1 ] - 130, 50 );
+		SetAlpha( Smooth( Min( 32, alpha ), alpha, Hypot( dstx - GetPlayerX(), dsty + 16 - GetPlayerY() ), 112 ) );
+		_DrawChrRect( imgname, dstx, dsty, srcx, srcy, srcx + 256, srcy + 24 );
+		_DrawChrRect( imgbonus, dstx - 92, dsty + 16, 0, 16, 64, 32 );
+		_DrawChrRect( imgbonus, dstx - 24, dsty + 16, 0, 32, 16, 48 );
+		_DrawChrRect( imgbonus, dstx - 92, dsty + 28, 0, 0, 64, 16 );
+		DrawNumSmall( imgnum, gethistory[ orgno ], dstx - 40, dsty + 16 );
+		DrawNumSmall( imgnum, playhistory[ orgno ], dstx + 8, dsty + 16 );
+		DrawNumSmall( imgnum, bonus[ 0 ], dstx - 16, dsty + 28 );
+		SetAlpha( 255 );
+	}
+}
+function Ready( let seok ){
+	if( !GetCommonDataDefault( "Practice", false ) ){
+		SetCommonData( "Ready", true );
+		let time = 0;
+		while( time < 1200 ){
+			if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+				PlaySEEx( seok );
+				time = 1200;
+			}
+			yield;
+			time++;
+		}
+		SetCommonData( "Ready", false );
+		ClearBGEffect();
+	}
+}
+function ClearBGEffect(){
+	loop( length( BGEffectX ) ){
+		BGEffectX = erase( BGEffectX, 0 );
+		BGEffectY = erase( BGEffectY, 0 );
+		BGEffectZ = erase( BGEffectZ, 0 );
+		BGEffectLife = erase( BGEffectLife, 0 );
+		BGEffectParam = erase( BGEffectParam, 0 );
+		BGEffectVectorX = erase( BGEffectVectorX, 0 );
+		BGEffectVectorY = erase( BGEffectVectorY, 0 );
+		BGEffectVectorZ = erase( BGEffectVectorZ, 0 );
+	}
+/*
+	BGEffectX = [];
+	BGEffectY = [];
+	BGEffectZ = [];
+	BGEffectLife = [];
+	BGEffectParam = [];
+	BGEffectVectorX = [];
+	BGEffectVectorY = [];
+	BGEffectVectorZ = [];
+*/
+}
+function AddBGEffect( let x, let y, let z, let vectorx, let vectory, let vectorz, let limit, let param ){
+	BGEffectX = BGEffectX ~ [ x ];
+	BGEffectY = BGEffectY ~ [ y ];
+	BGEffectZ = BGEffectZ ~ [ z ];
+	BGEffectLife = BGEffectLife ~ [ limit ];
+	BGEffectParam = BGEffectParam ~ [ param ];
+	BGEffectVectorX = BGEffectVectorX ~ [ vectorx ];
+	BGEffectVectorY = BGEffectVectorY ~ [ vectory ];
+	BGEffectVectorZ = BGEffectVectorZ ~ [ vectorz ];
+	return length( BGEffectX ) - 1;
+}
+function MoveBGEffect(){
+	let i = 0;
+	while( i < length( BGEffectX ) ){
+		if( BGEffectLife[ i ] <= 0 && BGEffectLife[ i ] != -65535 ){
+			BGEffectX = erase( BGEffectX, i );
+			BGEffectY = erase( BGEffectY, i );
+			BGEffectZ = erase( BGEffectZ, i );
+			BGEffectLife = erase( BGEffectLife, i );
+			BGEffectParam = erase( BGEffectParam, i );
+			BGEffectVectorX = erase( BGEffectVectorX, i );
+			BGEffectVectorY = erase( BGEffectVectorY, i );
+			BGEffectVectorZ = erase( BGEffectVectorZ, i );
+		}
+		else{
+			BGEffectX[ i ] = BGEffectX[ i ] + BGEffectVectorX[ i ];
+			BGEffectY[ i ] = BGEffectY[ i ] + BGEffectVectorY[ i ];
+			BGEffectZ[ i ] = BGEffectZ[ i ] + BGEffectVectorZ[ i ];
+			if( BGEffectLife[ i ] != -65535 ){ BGEffectLife[ i ] = BGEffectLife[ i ] - 1; }
+			i++;
+		}
+	}
+}
+function SetPhase( let phase ){
+	Phase = phase;
+	PhaseStartCount = count + 1;
+}
+function NextPhase(){ SetPhase( Phase + 1 ); }
+function ReadData(){
+	SpellCardGetHistory = GetCommonDataDefault( "SpellGetHistory", SpellCardGetHistory );
+	SpellCardPlayHistory = GetCommonDataDefault( "SpellPlayHistory", SpellCardPlayHistory );
+	SpellCardHighScore = GetCommonDataDefault( "SpellHighScore", SpellCardHighScore );
+	MusicRelease = GetCommonDataDefault( "MusicRelease", MusicRelease );
+	StageRelease = GetCommonDataDefault( "StageRelease", StageRelease );
+	StageHighScore = GetCommonDataDefault( "StageHighScore", StageHighScore );
+}
+function CreateSaveData(){
+	SetCommonData( "SpellGetHistory", SpellCardGetHistory );
+	SetCommonData( "SpellPlayHistory", SpellCardPlayHistory );
+	SetCommonData( "SpellHighScore", SpellCardHighScore );
+	SetCommonData( "MusicRelease", MusicRelease );
+	SetCommonData( "StageRelease", StageRelease );
+	SetCommonData( "StageHighScore", StageHighScore );
+}
+function DataMinimize(){
+	let optioncontinue = GetCommonDataDefault( "Continue", 1 );
+	let optionbgg = GetCommonDataDefault( "BGGEnable", true );
+	let optionbge = GetCommonDataDefault( "BGEEnable", true );
+	let optionbgm = GetCommonDataDefault( "BGMEnable", true );
+	let optionse = GetCommonDataDefault( "SEEnable", true );
+	ReadData();
+	ClearCommonData();
+	SetCommonData( "Continue", optioncontinue );
+	SetCommonData( "BGGEnable", optionbgg );
+	SetCommonData( "BGEEnable", optionbge );
+	SetCommonData( "BGMEnable", optionbgm );
+	SetCommonData( "SEEnable", optionse );
+	CreateSaveData();
+}

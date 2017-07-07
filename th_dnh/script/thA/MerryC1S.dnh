@@ -1,0 +1,105 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let slow = false;
+	let Color = 255;
+	task Behavior(){
+		Wait( 30 );
+		SetShotDirectionType( ABSOLUTE );
+		Concentration01( 60 );
+		PlaySEEx( sePower1 );
+		Wait( 20 );
+		slow = true;
+		Wait( 40 );
+		loop{
+			loop( [ 1, 2 ][ Level == 3 ] ){ MakeShot(); }
+			slow = false;
+			Wait( [ 30, 10, 1, 1 ][ Level ] );
+			Concentration01( 60 );
+			PlaySEEx( sePower1 );
+			Wait( 20 );
+			slow = true;
+			Wait( 40 );
+			ExMove( true, count );
+		}
+	}
+	task MakeShot(){
+		let l = RandBlur( 832 );
+		let x;
+		let y;
+		if( absolute( l ) < 384 ){
+			y = [ GetClipMaxY(), GetClipMinY() ][ GetDir( l ) > 0 ];
+			x = absolute( l );
+		}
+		else{
+			x = [ GetClipMaxX(), GetClipMinX() ][ GetDir( l ) > 0 ];
+			y = absolute( l ) - 384;
+		}
+		let obj = SetHiddenObject( x, y, [ 80, 64, 48, 56 ][ Level ], atan2( GetPlayerY() - y, GetPlayerX() - x ), 0, true, true );
+		while( !Obj_BeDeleted( obj ) ){
+			Sudden( Obj_GetX( obj ), Obj_GetY( obj ), Obj_GetAngle( obj ) );
+			Sudden( Obj_GetX( obj ), Obj_GetY( obj ), Obj_GetAngle( obj ) + 180 );
+			yield;
+		}
+	}
+	task Sudden( let x, let y, let angle ){
+		let objcount = 0;
+		let color = RED21;
+		let obj = SetShotObject( x, y, 0, angle, color, 0 );
+		Obj_SetAlpha( obj, 0 );
+		Obj_SetCollisionToPlayer( obj, false );
+		while( !Obj_BeDeleted( obj ) && objcount < 40 ){
+			Obj_SetAlpha( obj, Smooth( 0, 255, objcount, 40 ) );
+			Obj_SetSpeed( obj, Smooth( 0, 0.8, objcount, 40 ) );
+			yield;
+			objcount++;
+		}
+		if( Obj_BeDeleted( obj ) ){ return; }
+		SetShotDirectionType( ABSOLUTE );
+		CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), 0.8, angle, color, 0 );
+		Obj_Delete( obj );
+	}
+	@Initialize{
+		SetLife( 450 );
+		SetScore( 2000000 );
+		SetTimer( 22 );
+		SetInvincibility( 130 );
+		SetDamageRate( 24, 18 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 7 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 20, imgCutInMerry, 192, 256 );
+		Behavior();
+	}
+	@MainLoop{
+		if( !GetCommonDataDefault( "SpellPractice", false ) && GetCommonDataDefault( "GlobalCount", count ) > GetCommonDataDefault( "StartCount", count ) + 5100 ){ SetCommonData( "BGStep", 1 ); }
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		Color = MinMax( Color + [ 3, -5 ][ slow ], 96, 255 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 20 * 4 + Level );
+		EndSpell();
+		SetCommonData( "ShowName", -1 );
+		PlaySEEx( seBossExplode );
+		DropItem( 10, 64 );
+		DropBomb();
+	}
+	@DrawLoop{
+		SetColor( 224, 112, 240 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+	@BackGround{ KhanBG( imgSpellKhan, Color ); }
+}

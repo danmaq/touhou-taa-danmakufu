@@ -1,0 +1,55 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Argv = GetArgumentDefault( 64 );
+	task Behavior(){
+		yield;
+		let dir = [ -1, 1 ][ GetX() > GetCenterX() ];
+		SetMovePosition03( GetCenterX() + 192 * dir - Argv * dir, GetY(), 20, 4 );
+		WaitSpeedDown( 0.3 );
+		SetShotDirectionType( PLAYER );
+		ascent( let i in 2..13 ){ CreateShot01( GetX(), GetY(), i / 2, 0, [ BLUE04, RED04 ][ dir == 1 ], 10 ); }
+		PlaySE( seShot1 );
+		SetAngle( [ 300, 240 ][ dir == 1 ] );
+		while( GetSpeed() < 3 ){
+			SetSpeed( GetSpeed() + 0.1 );
+			Wait( 2 );
+		}
+	}
+	@Initialize{
+		SetLife( 50 );
+		SetDamageRate( 2, 2 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count == 40 ){ SetDamageRate( 100, 30 ); }
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{
+		if( !BeVanished() ){
+			SetShotDirectionType( PLAYER );
+			let angle = 0;
+			while( angle < 360 ){
+				ascent( let speed in 1..6 ){
+					let dir = 1;
+					loop( 2 ){
+						CreateShot02( GetX(), GetY(), 15 + speed, angle + speed * 2 * dir, -1.2, speed * 2, WHITE02, 0 );
+						dir = -dir;
+					}
+				}
+				angle += 10;
+			}
+			PlaySE( seShot1 );
+			CreateItem( ITEM_1UP, GetX(), GetY() );
+		}
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei5, count );
+	}
+}

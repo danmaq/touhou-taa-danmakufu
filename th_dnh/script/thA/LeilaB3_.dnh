@@ -1,0 +1,27 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		Wait( 120 );
+		AddLife( -1 );
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetInvincibility( 120 );
+		SetDamageRate( 0, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		SetAlpha( 240 );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+}

@@ -1,0 +1,55 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetX( GetCenterX() );
+		SetY( -64 );
+		CreateEventFromScript( "Talk" );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 24, 0 );
+		yield;
+		count++;
+	}
+	@Finalize{ SetCommonData( "ShowName", 7 ); }
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( RIGHT, imgCutInMerry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			Enemy();
+			TextOutB( 70, "\c[RED]ちょっと待て！" );
+			TextOutB( 100, "\c[RED]あなた、いかにも\n巫女以外って感じの身なりね" );
+			TextOutB( 100, "\c[RED]侵入するには少々目立ちすぎるわ" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( RIGHT, imgCutInMerry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			Enemy();
+			TextOutB( 70, "\c[BLUE]ちょっと待て！" );
+			TextOutB( 100, "\c[RED]あなたのその身なり\n・・・明らかに侵入者ね" );
+			TextOutB( 100, "\c[RED]悪いけど、そのまま\n回れ右してもらうわ" );
+		}
+		End();
+	}
+}

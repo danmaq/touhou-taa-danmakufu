@@ -1,0 +1,167 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let bgm = false;
+	task Behavior(){
+		yield;
+		while( GetEventStep() != 1 ){ yield; }
+		SetCommonData( "ShowName", 7 );
+		while( GetEventStep() != 2 ){ yield; }
+		PlayMusicEx( 11 );
+		Wait( 30 );
+		bgm = true;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		CreateEventFromScript( "Talk" );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() && bgm ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 24, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( RIGHT, imgCutInMerry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			Enemy();
+			TextOut( "\c[RED]いきなり攻撃してくるなんて、\n一体あんた何なのよ！" );
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			Player();
+			TextOut( "\c[BLUE]こんなところに普通の人間がいるなんて\n・・・やっぱこの遺跡怪しいわね" );
+			Enemy();
+			SetStep( 1 );
+			SetNameFromTexture( RIGHT, imgNameMerry );
+			TextOut( "\c[RED]あなたよりは怪しくないわよ！\nこの通り、普通の人間だし" );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]あなたみたいな普通の人間が\n私につっかかってくる時点で十分怪しいわ" );
+			TextOut( "\c[BLUE]見た限り迷子って\n感じでもなさそうだし" );
+			Enemy();
+			DeleteName( RIGHT );
+			TextOut( "\c[RED]あなたみたいな侵入者を排除しに来たのよ" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]ここで一体何隠れてやってるのかしら？" );
+			Enemy();
+			TextOut( "\c[RED]もうすぐ、この幻想郷・・・いえ\n全世界の時が消滅するわ" );
+			Player();
+			TextOut( "\c[BLUE]そうしたらあんたも消えるんじゃないの？" );
+			Enemy();
+			TextOut( "\c[RED]あの方は手伝ってくれたら\n二人の命は保障するって言ってくれたわ" );
+			Player();
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]二人？" );
+			Enemy();
+			TextOut( "\c[RED]ええ、私ともう一人人間がいるわ。\n私達はそれぞれあの方に『能力』をもらって" );
+			TextOut( "\c[RED]もう一人は術の補佐を\n私は周辺の警備をしているのよ" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]あんた、騙されてるんじゃないの？" );
+			Enemy();
+			TextOut( "\c[RED]なんでそう思うのよ" );
+			Player();
+			TextOut( "\c[BLUE]もし、世界の時が消えたら\n保障も何もみんな消滅するんじゃないの？" );
+			Enemy();
+			TextOut( "\c[RED]もしみんな消えるなら\nあの方も消えることになるわ。" );
+			TextOut( "\c[RED]そもそもそんな自殺じみたこと\n考えるようなお方じゃない" );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]いやまぁ。" );
+			Enemy();
+			TextOut( "\c[RED]さ、立ち話が長くなったわね" );
+			SetStep( 2 );
+			TextOut( "\c[RED]そこまで分かったら\nそろそろ立ち去ってもらおうかしら？" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]ところで、あんたは\nこの寒さに気付いてないのかしら？" );
+			Enemy();
+			TextOut( "\c[RED]なんのことかしら・・・とにかく\n立ち去らないなら強行退去させるわ" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( RIGHT, imgCutInMerry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 256 );
+			Enemy();
+			TextOut( "\c[RED]いきなり攻撃してくるなんて、\n一体あんた何なのよ！" );
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			Player();
+			TextOut( "\c[BLUE]侵入者だぜ" );
+			SetStep( 1 );
+			SetNameFromTexture( RIGHT, imgNameMerry );
+			Enemy();
+			TextOut( "\c[RED]じゃ、強制退去ね" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]カタいこと言うなよ" );
+			Enemy();
+			TextOut( "\c[RED]柔らかいことって何なのよ" );
+			Player();
+			DeleteName( RIGHT );
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]そうだな・・・とりあえず\nこの冷気をなんとかしてもらおうか" );
+			Enemy();
+			TextOut( "\c[RED]それは悪かったね、でももう少しなのよ" );
+			Player();
+			TextOut( "\c[BLUE]少しも待たんぜ" );
+			Enemy();
+			TextOut( "\c[RED]固いこと言わないの。\nもう少しであの方の術が完成するのよ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]幻想郷を氷漬けにする術か？" );
+			Enemy();
+			TextOut( "\c[RED]半正解ね。正しくは幻想郷\n・・・いえ、全世界の時を消す術よ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]そいつはまた物騒な術を\n持ち出したものだな" );
+			TextOut( "\c[BLUE]・・・で、あんたはそれでいいのか？" );
+			Enemy();
+			TextOut( "\c[RED]？" );
+			Player();
+			TextOut( "\c[BLUE]世界の時が消えるってことは\nあんたも消えるってことじゃないのか？" );
+			Enemy();
+			TextOut( "\c[RED]ご心配なくてよ。" );
+			TextOut( "\c[RED]私達の命は保障するって\nあの方は言っていたわ" );
+			TextOut( "\c[RED]それに私達が消えるならあの方も消える。" );
+			TextOut( "\c[RED]そんな自殺じみたこと\n考えるようなお方じゃないわ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]達？他にもあんたみたいな\n人間がいるのか？" );
+			Enemy();
+			TextOut( "\c[RED]もう一人は能力の制御が\nうまいからって術の補佐に回されたわ。" );
+			TextOut( "\c[RED]私はパワーが有り余り過ぎて\n制御がうまく効かないから・・・" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]お払い箱ってわけだな" );
+			Enemy();
+			TextOut( "\c[RED]警備よ！近辺警備！\nつまり最初からあなたを倒す為に来たの！" );
+			SetStep( 2 );
+			TextOut( "\c[RED]そこまで分かったら\nそろそろ立ち去ってもらおうかしら？" );
+			Player();
+			TextOut( "\c[BLUE]あんたこそ早めに\n引いたほうが身のためだぜ" );
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]外の世界からの迷い人を\n消し炭にするなんて寝覚め悪いわな" );
+			Enemy();
+			TextOut( "\c[RED]なんのことかしら・・・とにかく\n立ち去らないなら強行退去させるわ" );
+		}
+		End();
+	}
+}

@@ -1,0 +1,61 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task BuckShot( let speed, let graphic, let clustergraphic, let clustergap ){
+		let obj = SetShotObject( GetX(), GetY(), speed, rand( 0, 360 ), graphic, 30 );
+		while( !Obj_BeDeleted( obj ) ){
+			yield;
+			let nowspeed = Obj_GetSpeed( obj );
+			Obj_SetSpeed( obj, nowspeed - 0.05 );
+			if( nowspeed < 0.1 ){
+				SetShotDirectionType( PLAYER );
+				let angle = 0;
+				while( angle < 360 ){
+					CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), rand( 1, 1.5 + Level ), angle, clustergraphic, 20 );
+					angle += clustergap;
+				}
+				PlaySEEx( seShot1 );
+				Obj_Delete( obj );
+				return;
+			}
+		}
+	}
+	task Behavior(){
+		yield;
+		let pattern = 0;
+		loop{
+			let color = [ PURPLE21, GREEN21, BLUE21, YELLOW21, AQUA21, ORANGE21, WHITE21, RED21 ][ pattern % 8 ];
+			Wait( 100 );
+			loop( 5 ){ BuckShot( rand( 4.5, 5.5 ), [ PURPLE03, GREEN03, BLUE03, YELLOW03, AQUA03, ORANGE03, WHITE03, RED03 ][ pattern % 8 ], color, [ 30, 15, 12, 8 ][ Level ] ); }
+			loop( 8 ){ BuckShot( rand( 3.6, 4.5 ), [ PURPLE02, GREEN02, BLUE02, YELLOW02, AQUA02, ORANGE02, WHITE02, RED02 ][ pattern % 8 ], color, [ 45, 24, 20, 12 ][ Level ] ); }
+			loop( 12 ){ BuckShot( rand( 3, 4 ), [ PURPLE01, GREEN01, BLUE01, YELLOW01, AQUA01, ORANGE01, WHITE01, RED01 ][ pattern % 8 ], color, [ 90, 45, 30, 20 ][ Level ] ); }
+			loop( 20 ){ BuckShot( rand( 2.5, 3.5 ), [ PURPLE04, GREEN04, BLUE04, YELLOW04, AQUA04, ORANGE04, WHITE04, RED04 ][ pattern % 8 ], color, [ 120, 60, 36, 24 ][ Level ] ); }
+			PlaySEEx( seShot1 );
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 2100 );
+		SetTimer( 40 );
+		SetInvincibility( 50 );
+		SetDamageRate( 100, 60 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 24 );
+		yield;
+		count++;
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyLily, 1, 1, 58, 72, count ); }
+}

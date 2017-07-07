@@ -1,0 +1,26 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		Wait( 180 );
+		AddLife( -1 );
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetInvincibility( 120 );
+		SetDamageRate( 0, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+}

@@ -1,0 +1,103 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	let Hide = false;
+	let Phase = 0;
+	let NextPhaseTime = 2800;
+	let ShotSETime = [];
+	task Behavior(){
+		yield;
+		PlaySEEx( sePower1 );
+		Concentration01( 120 );
+		ascent( let i in 0..6000 ){
+			ShotSETime = ShotSETime ~ [ false ];
+			if( i % 50 == 0 ){ yield; }
+		}
+		Explosion01( GetX(), GetY(), 12, 0.5, 16 );
+		PlaySEEx( seKira1 );
+		Hide = true;
+		let pattern = 0;
+		while( Phase == 0 ){
+			SetShotDirectionType( PLAYER );
+			CreateLaserA( 0, GetX(), GetY(), Hypot( GetX() - GetPlayerX(), GetY() - GetPlayerY() ), 16, WHITE05, 60 );
+			SetLaserDataA( 0, 0, 0, 0, 0, 0, 0 );
+			let angle = 0;
+			while( angle < 360 ){
+				ascent( let i in 0..10 ){
+					CreateShotA( 1, 0, 0, i * 3 + 10 );
+					SetShotDataA( 1, 0, Smooth( 1.5, 5, i, 9 ), angle + GetAngleToPlayer(), 0, 0, 5, ORANGE02 );
+					AddShot( NextPhaseTime, 0, 1, 0 );
+					ShotSETime[ count + NextPhaseTime ] = true;
+				}
+				angle += 60;
+			}
+			SetShotKillTime( 0, NextPhaseTime + 50 );
+			FireShot( 0 );
+			PlaySEEx( seLaser1 );
+			SetMovePosition03( GetPlayerX(), GetPlayerY(), 24, 7 );
+			Wait( Max( 150 - pattern * 10, 24 ) );
+			WayShot01( 5, 5, 1.5, PURPLE04, 20 );
+			WayShotGap01( 160, 160, 0.3, YELLOW04, 20, 180 );
+			PlaySEEx( seShot3 );
+			pattern++;
+		}
+		SetMovePosition03( GetCenterX(), GetCenterY(), 24, 2.5 );
+		WaitZeroSpeed();
+		pattern = 0;
+		loop{
+			if( pattern % 5 != 0 ){
+				let speed = 0.8;
+				loop( 2 ){
+					CircleShotGap01( 90, speed, GREEN21, 10, count );
+					CircleShotGap01( 90, speed, PURPLE21, 10, -count );
+					speed += 0.7;
+				}
+				PlaySEEx( seShot2 );
+			}
+			Wait( 7 );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 300 );
+		SetScore( 12800000 );
+		SetTimer( 95 );
+		SetInvincibility( 130 );
+		SetDamageRate( 0, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetDurableSpellCard();
+		SetCommonData( "ShowName", 9 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 37, imgCutInRenko, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count == NextPhaseTime ){ Phase++; }
+		if( count > NextPhaseTime && ShotSETime[ count ] ){
+			PlaySEEx( seShot1 );
+		}
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		if( !Hide && !OnBomb() ){ Collision( 32, 16 ); }
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 118 );
+		EndSpell();
+		DropItem( 36, 64 );
+	}
+	@DrawLoop{
+		if( !Hide ){
+			DrawCircle( imgSystemCircleBig, count, 256 );
+			if( !OnBomb() ){ DrawBossChr( imgEnemyRenko, 1, 1, 43, 72, count ); }
+		}
+	}
+	@BackGround{ RenkoBG( imgSpellRenko ); }
+}

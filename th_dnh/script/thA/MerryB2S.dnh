@@ -1,0 +1,113 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 3 );
+	let PrevTime = GetTimer();
+	let slow = false;
+	let Color = 255;
+	task Laser(){
+		SetShotDirectionType( ABSOLUTE );
+		ascent( let i in 0..2 ){
+			CreateLaserA( 0, 0, [ GetClipMinY(), GetClipMaxY() ][ i ], 448, 32, [ RED01, BLUE01 ][ i ], 60 );
+			SetLaserDataA( 0, 0, 0, 0, 0, 0, 0 );
+			FireShot( 0 );
+		}
+		PlaySEEx( seLaser1 );
+		Wait( 60 );
+		let space = [ 48, 32, 28, 24 ][ Level ];
+		let laserspace = space * 2;
+		let pattern = 0;
+		loop{
+			ascent( let i in 0..2 ){
+				SetShotDirectionType( ABSOLUTE );
+				let x = GetPlayerX() % space - ( space / 2 ) * ( 1 - i );
+				while( x <= 400 ){
+					CreateShotA( 0, x, GetCenterY() + 224 * [ -1, 1 ][ i ], 10 );
+					SetShotDataA( 0, 0, 0, 90 + i * 180, 0, 0.01, 0.7, [ RED21, BLUE21 ][ i ] );
+					FireShot( 0 );
+					x += space;
+				}
+				PlaySEEx( seShot3 );
+				Wait( 50 );
+			}
+			if( pattern % 4 == 3 ){
+				SetShotDirectionType( ABSOLUTE );
+				ascent( let i in 0..2 ){
+					let x = GetPlayerX() % laserspace - ( laserspace / 2 ) * ( 1 - i );
+					while( x <= 400 ){
+						CreateLaserA( 0, x, GetCenterY() + 224 * [ -1, 1 ][ i ], 464, 12, [ RED01, BLUE01 ][ i ], 100 );
+						SetLaserDataA( 0, 0, 90 + i * 180 + [ RandBlur( 5 ), 0 ][ pattern == 4 ], 0, 0, 0, 0 );
+						SetShotKillTime( 0, 200 );
+						FireShot( 0 );
+						x += laserspace;
+					}
+					PlaySEEx( seLaser1 );
+				}
+			}
+			pattern++;
+		}
+	}
+	task Behavior(){
+		yield;
+		Concentration01( 60 );
+		PlaySEEx( sePower1 );
+		Wait( 60 );
+		slow = true;
+		ExMove( false, count );
+		Slow( 1 );
+		Wait( 30 );
+		Slow( 2 );
+		Wait( 16 );
+		Laser();
+		Wait( 30 );
+		slow = false;
+		Slow( 1 );
+		Wait( 30 );
+		Slow( 0 );
+		let pattern = 0;
+		loop{
+			SetShotDirectionType( PLAYER );
+			CircleShot01( 40 - Level * 10, 0.5, PURPLE12, 30 );
+			PlaySEEx( seShot1 );
+			Wait( [ 15, 120 ][ pattern % 3 == 0 ] );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 3000 );
+		SetScore( 2000000 );
+		SetTimer( 65 );
+		SetInvincibility( 160 );
+		SetDamageRate( 100, 8 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 7 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 17, imgCutInMerry, 192, 256 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		Color = MinMax( Color + [ 3, -5 ][ slow ], 96, 255 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 17 * 4 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+	@BackGround{ KhanBG( imgSpellKhan, Color ); }
+}

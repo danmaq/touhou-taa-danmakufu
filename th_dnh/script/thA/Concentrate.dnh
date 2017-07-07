@@ -1,0 +1,16 @@
+script_enemy_main{
+#include_function ".\FUNC\Enemy.dnh"
+	task Behavior(){
+		Wait( 1 );
+		Concentration02( 100 );
+		PlaySEEx( sePower1 );
+		Wait( 120 );
+		Explosion01( GetX(), GetY(), 16, 0.3, 16 );
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 1 );
+		Behavior();
+	}
+	@MainLoop{ yield; }
+}

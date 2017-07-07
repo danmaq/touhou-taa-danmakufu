@@ -1,0 +1,7 @@
+let imgNameAlice = GetCurrentScriptDirectory() ~ "IMAGE\CUTIN\NAME\Alice.png";
+let imgNameKene = GetCurrentScriptDirectory() ~ "IMAGE\CUTIN\NAME\Kene.png";
+let imgNameLeila = GetCurrentScriptDirectory() ~ "IMAGE\CUTIN\NAME\Leila.png";
+let imgNameLily = GetCurrentScriptDirectory() ~ "IMAGE\CUTIN\NAME\Lily.png";
+let imgNameMerry = GetCurrentScriptDirectory() ~ "IMAGE\CUTIN\NAME\Merry.png";
+let imgNameRenko = GetCurrentScriptDirectory() ~ "IMAGE\CUTIN\NAME\Renko.png";
+let imgNameSakuya = GetCurrentScriptDirectory() ~ "IMAGE\CUTIN\NAME\Sakuya.png";

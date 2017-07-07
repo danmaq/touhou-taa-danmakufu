@@ -1,0 +1,10 @@
+script_enemy_main{
+	let count = 0;
+	let Argv = GetArgument();
+	@Initialize{ SetLife( 1 ); }
+	@MainLoop{
+		MotionBlurEx( ALL, Argv, 240, ALPHA );
+		if( count > Argv ){ VanishEnemy(); }
+		count++;
+	}
+}

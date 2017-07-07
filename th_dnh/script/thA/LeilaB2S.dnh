@@ -1,0 +1,136 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_LEILAB2S";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let pattern = 0;
+		loop{
+			PlaySEEx( sePower1 );
+			Concentration01( 120 );
+			Wait( 120 );
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 2, angle, pattern );
+				angle += [ 120, 90, 72, 60 ][ Level ];
+			}
+			PlaySEEx( seShadow );
+			Wait( 300 - Level * 10 );
+			ExMove( false, count );
+			Wait( 240 - Level * 50 );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 444 );
+		SetScore( 1700000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 18, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 6 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 11, imgCutInLeila, 192, 304 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, [ -1, 7 ][ count > 130 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		CreateSpellResult( 44 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{
+		SetAlpha( 240 );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+	@BackGround{ LeilaBG( imgSpellChirch, imgSpellLuna, imgSpellRedWall, count ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_LEILAB2S";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgument();
+	let PrevLife;
+	task Rotate(){
+		loop{
+			SetAngle( GetAngle() + Smooth( 1, 0.1, count, 256 ) * [ 1, -1 ][ Argv % 2 ] );
+			yield;
+		}
+	}
+	task Behavior(){
+		yield;
+		Rotate();
+		Wait( 30 );
+		loop{
+			CreateEnemyFromScript( "Shadow2", GetX(), GetY(), 0, GetAngle(), Argv );
+			PlaySEEx( seShadow );
+			Wait( 20 );
+		}
+	}
+	@Initialize{
+		SetLife( 333 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}
+script_enemy Shadow2{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_LEILAB2S";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgument();
+	let PrevLife;
+	task Behavior(){
+		yield;
+		let ziki = IsHidden();
+		Wait( 100 );
+		let gap = [ GetAngle(), GetAngleToPlayer() ][ ziki ];
+		let pattern = 0;
+		loop( 6 ){
+			CircleShotGap01( 72, 0.5, [ [ RED21, BLUE21 ][ Argv % 2 ], [ PURPLE21, AQUA21 ][ Argv % 2 ] ][ ziki ], 5, pattern * 3 * [ -1, 1 ][ Argv % 2 ] + gap );
+			PlaySE( seShot1 );
+			Wait( 12 );
+			pattern++;
+		}
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 256 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleGreen, imgEnemyShadow, count ); }
+}

@@ -1,0 +1,116 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let ColdTimer = 90;
+	task Cold( let x, let y ){
+		let angle = rand( 0, 360 );
+		let speed = rand( 0.9, 1.2 );
+		CreateShotA( 0, x, y, ColdTimer );
+		SetShotDataA( 0, 0, 6, angle, 0, -0.5, 0, BLUE01 );
+		SetShotDataA( 0, 15, 0, angle + 180, 0, 0.01, speed, BLUE01 );
+		FireShot( 0 );
+		if( Level == 3 ){
+			let gap = -1.5;
+			loop( 2 ){
+				CreateShotA( 0, x, y, ColdTimer );
+				SetShotDataA( 0, 0, 6, angle + gap, 0, -0.5, 0, BLUE04 );
+				SetShotDataA( 0, 15, 0, angle + gap + 180, 0, 0.01, speed, BLUE04 );
+				FireShot( 0 );
+				gap += 3;
+			}
+		}
+		if( count % 4 == 0 ){ return; }
+		PlaySEEx( seKira1 );
+		Wait( ColdTimer );
+		if( count % 8 == 0 ){ return; }
+		PlaySEEx( seShot1 );
+	}
+	task Blizzard( let gap ){
+		let obj = SetHiddenObject( GetX(), GetY(), 0, GetAngleToPlayer() + gap, 0, true, true );
+		let count = 0;
+		while( !Obj_BeDeleted( obj ) ){
+			let speed = Obj_GetSpeed( obj );
+			Obj_SetSpeed( obj, speed + 0.05 );
+			if( speed > 1.5 && count % [ 3, 5 ][ Level == 0 ] == 0 ){ Cold( Obj_GetX( obj ), Obj_GetY( obj ) ); }
+			yield;
+			count++;
+		}
+	}
+	task Behavior(){
+		function ShotBlizzard( let space, let gap ){
+			let angle = gap;
+			while( angle < 360 ){
+				Blizzard( angle );
+				angle += space;
+			}
+		}
+		loop{
+			PlaySEEx( sePower1 );
+			Concentration02( 90 );
+			Wait( 90 );
+			alternative( Level )
+			case( 0, 1 ){
+				Blizzard( 0 );
+				Wait( 30 );
+				ShotBlizzard( 180, 90 );
+				Wait( 30 );
+				ShotBlizzard( 120, 60 );
+			}
+			case( 2, 3 ){
+				Blizzard( 0 );
+				Wait( 15 );
+				ShotBlizzard( 180, 90 );
+				Wait( 15 );
+				ShotBlizzard( 120, 60 );
+				Wait( 15 );
+				ShotBlizzard( 90, 45 );
+				Wait( 15 );
+				ShotBlizzard( 72, 0 );
+			}
+			Wait( 150 );
+			let space = [ 30, 30, 16, 20 ][ trunc( Level / 2 ) ];
+			CircleShot02( space, 10, -0.4, 1, WHITE02, 10 );
+			if( Level != 0 ){ CircleShotGap02( space, 10, -0.36, 1.2, WHITE02, 10, space / 2 ); }
+			PlaySEEx( seShot3 );
+			ExMove( false, count );
+			Wait( 50 );
+		}
+	}
+	@Initialize{
+		SetLife( 446 );
+		SetScore( 720000 );
+		SetTimer( 50 );
+		SetInvincibility( 100 );
+		SetDamageRate( 18, 24 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 4 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 5, imgCutInLetty, 192, 304 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 15 );
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 20 + Level );
+		EndSpell();
+		SetCommonData( "ShowName", -1 );
+		PlaySEEx( seBossExplode );
+		DropItem( 10, 64 );
+		DropExtend();
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyLetty, 1, 1, 31, 76, count ); }
+	@BackGround{ LettyBG( imgSpellIceWall, count ); }
+}

@@ -1,0 +1,9 @@
+let imgED = [
+	GetCurrentScriptDirectory() ~ "IMAGE\ED\0.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ED\Reimu1.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ED\Reimu2.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ED\Reimu3.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ED\Marisa1.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ED\Marisa2.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ED\Marisa3.png"
+];

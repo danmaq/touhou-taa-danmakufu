@@ -1,0 +1,78 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		PlaySEEx( seBossExplode );
+		CreateEventFromScript( "Talk" );
+		while( GetEventStep() != 1 ){ yield; }
+		SetCommonData( "Result", true );
+		let clear = 30000000;
+		let point = GetPoint() * 50000 - GetCommonDataDefault( "ResultPoint", 0 );
+		let graze = GetGraze() * 500 - GetCommonDataDefault( "ResultGraze", 0 );
+		let rank = [ 50, 100, 120, 150 ][ GetCommonDataDefault( "Level", 1 ) ];
+		let total = ( clear + point + graze ) * ( rank / 100 );
+		SetCommonData( "ResultClear", clear );
+		SetCommonData( "ResultPoint", point );
+		SetCommonData( "ResultGraze", graze );
+		SetCommonData( "ResultRank", rank );
+		SetCommonData( "ResultTotal", total );
+		AddScore( total );
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetX( -128 );
+		SetY( -128 );
+		LoadSE( seBossExplode );
+		ForbidBomb( true );
+		ForbidShot( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( !OnEvent() ){ VanishEnemy(); }
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu3 );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			SetChar( RIGHT, imgCutInLilyCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Player();
+			TextOut( "\c[BLUE]なによ、あんたが犯人じゃないの？" );
+			Enemy();
+			TextOut( "\c[RED]そういうことは攻撃してくる前に\n気づいて欲しかったです・・・" );
+			TextOut( "\c[RED]心当たりだってあるのに・・・" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]そういうことは先に言う！" );
+			Enemy();
+			SetStep( 1 );
+			TextOut( "\c[RED]だからそれ私のセリフですよ・・・くすん" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa4 );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			SetChar( RIGHT, imgCutInLilyCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Player();
+			TextOut( "\c[BLUE]まいったな、\nとっちめた犯人がまさかシロとは" );
+			Enemy();
+			TextOut( "\c[RED]リリーホワイトですから・・・くすん" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]あー、お前は\nなんか心当たりはあるのか？" );
+			Enemy();
+			TextOut( "\c[RED]この山の向こうのお屋敷の床下で\n冬眠してたら中から物凄い冷気が・・・" );
+			Player();
+			SetStep( 1 );
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]山の向こうか・・・\nちっ、行ったことの無いところだぜ" );
+		}
+		End();
+	}
+}

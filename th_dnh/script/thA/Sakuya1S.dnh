@@ -1,0 +1,70 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let BlackOutCount = -100;
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		SetShotDirectionType( PLAYER );
+		let pattern = 0;
+		while( 1 ){
+			Concentration01( [ 50, 120 ][ pattern < 3 ] );
+			PlaySEEx( sePower1 );
+			Wait( [ 50, 120 ][ pattern < 3 ] );
+			descent( let i in 0..5 ){
+				let color = [ BLUE32, RED32 ][ i % 2 ];
+				let dir = [ 1, -1 ][ i % 2 ];
+				let angle = 0;
+				while( angle < 360 ){
+					let firstangle = angle;
+					CreateShotA( 0, GetX(), GetY(), 10 );
+					SetShotDataA( 0, 0, 6, firstangle, 0, -0.03, 3, color );
+					SetShotDataA( 0, 5 + i * 5, 0, firstangle + [ 10, 30, 60, 90, 120, 160 ][ pattern % 6 ] * dir, 0, 0, 0, color );
+					SetShotDataA( 0, 30 + i * 5, 1, NULL, 0, 0.1, 2, color );
+					FireShot( 0 );
+					angle += [ 20, 12, 8, 6 ][ Level ];
+				}
+				PlaySEEx( seShot1 );
+				Wait( 5 );
+			}
+			Wait( 10 );
+			if( pattern % 3 == 2 ){ ExMove( false, count ); }
+			BlackOutCount = count;
+			TimeStop( 20, 1, 0, 1 );
+			MotionBlur( SHOT, 20, 244 );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 398 );
+		SetScore( 880000 );
+		SetTimer( 65 );
+		SetInvincibility( 130 );
+		SetDamageRate( 18, 5 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 3 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 2, imgCutInSakuya, 192, 320 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 20 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 8 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{ DrawBossChr( imgEnemySakuya, 1, 1, 44, 86, count ); }
+	@BackGround{ SakuyaBG( imgSpellRotateStone, imgSpellBlood, BlackOutCount, 20, count ); }
+}

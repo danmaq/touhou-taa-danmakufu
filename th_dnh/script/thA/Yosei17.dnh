@@ -1,0 +1,93 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquecode = RandBlur( 32767 );
+	let uniquestr = ToString( uniquecode );
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetMovePosition03( GetX(), GetClipMinY() + 32, 20, 3 );
+		WaitSpeedDown( 0.6 );
+		SetShotDirectionType( PLAYER );
+		local{
+			let speed = [ 1, 1.5 ][ Level == 0 ];
+			loop( 2 + Level ){
+				CreateShot01( GetX(), GetY(), speed, 0, AQUA04, 20 );
+				speed += 0.5;
+			}
+		}
+		PlaySEEx( seShot1 );
+		Wait( 100 );
+		SetShotDirectionType( PLAYER );
+		local{
+			let speed = 1;
+			loop( 2 ){
+				CircleShot01( [ 10, 20 ][ Level == 0 ], speed, WHITE12, 10 );
+				speed += 0.3;
+			}
+		}
+		PlaySEEx( seShot2 );
+		Wait( 20 );
+		SetShotDirectionType( PLAYER );
+		if( Level != 0 ){
+			let speed = 1.5;
+			loop( Max( Level, 2 ) ){
+				WayShot01( [ 3, 7.5 ][ trunc( Level / 2 ) ], 3, speed, WHITE12, 10 );
+				speed += 0.5;
+			}
+		}
+		PlaySEEx( seShot1 );
+		Wait( 120 );
+		let pangle = GetAngleToPlayer();
+		loop( 4 ){
+			CreateEnemyFromScript( "Shadow", GetX(), GetY(), 5, pangle, uniquecode );
+			PlaySEEx( seShadow );
+			Wait( 10 );
+		}
+		Wait( 60 );
+		while( GetSpeed() < 5 ){
+			SetSpeed( GetSpeed() + 0.03 );
+			yield;
+		}
+	}
+	@Initialize{
+		SetLife( 20 );
+		SetDamageRate( 1, 10 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 50 ){ SetDamageRate( 100, 100 ); }
+		TaskShadowInterface( uniquestr, 100 );
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		DropItem( [ 1, 3 ][ count > 240 ], 32 );
+	}
+	@DrawLoop{
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei2, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let PrevLife;
+	@Initialize{
+		SetLife( 5 );
+		PrevLife = GetLife();
+	}
+	@MainLoop{
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

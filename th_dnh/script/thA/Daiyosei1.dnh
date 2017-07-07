@@ -1,0 +1,111 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let HideAlpha = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let Turn = 0;
+	task Behavior(){
+		yield;
+		WaitZeroSpeed();
+		loop{
+			Concentration02( 100 );
+			PlaySEEx( sePower2 );
+			Wait( 80 );
+			alternative( Turn % 2 )
+			case( 0 ){
+				SetShotDirectionType( ABSOLUTE );
+				let dir = -1;
+				loop( [ 2, 1 ][ Turn == 0 ] ){
+					let angle = 0;
+					while( angle <= [ 60, 120 ][ Turn == 0 ] ){
+						let speed = Smooth( [ 1, 0.5 ][ trunc( Level / 2 ) ], [ 3, 5 ][ trunc( Level / 2 ) ], angle, 120 );
+						loop( [ 1, 2, 3, 5 ][ Level ] ){
+							let firstspeed = speed / 3;
+							let gap = angle * dir * [ 1, -1 ][ trunc( Turn / 2 ) % 2 ];
+							ascent( let i in 0..[ 2, 4 ][ Level == 3 ] ){ CircleShotGap02( 120, firstspeed, 0.05, speed, BLUE11, 5, gap + [ 0, 57.5 ][ trunc( i / 2 ) ] + [ 0, 1.5 ][ i % 2 ] ); }
+							speed += [ 0.4, 0.6 ][ trunc( Level / 2 ) ];
+						}
+						PlaySEEx( seShot3 );
+						Wait( 5 );
+						angle += 5;
+					}
+					dir = -dir;
+				}
+			}
+			case( 1 ){
+				SetShotDirectionType( PLAYER );
+				if( Level == 3 ){
+					CircleShot01( 5, 2, ORANGE12, 20 );
+					CircleShot01( 5, 1, ORANGE12, 7 );
+				}
+				ascent( let i in 0..6 ){
+					let speed = 1.5;
+					loop( [ 6, 4 ][ Level == 0 ] ){
+						if( trunc( Turn / 2 ) % 2 == 0 ){
+							let limit = [ 2, 5 ][ trunc( Level / 2 ) ];
+							WayShot01( limit * trunc( i / 2 ), limit, speed, [ PURPLE31, GREEN31 ][ trunc( i / 2 ) % 2 ], 5 );
+						}
+						else{
+							let dir = 1;
+							loop( 2 ){
+								CreateShotA( 0, GetX(), GetY(), 5 );
+								SetShotDataA( 0, 0, speed, rand( 50, 65 ) * dir, 0, 0, speed, PURPLE31 );
+								SetShotDataA( 0, 40, NULL, [ 0, [ -12, -8, 0, 8, 12 ][ rand_int( 0, 4 ) ] ][ Level == 3 ], 0, -1, 0, PURPLE31 );
+								SetShotDataA( 0, 50, speed / [ 1.7, 1.5, 1, 4 ][ Level ], NULL, 0, 0, speed, PURPLE31 );
+								FireShot( 0 );
+								dir = -dir;
+							}
+						}
+						speed += [ 0.4, 0.8 ][ trunc( Level / 2 ) ];
+					}
+					PlaySEEx( seShot1 );
+					Wait( 20 );
+				}
+			}
+			ExMove( false, count );
+			Wait( 16 );
+			Turn++;
+			Wait( 84 );
+		}
+	}
+	@Initialize{
+		SetLife( 1999 );
+		SetTimer( 28 );
+		SetInvincibility( 200 );
+		SetDamageRate( 100, 90 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 0, 0, 0 );
+		Behavior();
+		SetCommonData( "ShowName", 0 );
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		HideAlpha = MinMax( HideAlpha + [ -16, 7 ][ GetSpeed() < 0.1 ], 0, 255 );
+		SetEnemyMarker( HideAlpha > 0 );
+		if( HideAlpha > 64 ){ Collision( 36, [ 0, 20 ][ HideAlpha == 255 ] ); }
+		SEShotHitBoss( seDamage, count );
+		yield;
+		count++;
+	}
+	@Finalize{
+		SetCommonData( "ShowName", -1 );
+		PlaySEEx( seBossExplode );
+		DropItem( 6, 64 );
+	}
+	@DrawLoop{
+		if( HideAlpha != 0 ){
+			SetGraphicScale( Smooth( 0, 1, HideAlpha, 255 ), Smooth( 2, 1, HideAlpha, 255 ) );
+			SetAlpha( HideAlpha );
+			SetGraphicAngle( [ 0, 180 ][ Turn % 2 ], 0, 0 );
+			DrawBossChr( imgEnemyDaiyosei, 1, 1, 47, 64, count );
+			SetAlpha( 255 );
+			SetGraphicAngle( 0, 0, 0 );
+			SetGraphicScale( 1, 1 );
+		}
+	}
+}

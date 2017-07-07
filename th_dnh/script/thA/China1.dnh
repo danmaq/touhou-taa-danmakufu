@@ -1,0 +1,62 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 0 );
+	let PrevTime = GetTimer();
+	task Behavior(){
+		Wait( 130 );
+		SetShotDirectionType( ABSOLUTE );
+		let anglegap = 0;
+		while( 1 ){
+			loop( [ 30, 40, 40, 60 ][ Level ] ){
+				ascent( let angle in 0..4 ){
+					ascent( let i in 0..[ 2, 4 ][ trunc( Level / 2 ) ] ){
+						let firstangle = angle * 90 + anglegap * [ 1, -1, -1, 1 ][ i ] + GetAngleToPlayer();
+						let color = [ [ WHITE23, RED23, ORANGE23, YELLOW23 ][ angle ], [ GREEN23, AQUA23, BLUE23, PURPLE23 ][ angle ] ][ i % 2 ];
+						CreateShotA( 0, GetX(), GetY(), 10 );
+						SetShotDataA( 0, 0, [ 4.5, 1.5 ][ i % 2 ] + Level / 2, firstangle, 0, -0.1, 1, color );
+						SetShotDataA( 0, [ 50, 70, 50, 40 ][ Level ], [ 1.2, 1.5 ][ i % 2 ], firstangle + [ -90, 60, 60, -90 ][ i ], 0, 0, [ 1.2, 1.5 ][ i % 2 ], color );
+						FireShot( 0 );
+					}
+				}
+				PlaySEEx( seShot1 );
+				anglegap += [ 27, 8 ][ trunc( Level / 2 ) ];
+				Wait( [ 8, 5, 5, 5 ][ Level ] );
+			}
+			if( Level == 3 ){
+				CircleShot01( 6, 1.1, RED01, 20 );
+				PlaySEEx( seShot3 );
+			}
+			ExMove( false, count );
+		}
+	}
+	@Initialize{
+		SetLife( 1900 );
+		SetTimer( 40 );
+		SetInvincibility( 50 );
+		SetDamageRate( 100, 40 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 0, 0, 0 );
+		SetEnemyMarker( true );
+		Behavior();
+		SetCommonData( "ShowName", 2 );
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 20 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		SetCommonData( "ShowName", -1 );
+		PlaySEEx( seBossExplode );
+		DropItem( 10, 64 );
+		DropBomb();
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyChina, 1, 1, 47, 86, count ); }
+}

@@ -1,0 +1,7 @@
+let imgSystemBorder = GetCurrentScriptDirectory() ~ "IMAGE\SYSTEM\Border.png";
+let imgSystemCircleBig = GetCurrentScriptDirectory() ~ "IMAGE\SYSTEM\CircleBig.png";
+let imgSystemCircleBlue = GetCurrentScriptDirectory() ~ "IMAGE\SYSTEM\CircleBlue.png";
+let imgSystemCircleGreen = GetCurrentScriptDirectory() ~ "IMAGE\SYSTEM\CircleGreen.png";
+let imgSystemCircleRed = GetCurrentScriptDirectory() ~ "IMAGE\SYSTEM\CircleRed.png";
+let imgSystemCircleYellow = GetCurrentScriptDirectory() ~ "IMAGE\SYSTEM\CircleYellow.png";
+let imgSystemCircleWhite = GetCurrentScriptDirectory() ~ "IMAGE\SYSTEM\CircleWhite.png";

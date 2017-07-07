@@ -1,0 +1,120 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let LaserList = [];
+	task Cluster( let angle ){
+		let obj = SetShotObject( GetX(), GetY(), 2.7, angle, WHITE02, 20 );
+		while( !Obj_BeDeleted( obj ) ){
+			ascent( let i in 0..length( LaserList ) ){
+				if( Collision_Obj_Obj( LaserList[ i ], obj ) ){
+					ascent( let speed in 1..[ 2, 3 ][ Level == 1 ] ){
+						loop( ( Level + 1 ) * 2 ){
+							CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), rand( 1, [ 4, 1.2 ][ Level < 2 ] ) * speed, Obj_GetAngle( LaserList[ i ] ) - 90 + [ 0, RandBlur( 3 ) ][ Level < 2 ], WHITE23, 5 );
+							if( Level == 3 ){
+								let gap = -120;
+								while( gap <= 120 ){
+									CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), rand( 1, 2 ) * speed, Obj_GetAngle( LaserList[ i ] ) - 90 + gap, WHITE23, 5 );
+									gap += 240;
+								}
+							}
+						}
+					}
+					Obj_Delete( obj );
+					break;
+				}
+			}
+			yield;
+		}
+	}
+	task ShotCluster(){
+		let gap = GetAngleToPlayer();
+		loop{
+			let angle= 0;
+			while( angle < 360 ){
+				let dir = 1;
+				loop( 2 ){
+					Cluster( angle + gap * dir );
+					dir = -dir;
+				}
+				angle += [ 120, 180 ][ Level == 0 ];
+			}
+			PlaySEEx( seShot1 );
+			Wait( 10 );
+			gap += [ 10, 15 ][ Level != 0 ];
+		}
+	}
+	task CrashLaser( let angle ){
+		let obj = Obj_Create( OBJ_LASER );
+		let count = 0;
+		let radius = 128;
+		Obj_SetAutoDelete( obj, false );
+		ObjShot_SetGraphic( obj, BLUE01 );
+		ObjShot_SetDelay( obj, 120 );
+		ObjShot_SetBombResist( obj, true );
+		ObjLaser_SetLength( obj, 120 );
+		ObjLaser_SetWidth( obj, 16 );
+		while( !Obj_BeDeleted( obj ) ){
+			let speed = Accelerate( 0.3, 2.4, count, 3600 );
+			if( count == 120 ){ LaserList = LaserList ~ [ obj ]; }
+			Obj_SetX( obj, GetX() + cos( angle - count * speed ) * radius );
+			Obj_SetY( obj, GetY() + sin( angle - count * speed ) * radius );
+			Obj_SetAngle( obj, angle - count * speed + 120 );
+			count++;
+			yield;
+		}
+	}
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		Wait( 90 );
+		ShotCluster();
+		Wait( 130 );
+		PlaySEEx( sePower1 );
+		Concentration01( 120 );
+		Wait( 120 );
+		let angle = 0;
+		while( angle < 360 ){
+			CrashLaser( angle );
+			angle += 60;
+		}
+		PlaySEEx( seLaser1 );
+		loop{
+			Wait( 300 );
+			ExMove( false, count );
+		}
+	}
+	@Initialize{
+		SetLife( 450 );
+		SetScore( 1000000 );
+		SetTimer( 60 );
+		SetInvincibility( 130 );
+		SetDamageRate( 15, 10 );
+		DeleteEnemyShotToItem( ALL );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 5 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 8, imgCutInLily, 192, 288 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 24 );
+		yield;
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 32 + Level );
+		EndSpell();
+		DropItem( 10, 64 );
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyLily, 1, 1, 58, 72, count ); }
+	@BackGround{ LilyBG( imgSpellBamboo, 192, 192, 255, count ); }
+}

@@ -1,0 +1,107 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let HideAlpha = 255;
+	let HideStop = false;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	task Obj( let speed, let angle, let num ){
+		let obj = SetShotObject( GetX(), GetY(), speed, angle, BLUE21, 20 );
+		let ocount = 0;
+		Wait( 20 );
+		while( !Obj_BeDeleted( obj ) ){
+			if( ocount < 60 ){ Obj_SetSpeed( obj, Max( Obj_GetSpeed( obj ) - speed / 50, 0 ) ); }
+			if( ocount == 60 ){ Obj_SetAngle( obj, [ -120, 0, 120 ][ num % 3 ] + atan2( GetPlayerY() - Obj_GetY( obj ), GetPlayerX() - Obj_GetX( obj ) ) ); }
+			if( ocount >= 60 ){ Obj_SetSpeed( obj, Min( Obj_GetSpeed( obj ) + 0.1, 2 ) ); }
+			yield;
+			ocount++;
+		}
+	}
+	task Circle(){
+		let pangle = GetAngleToPlayer();
+		ascent( let i in 0..72 ){
+			let toplayer = trunc( i / 3 ) % 2;
+			SetShotDirectionType( [ ABSOLUTE, PLAYER ][ toplayer ] );
+			ascent( let speed in [ 5, 3, 2, 1 ][ Level ]..6 ){
+				let angle = i * 5 + ( speed - 1 ) * 10;
+				if( toplayer == 1 ){ Obj( speed, angle, i ); }
+				else{
+					CreateShotA( 0, GetX(), GetY(), 20 );
+					SetShotDataA( 0, 0, speed, angle, 0, -speed / 50, 0, [ WHITE12, BLUE21 ][ toplayer ] );
+					SetShotDataA( 0, 60, 0, angle + [ -90, 180, 90 ][ i % 3 ], 0, 0.1, 2, [ WHITE12, BLUE21 ][ toplayer ] );
+					FireShot( 0 );
+				}
+			}
+		}
+		PlaySEEx( seShot2 );
+		Wait( 60 );
+		PlaySEEx( seKira1 );
+	}
+	task Behavior(){
+		Wait( 60 );
+		loop{
+			ascent( let i in 0..4 ){
+				Concentration01( 60 );
+				PlaySEEx( sePower1 );
+				Wait( 60 );
+				Circle();
+				Wait( 30 );
+				ExMove( false, count );
+				Wait( [ 100, 20 ][ i == 2 ] );
+			}
+			SetMovePosition03( GetCenterX(), GetCenterY(), 20, 3.5 );
+			Wait( 50 );
+			HideStop = true;
+			Concentration01( 50 );
+			PlaySEEx( sePower1 );
+			Wait( 50 );
+			SetMovePosition03( GetCenterX(), GetClipMinY(), 20, 2 );
+			SetShotDirectionType( ABSOLUTE );
+			let angle = 0;
+			while( angle <= 180 ){
+				let speed = [ 0.8, 1.3, 1.7, 2.1 ][ Level ];
+				loop( 2 ){
+					ascent( let i in 0..2 ){
+						let gap = angle + speed * 5.5;
+						WayShotGap01( 60, [ 30, 20 ][ trunc( Level / 2 ) ], speed, [ BLUE04, PURPLE04 ][ i ], 10, [ gap, 180 - gap ][ i ] );
+					}
+					speed += 0.5;
+				}
+				PlaySEEx( seShot1 );
+				Wait( 8 );
+				angle += 6;
+			}
+			HideStop = false;
+		}
+	}
+	@Initialize{
+		SetLife( 3000 );
+		SetTimer( 40 );
+		SetInvincibility( 50 );
+		SetDamageRate( 100, 100 );
+		DeleteEnemyShotToItem( ALL );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		HideAlpha = MinMax( HideAlpha + [ -16, 7 ][ GetSpeed() < 0.1 || HideStop ], 0, 255 );
+		SetEnemyMarker( HideAlpha > 0 );
+		SEShotHitBoss( seDamage, count );
+		if( HideAlpha > 0 ){ Collision( 36, [ 0, 24 ][ HideAlpha == 255 ] ) };
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		if( HideAlpha != 0 ){
+			SetGraphicScale( Smooth( 0, 1, HideAlpha, 255 ), Smooth( 2, 1, HideAlpha, 255 ) );
+			SetAlpha( HideAlpha );
+			DrawBossChr( imgEnemyLily, 1, 1, 58, 72, count );
+			SetAlpha( 255 );
+			SetGraphicScale( 1, 1 );
+		}
+	}
+}

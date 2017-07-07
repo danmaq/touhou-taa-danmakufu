@@ -1,0 +1,12 @@
+let imgEnemyBat = [
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\0.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\1.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\2.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\3.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\4.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\5.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\6.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\7.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\8.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\ENEMY\BAT\9.png"
+];

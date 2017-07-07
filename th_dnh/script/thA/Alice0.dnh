@@ -1,0 +1,103 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let bgm = false;
+	task Behavior(){
+		yield;
+		while( GetEventStep() != 1 ){ yield; }
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		while( GetEventStep() != 2 ){ yield; }
+		SetCommonData( "ShowName", 1 );
+		while( GetEventStep() != 3 ){ yield; }
+		PlayMusicEx( 3 );
+		Wait( 30 );
+		bgm = true;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetX( 0 );
+		SetY( -128 );
+		SetGraphicRect( 1, 1, 45, 80 );
+		CreateEventFromScript( "Talk" );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() && bgm ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 36, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{ DrawBossChr( imgEnemyAlice, 1, 1, 45, 80, count ); }
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu5 );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]あいたたた・・・" );
+			TextOut( "\c[BLUE]やっと冬支度終えて一息って時に、\n何なのよこの腰の痛みは・・・" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]それは困ったものね" );
+			SetStep( 1 );
+			Wait( 60 );
+			SetChar( RIGHT, imgCutInAlice );
+			SetGraphicRect( RIGHT, 1, 1, 192, 320 );
+			Enemy();
+			SetStep( 2 );
+			SetNameFromTexture( RIGHT, imgNameAlice );
+			TextOut( "\c[RED]私もここ数日腰痛とかで困っているのよね" );
+			SetChar( LEFT, imgCutInReimu );
+			Player();
+			TextOut( "\c[BLUE]珍しいわ、あんたも悩むことあるのね" );
+			Enemy();
+			DeleteName( RIGHT );
+			TextOut( "\c[RED]悩みは時に女を美しく見せるのよ" );
+			TextOut( "\c[RED]あいたたた・・・\n本当に痛くなってきたわ" );
+			Player();
+			SetStep( 3 );
+			Player();
+			TextOut( "\c[BLUE]こういうときは、\n痛みをもって痛みを相殺すればいいのよ" );
+			Enemy();
+			TextOut( "\c[RED]その言葉、そっくりそのまま\n返してもよくて？" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]何ていうか、\n今日は一段と寒さがこたえるな" );
+			TextOut( "\c[BLUE]こういう日はさっさと行って\nさっさと集めてさっさと寝るに限るぜ" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]あなたの蒐集癖も飽きないものね" );
+			SetStep( 1 );
+			Wait( 100 );
+			SetChar( RIGHT, imgCutInAlice );
+			SetGraphicRect( RIGHT, 1, 1, 192, 320 );
+			Enemy();
+			SetStep( 2 );
+			SetNameFromTexture( RIGHT, imgNameAlice );
+			TextOut( "\c[RED]ま、私にも同じこと言えるわね" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]おー？\n私もコレクションにする気か？" );
+			Enemy();
+			DeleteName( RIGHT );
+			TextOut( "\c[RED]変なこと言わないでよ。\n腰痛に響くわ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]出産か？" );
+			SetStep( 3 );
+			Enemy();
+			TextOut( "\c[RED]ば…バカ言わないの！\nこの場で黙らせるわよ？" );
+			Player();
+			TextOut( "\c[BLUE]出来るものならな。\n出来なきゃ霊夢に言いふらすぜ" );
+		}
+		End();
+	}
+}

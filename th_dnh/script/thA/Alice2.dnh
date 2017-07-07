@@ -1,0 +1,94 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let uniquestr = "G_ALICE2";
+	task Behavior(){
+		SetShotDirectionType( ABSOLUTE );
+		yield;
+		CreateShadowInterface( uniquestr );
+		let pattern = 0;
+		while( 1 ){
+			Wait( 80 );
+			ascent( let i in [ 0, 1 ][ Level == 0 ]..3 ){
+				let space = 120 - i * 20;
+				let angle = -space / 2;
+				while( angle <= space / 2 ){
+					CreateEnemyFromScript( "Shadow", GetX(), GetY(), [ 2.4, 2 ][ i % 2 ], angle + GetAngleToPlayer(), pattern + i );
+					angle += space;
+				}
+			}
+			PlaySEEx( seShadow );
+			Wait( 150 );
+			CreateShot02( GetX(), GetY(), 11, GetAngleToPlayer(), -0.6, 0.8, WHITE02, 20 );
+			PlaySEEx( seShot2 );
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 2000 );
+		SetTimer( 55 );
+		SetInvincibility( 30 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, [ -1, 16 ][ count > 30 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 36, 20 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{ DrawBossChr( imgEnemyAlice, 1, 1, 45, 80, count ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_ALICE2";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let Argv = GetArgument();
+	task Behavior(){
+		SetShotDirectionType( ABSOLUTE );
+		while( GetSpeed() > 0 ){
+			SetSpeed( GetSpeed() - 0.02 );
+			yield;
+		}
+		let color = [ PURPLE01, BLUE01, AQUA01, GREEN01, YELLOW01, ORANGE01, RED01 ][ Argv % 7 ];
+		SetAngle( rand( 0, 360 ) );
+		loop{
+			if( count % [ 12, 10, 8, 5 ][ Level ] == 0 ){
+				loop( Max( Level, 1 ) ){
+					CreateShotA( 0, GetX(), GetY(), 5 );
+					SetShotDataA( 0, 0, 5, GetAngle() + 180 + RandBlur( 2 ), 0, -0.2, 0, color );
+					SetShotDataA( 0, 30, NULL, rand( 0, 360 ), 0, ( Level + 1 ) * 0.004, ( Level + 1 ) * 0.4, color );
+					FireShot( 0 );
+				}
+				PlaySEEx( seShot1 );
+			}
+			SetSpeed( Min( GetSpeed() + 0.03, 3 ) );
+			yield;
+		}
+	}
+	@Initialize{
+		SetLife( 190 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, true );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleRed, imgEnemyShadow, count ); }
+}

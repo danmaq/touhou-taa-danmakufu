@@ -1,0 +1,168 @@
+function GetStage5BGLoadList(){ return [ imgMapPoll, imgMapRock, imgMapLight2 ]; }
+function GetStage5MerryLoadList(){ return [ imgSpellKhan, imgNameMerry, imgCutInMerry, imgCutInMerryCry, imgEnemyMerry, imgSystemCircleBig ]; }
+task Stage5(){
+	MuteMusic();
+	let loadgraphiclist = [ imgStage[ 4 ] ];
+	loadgraphiclist = loadgraphiclist ~ GetStage5BGLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStage5MerryLoadList();
+	let loadenemylist = [ _enemyBlur, enemyDoll03, enemyYosei10, enemyYosei11, enemyYosei12, enemyYosei13, bossMerryBE ];
+	if( GetCommonDataDefault( "Practice", false ) ){ StageLoad( DefaultStageLoadGraphicList ~ loadgraphiclist, DefaultStageLoadSEList, loadenemylist ); }
+	else{ StageLoad( loadgraphiclist, [], loadenemylist ); }
+	Ready( seOk );
+	Stage5LoopInit();
+	ForbidBomb( false );
+	ForbidShot( false );
+	SetCommonData( "Result", false );
+	SetCommonData( "Stage", 4 );
+	SetCommonData( "BGStep", 0 );
+	PlayMusicEx( 10 );
+	MusicRelease[ 10 ] = true;
+	StageRelease[ 4 ] = true;
+	CreateSaveData();
+	SaveEx();
+	Wait( 230 );
+	CreateEnemyFromFile( enemyYosei10, GetCenterX() + 128, 0, 0, 0, 0 );
+	Wait( 500 );
+	SetCommonData( "StageTitle", true );
+	Wait( 430 );
+	SetCommonData( "StageTitle", false );
+	Wait( 100 );
+	SetCommonData( "BGStep", 1 );
+	Wait( 120 );
+	SetCommonData( "BGStep", 2 );
+	Rush1();
+	SetCommonData( "BGStep", 3 );
+	Wait( 80 );
+	CreateEnemyFromFile( enemyYosei13, GetCenterX() + 128, 0, 0, 0, 0 );
+	Wait( 300 );
+	CreateEnemyFromFile( enemyYosei13, GetCenterX() - 128, 0, 0, 0, 0 );
+	Wait( 300 );
+	CreateEnemyFromFile( enemyYosei13, GetCenterX() + 96, 0, 0, 0, 0 );
+	Wait( 300 );
+	CreateEnemyFromFile( enemyYosei13, GetCenterX() - 80, 0, 0, 0, 0 );
+	Wait( 60 );
+	CreateEnemyFromFile( enemyYosei13, GetCenterX() + 72, 0, 0, 0, 0 );
+	SetCommonData( "BGStep", 4 );
+	Wait( 210 );
+	let bossstart = GetCommonData( "NowCount" );
+	CreateEnemyBossFromFile( bossMerryA, GetClipMaxX() + 64, GetClipMinY() - 64, 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SaveEx();
+	Wait( 160 );
+	while( GetCommonData( "NowCount" ) < bossstart + 2700 ){
+		Wait( 20 );
+		CreateEnemyFromFile( enemyDoll03, GetCenterX() + sin( GetCommonData( "NowCount" ) / 3.4 ) * 160, GetClipMinX() + 128 + sin( GetCommonData( "NowCount" ) / 1.7 ) * 96, 0, 0, 0 );
+	}
+	Wait( 300 );
+	Rush2();
+	WaitZeroEnemy();
+	Wait( 150 );
+	MusicRelease[ 11 ] = true;
+	CreateSaveData();
+	SaveEx();
+	CreateEnemyBossFromFile( bossMerryB, GetClipMaxX() + 64, GetClipMinY() - 64, 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SetCommonData( "ShowName", -1 );
+	CreateEnemyFromFile( bossMerryBE, -128, -128, 0, 0, 0 );
+	ForbidBomb( true );
+	WaitZeroEnemy();
+	StageHighScore[ 4 ] = GetCommonDataDefault( "ResultTotal", 0 );
+	CreateSaveData();
+	SaveEx();
+	if( GetCommonDataDefault( "Practice", false ) ){
+		Clear();
+		return;
+	}
+	DeleteGraphicList( loadgraphiclist, [] );
+	ClearByteCodeCash();
+	Stage6();
+	function Rush1(){
+		ascent( let i in 0..4 ){
+			Rush1Yosei11( [ -1, 1 ][ i % 2 ] );
+			Wait( [ 120, 100 ][ i == 3 ] );
+			Rush1Yosei12( [ -1, 1 ][ i % 2 ] );
+			Wait( [ 260, 200 ][ i == 2 ] );
+		}
+	}
+	function Rush2(){
+		ascent( let i in 0..4 ){
+			Rush1Yosei11( [ 1, -1 ][ i % 2 ] );
+			Wait( [ 120, 100 ][ i == 3 ] );
+			CreateEnemyFromFile( enemyYosei13, GetCenterX() + 96 * [ -1, 1 ][ i % 2 ], 0, 0, 0, trunc( i / 2 ) );
+			Wait( [ 240, 160 ][ i == 2 ] );
+		}
+	}
+	task Rush1Yosei11( let dir ){
+		ascent( let i in 0..12 ){
+			CreateEnemyFromFile( enemyYosei11, GetCenterX() + 192 * dir, GetClipMinY() + 32 + ( i * 96 ) % 224, 0, 0, 128 + sin( i * 320 ) * 80 );
+			Wait( 20 );
+		}
+	}
+	task Rush1Yosei12( let dir ){
+		ascent( let i in 0..4 ){
+			CreateEnemyFromFile( enemyYosei12, GetCenterX() - 160 * dir + i * 64 * dir, 0, 1.5, 90, 0 );
+			Wait( 60 );
+		}
+	}
+}
+function Stage5LoopInit(){
+	ClearBGEffect();
+	SetCommonData( "PrevBG", [ 0, 0 ] );
+	SetCommonData( "BGViewTo", [ 0, 0, 0 ] );
+	SetCommonData( "BGViewFrom", [ 500, 90, 20 ] );
+}
+function Stage5Loop( let count ){
+	let speed = [ 0.45, 0.15, 2.5, 2.8, 2.5 ];
+	let step = GetCommonDataDefault( "BGStep", 0 );
+	let prev = GetCommonData( "PrevBG" );
+	let to = GetCommonData( "BGViewTo" );
+	let from = GetCommonData( "BGViewFrom" );
+	if( step != prev[ 0 ] ){
+		prev = [ step, count ];
+		SetCommonData( "PrevBG", prev );
+	}
+	let bgphasecount = count - prev[ 1 ];
+	to[ 2 ] = to[ 2 ] - Smooth( speed[ Max( step - 1, 0 ) ], speed[ step ], bgphasecount, 150 );
+	if( step == 2 ){ to[ 0 ] = SlowDown( 0, -50, bgphasecount, 100 ); }
+	SetCommonData( "BGViewTo", to );
+	SetCommonData( "BGViewFrom", from );
+}
+function Stage5BG( let count ){
+	let to = GetCommonData( "BGViewTo" );
+	let from = GetCommonData( "BGViewFrom" );
+	let color = [ 255, 240 ][ trunc( GetCommonDataDefault( "DrawFrameCount", 0 ) / 2 ) % 2 ];
+	SetFog( Smooth( 0, 700, count, 150 ), Smooth( 0, 1000, count, 300 ), 0, 0, 0 );
+	SetViewFrom( from[ 0 ], from[ 1 ], from[ 2 ] );
+	SetViewTo( to[ 0 ], to[ 1 ], to[ 2 ] );
+	SetColor( color, color, color );
+	local{
+		let z = truncEx( to[ 2 ], 512 ) - 1536;
+		loop( [ 4, 5 ][ count < 300 ] ){
+			SetTexture( imgMapRock );
+			SetGraphicRect( 0, 0, 512, 512 );
+			SetGraphicAngle( -10, 90, 0 );
+			DrawGraphic3D( 100, -50, z );
+			SetTexture( imgMapLight2 );
+			SetGraphicRect( 0, 0, 128, 128 );
+			SetGraphicAngle( 0, 0, 0 );
+			DrawGraphic3D( 70, -50, z );
+			z += 512;
+		}
+	}
+	local{
+		SetTexture( imgMapPoll );
+		SetGraphicRect( 0, 0, 512, 48 );
+		let z = truncEx( to[ 2 ], 512 ) - 1344;
+		loop( [ 4, 5 ][ count < 300 ] ){
+			SetGraphicAngle( 0, 0, 20 );
+			DrawGraphic3D( -160, 0, z );
+			SetGraphicAngle( 30, 0, 85 );
+			DrawGraphic3D( -200, 0, z - 60 );
+			z += 512;
+		}
+	}
+	SetColor( 255, 255, 255 );
+	SetGraphicAngle( 0, 0, 0 );
+}

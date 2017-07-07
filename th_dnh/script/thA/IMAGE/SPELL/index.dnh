@@ -1,0 +1,14 @@
+let imgSpellAlice = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Alice.png";
+let imgSpellBamboo = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Bamboo.png";
+let imgSpellBigCircle = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\BigCircle.png";
+let imgSpellBlood = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Blood.png";
+let imgSpellChirch = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Chirch.png";
+let imgSpellIceWall = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\IceWall.png";
+let imgSpellKene = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Kene.png";
+let imgSpellKhan = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Khan.png";
+let imgSpellLuna = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Luna.png";
+let imgSpellRedWall = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\RedWall.png";
+let imgSpellRenko = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Renko.png";
+let imgSpellRotateStone = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\RotateStone.png";
+let imgSpellStar = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Star.png";
+let imgSpellWheel = GetCurrentScriptDirectory() ~ "IMAGE\SPELL\Wheel.png";

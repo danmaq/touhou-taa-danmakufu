@@ -1,0 +1,135 @@
+#include_function ".\FUNC\Enemy.dnh"
+#include_function ".\IMAGE\ENEMY\BAT\index.dnh"
+#include_function ".\IMAGE\ENEMY\PHOENIX\index.dnh"
+#include_function ".\IMAGE\ENEMY\SENSE\index.dnh"
+function ExMoveUnderBorder( let acrobat, let underborder ){
+	let dstx = GetX();
+	let dsty = GetY();
+	let len = [ 40, 80 ][ acrobat ];
+	dstx = dstx + len * [ -1, 1 ][ GetPlayerX() - GetX() > 0 ];
+	if( GetPlayerY() > GetCenterY() ){ dsty += [ 32, 64 ][ acrobat ] * [ -1, 1 ][ rand_int( 0, 1 ) ]; }
+	else{ dsty = dsty + len * [ -1, 1 ][ GetPlayerY() - GetY() > 0 ]; }
+	if( dstx < GetClipMinX() + 64 ){ dstx += 96; }
+	else if( dstx > GetClipMaxX() - 64 ){ dstx -= 96; }
+	if( dsty < GetClipMinY() + 16 ){ dsty += 96; }
+	else if( dsty > GetCenterY() - underborder ){ dsty -= 96; }
+	SetMovePosition03( dstx, dsty, 20, [ 1.6, 20 ][ acrobat ] );
+}
+function ExMove( let acrobat, let count ){ ExMoveUnderBorder( acrobat, 64 ); }
+function MoveSpell( let frame ){ SetMovePosition02( GetCenterX(), GetClipMinY() + 80, frame ); }
+function SEShotHitBoss( let se, let count ){
+	if( GetHitCount() != 0 ){
+		if( count % 3 == 0 ){ PlaySEEx( se ); }
+		if( GetCommonDataDefault( "DrawFrameCount", 0 ) % 2 != 0 ){ SetEnemyMarker( false ); }
+		else{ SetEnemyMarker( true ); }
+	}
+	else{ SetEnemyMarker( true ); }
+}
+function StartSpell( let code, let imgcutin, let width, let height ){
+	SetCommonData( "Spell", [ code, width, height ] );
+	SetCommonData( "SpellCutIn", imgcutin );
+	SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), 0 ] );
+}
+function EndSpell(){
+	DeleteCommonData( "Spell" );
+	DeleteCommonData( "SpellCutIn" );
+	DeleteCommonData( "SpellBonus" );
+}
+function CreateSpellResult( let no ){
+	let gethistory = GetCommonData( "SpellGetHistory" );
+	let playhistory = GetCommonData( "SpellPlayHistory" );
+	let highscore = GetCommonData( "SpellHighScore" );
+	playhistory[ no ] = playhistory[ no ] + 1;
+	if( GotSpellCardBonus() ){
+		let nowscore = GetSpellCardBonusScore();
+		gethistory[ no ] = gethistory[ no ] + 1;
+		if( nowscore > highscore[ no ] ){ highscore[ no ] = nowscore; }
+	}
+	SetCommonData( "SpellGetHistory", gethistory );
+	SetCommonData( "SpellPlayHistory", playhistory );
+	SetCommonData( "SpellHighScore", highscore );
+	SaveEx();
+}
+function LettyBG( let bgfile, let count ){
+	if( !GetCommonDataDefault( "BGGEnable", true ) ){ return; }
+	SetGraphicRect( 0, 0, 384, 448 );
+	local{ ascent( let y in 0..2 ){ _DrawChr( bgfile, GetCenterX(), GetCenterY() + y * 448 - count * 5 % 448 ); } }
+	SetAlpha( 128 );
+	local{ ascent( let y in 0..2 ){ _DrawChr( bgfile, GetCenterX(), GetCenterY() + y * 448 + count * 5 % 448 ); } }
+	SetAlpha( 255 );
+}
+function AliceBG( let bgfile, let circlefile, let count ){
+	if( !GetCommonDataDefault( "BGGEnable", true ) ){ return; }
+	SetGraphicRect( 0, 0, 384, 448 );
+	local{ ascent( let y in 0..2 ){ _DrawChr( bgfile, GetCenterX(), GetCenterY() + y * 448 - count * 3 % 448 ); } }
+	SetGraphicRect( 0, 0, 512, 512 );
+	SetGraphicAngle( 0, 0, count * 1.5 );
+	SetAlpha( 80 + sin( count * 2 ) * 16 );
+	local{ ascent( let y in 0..6 ){ _DrawChr( circlefile, [ GetCenterX(), GetClipMinY(), GetClipMaxY() ][ y % 3 ], 512 - y * 256 + count * 2 % 768 ); } }
+	SetGraphicAngle( 0, 0, 0 );
+	SetAlpha( 255 );
+}
+function KhanBG( let bgfile, let color ){
+	if( !GetCommonDataDefault( "BGGEnable", true ) ){ return; }
+	SetColor( color, color, color );
+	RenkoBG( bgfile );
+	SetColor( 255, 255, 255 );
+}
+function RenkoBG( let bgfile ){
+	if( !GetCommonDataDefault( "BGGEnable", true ) ){ return; }
+	SetGraphicRect( 0, 0, 384, 448 );
+	DrawCenter( bgfile );
+}
+function LeilaBG( let frontbg, let backbg, let scrollbg, let count ){
+	SetGraphicRect( 0, 0, 384, 448 );
+	DrawCenter( backbg );
+	SetAlpha( 128 );
+	local{ ascent( let y in 0..2 ){ _DrawChr( scrollbg, GetCenterX(), GetCenterY() + y * 448 - count * 3 % 448 ); } }
+	SetAlpha( 255 );
+	DrawCenter( frontbg );
+}
+function LilyBG( let bgfile, let r, let g, let b, let count ){
+	if( !GetCommonDataDefault( "BGGEnable", true ) ){ return; }
+	SetColor( r, g, b );
+	SetGraphicRect( 0, 0, 1024, 1024 );
+	SetGraphicAngle( 0, 0, count / 3 );
+	DrawCenter( bgfile );
+	SetGraphicAngle( 0, 0, 0 );
+	SetColor( 255, 255, 255 );
+}
+function SakuyaBG( let bgfile, let bgtop, let fadestart, let fadetime, let count ){
+	if( !GetCommonDataDefault( "BGGEnable", true ) ){ return; }
+	let freeze = fadestart + fadetime >= count;
+	let color = [ 255, 48 ][ freeze ];
+	SetColor( color, color, color );
+	SetGraphicRect( 0, 0, 1024, 1024 );
+	SetGraphicAngle( 0, 0, [ -count, -fadestart ][ freeze ] / 2 );
+	DrawCenter( bgfile );
+	SetGraphicAngle( 0, 0, 0 );
+	SetColor( 255, 255, 255 );
+	if( !freeze ){
+		SetAlpha( 128 );
+		let speed = count * 1.5;
+		SetGraphicRect( speed, speed, speed + 512, speed + 512 );
+		DrawCenter( bgtop );
+		SetAlpha( 255 );
+	}
+}
+function KeneBG( let bg1, let bg2, let bg3, let state, let count ){
+	let speed = count * 1.5;
+	SetGraphicRect( count, count, 512 + count, count + 512 );
+	DrawCenter( bg1 );
+	SetRenderState( state );
+	SetGraphicRect( -speed, speed, 512 - speed, speed + 512 );
+	DrawCenter( bg2 );
+	SetRenderState( ALPHA );
+	SetGraphicRect( 0, 0, 384, 448 );
+	DrawCenter( bg3 );
+}
+function DrawBossChr( let file, let x1, let y1, let x2, let y2, let count ){
+	let angle = ( GetAngle() + 7200 ) % 360;
+	SetGraphicAngle( [ 0, 180 ][ angle > 90 && angle <= 270 ], 0, 0 );
+	SetGraphicRect( x1, y1, x2, y2 );
+	DrawChr( file, count );
+	SetGraphicAngle( 0, 0, 0 );
+}

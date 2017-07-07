@@ -1,0 +1,746 @@
+#ìåï˚íeñãïó[Stage]
+#Title[ìåï˚éûïïèÈ Å` the Alternative Age]
+#Text[THA_VERSION1.00(R140)]
+#ScriptVersion[2]
+#BGM[]
+#Image[.\IMAGE\SYSTEM\Jacket.png]
+
+script_stage_main{
+#include_function ".\FUNC\Stage.dnh"
+#include_function ".\STAGE\index.dnh"
+	let count = 0;
+	let Phase = 0;
+	let PrevStage = -1;
+	let PhaseStartCount = 1;
+	let now = 0;
+	let DrawFrameCount = 0;
+	let LogoAnimeSkip = false;
+	let Level = 1;
+	let MainMenu = 0;
+	let MusicRoom = 0;
+	let ExtraSelect = 0;
+	let PracticeMode = 0;
+	let PracticeStage = 0;
+	let OptionSelect = 0;
+	let SpellSelect = 0;
+	let StageTitleAlpha = 0;
+	let SlowEffectAlpha = 0;
+	let WhiteFadeOutAlpha = 0;
+	let ShowNameAlpha = 0;
+	let ShowName = 0;
+	let PrevBGM = 0;
+	let PrevBGStep = 0;
+	let BGMStartCount = 0;
+	let NormIndex = 0;
+	let PlayerDefaultX;
+	let PlayerDefaultY;
+	let BGEffectX = [];
+	let BGEffectY = [];
+	let BGEffectZ = [];
+	let BGEffectLife = [];
+	let BGEffectParam = [];
+	let BGEffectVectorX = [];
+	let BGEffectVectorY = [];
+	let BGEffectVectorZ = [];
+	let SpellCardPlayHistory = [];
+	let SpellCardGetHistory = [];
+	let SpellCardHighScore = [];
+	let MusicRelease = [];
+	let StageRelease = [];
+	let StageHighScore = [];
+	let SpellPracticeDefaultLoadGraphicList = [
+		imgSystemCircleWhite, imgSystemCircleYellow, imgSystemCircleRed, imgSystemCircleGreen, imgSystemCircleBlue, imgSystemPlayerBorder, imgSystemLevel, imgMapWhite, imgEnemyShadow
+	];
+	let DefaultStageLoadGraphicList = SpellPracticeDefaultLoadGraphicList ~ [
+		imgSystemEqual, imgSystemResult, imgSystemResultNum, imgSystemClear, imgSystemPushKey, imgEnemyYosei1, imgEnemyYosei2, imgEnemyYosei3, imgEnemyYosei4, imgEnemyYosei5,
+		imgEnemyKedamaAqua, imgEnemyKedamaBlue, imgEnemyKedamaGreen, imgEnemyKedamaOrange, imgEnemyKedamaPurple, imgEnemyKedamaRed, imgEnemyKedamaWhite, imgEnemyKedamaYellow, 
+		imgCutInReimu, imgCutInReimu2, imgCutInReimu3, imgCutInReimu4, imgCutInReimu5, imgCutInMarisa, imgCutInMarisa2, imgCutInMarisa3, imgCutInMarisa4
+	];
+	let DefaultStageLoadSEList = [
+		seDamage, seBossExplode, seKira1, seKira2, seKira3, seLaser1, seLaser2, sePower1, sePower2, seShot1, seShot2, seShot3, seTimeOut, seHidden, seSudden, seShadow
+	];
+	let DeleteLoadGraphicList = [
+		imgSystemLogo, imgSystemLogoBG, imgSystemLevelSelect, imgSystemMenu, imgSystemCopyright, imgSystemNumMiddle, imgSystemSpellResult,
+		imgSystemPractice, imgSystemOption, imgSystemBoolean, imgSystemMusicComment, imgSystemStage, imgSystemNetabare,
+		imgCutInAlice, imgCutInKene, imgCutInLeila, imgCutInLetty, imgCutInLily, imgCutInMerry, imgCutInRenko, imgCutInSakuya
+	];
+	let DeleteLoadSEList = [ seCancel, seSelect ];
+	let NormList = [ 0, 200, 450, 800, 1300, 1900, 9999, 99999, -1 ];
+	let debug = false;
+	let EXGuard = true;
+	task Behavior(){
+		yield;
+		ForbidBomb( true );
+		ForbidShot( true );
+		PlayerDefaultX = GetPlayerX();
+		PlayerDefaultY = GetPlayerY();
+		while( GetCommonDataDefault( "LoadingProgress", 0 ) != -1 ){
+			LoadProgress( now, [
+				imgSystemProgress, imgSystemProgressBG, imgSystemNumSmall, imgSystemLogo, imgSystemLogoBG, imgSystemLevelSelect, imgSystemMenu,
+				imgSystemMusicComment, imgSystemCopyright, imgSystemPractice, imgSystemMusicList, imgSystemOption, imgSystemNum, imgSystemSpellResult,
+				imgSystemNumMiddle, imgSystemBoolean, imgSystemStage, imgSystemOtama, imgSystemName, imgSystemSpellName, imgSystemSpellBonus, imgSystemNetabare,
+				imgCutInAlice, imgCutInKene, imgCutInLeila, imgCutInLetty, imgCutInLily, imgCutInMerry, imgCutInRenko, imgCutInSakuya
+			], [ seCancel, seOk, seSelect, seTimeOut ], [ _enemyExtend ] );
+			yield;
+		}
+		PlayMusicEx( 1 );
+		NextPhase();
+		while( now < 160 || !LogoAnimeSkip ){
+			if( !LogoAnimeSkip && GetKeyState( VK_SHOT ) == KEY_PUSH ){
+				PlaySEEx( seOk );
+				if( GetKeyState( VK_BOMB ) == KEY_HOLD ){
+					EXGuard = false;
+					PlaySEEx( seTimeOut );
+				}
+				LogoAnimeSkip = true;
+			}
+			yield;
+		}
+		NextPhase();
+		Wait( 30 );	//	îwåiÉtÉFÅ[ÉhópÉEÉFÉCÉg:êGÇÈÇ»äÎåØ
+		NextPhase();
+		yield;
+		while( GetCommonDataDefault( "Stage", -1 ) == -1 ){
+			yield;
+			alternative( Phase )
+			case( 3 ){
+				SetCommonData( "Practice", false );
+				while( GetKeyState( VK_SHOT ) != KEY_PUSH ){
+					MainMenu = MenuSelect( MainMenu, seSelect, 4 );
+					if( MainMenu == 1 && EXGuard ){ MainMenu = MenuSelect( MainMenu, seSelect, 4 ); }
+					yield;
+				}
+				PlaySEEx( seOk );
+				SetPhase( Phase + MainMenu + 1 );
+			}
+			case( 4 ){
+				while( GetKeyState( VK_SHOT ) != KEY_PUSH && GetKeyState( VK_BOMB ) != KEY_PUSH ){
+					Level = MenuSelect( Level, seSelect, 3 );
+					yield;
+				}
+				if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+					SetCommonData( "Level", Level );
+					PlaySEEx( seOk );
+					SetPhase( 20 + [ 0, PracticeStage ][ GetCommonDataDefault( "Practice", false ) ] );
+					DeleteGraphicList( DeleteLoadGraphicList, DeleteLoadSEList );
+					if( !GetCommonDataDefault( "Practice", false ) ){ Stage1(); }
+					else{
+						Extend( 5 );
+						if( !debug ){ SetAllowedContinueCount( 0 ); }
+						alternative( PracticeStage )
+						case( 0 ){ Stage1(); }
+						case( 1 ){ Stage2(); }
+						case( 2 ){ Stage3(); }
+						case( 3 ){ Stage4(); }
+						case( 4 ){ Stage5(); }
+						case( 5 ){ Stage6(); }
+					}
+					return;
+				}
+				else{
+					PlaySEEx( seCancel );
+					SetPhase( [ 3, 9 ][ GetCommonDataDefault( "Practice", false ) ] );
+				}
+			}
+			case( 5 ){
+				while( GetKeyState( VK_SHOT ) != KEY_PUSH && GetKeyState( VK_BOMB ) != KEY_PUSH ){
+					ExtraSelect = MenuSelect( ExtraSelect, seSelect, 0 );
+					yield;
+				}
+				if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+					PlaySEEx( seOk );
+					SetCommonData( "Level", 4 );
+					SetPhase( 26 );
+					DeleteGraphicList( DeleteLoadGraphicList, DeleteLoadSEList );
+					SetAllowedContinueCount( 0 );
+					StageEX();
+					return;
+				}
+				else{
+					PlaySEEx( seCancel );
+					SetPhase( 3 );
+				}
+			}
+			case( 6 ){
+				while( GetKeyState( VK_SHOT ) != KEY_PUSH && GetKeyState( VK_BOMB ) != KEY_PUSH ){
+					PracticeMode = MenuSelect( PracticeMode, seSelect, 1 );
+					yield;
+				}
+				if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+					PlaySEEx( seOk );
+					SetPhase( 9 + PracticeMode );
+				}
+				else{
+					PlaySEEx( seCancel );
+					SetPhase( 3 );
+				}
+			}
+			case( 7 ){
+				while( GetKeyState( VK_BOMB ) != KEY_PUSH ){
+					MusicRoom = MenuSelect( MusicRoom, seSelect, 17 );
+					if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+						MusicRelease[ MusicRoom + 1 ] = true;
+						PlaySEEx( seOk );
+						PlayMusicEx( MusicRoom + 1 );
+					}
+					yield;
+				}
+				PlaySEEx( seCancel );
+				CreateSaveData();
+				SaveEx();
+				MuteMusic();
+				PlayMusicEx( 1 );
+				SetPhase( 3 );
+			}
+			case( 8 ){
+				while( GetKeyState( VK_BOMB ) != KEY_PUSH ){
+					OptionSelect = MenuSelect( OptionSelect, seSelect, 4 );
+					if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+						PlaySEEx( seOk );
+						if( OptionSelect == 0 ){ SetCommonData( "Continue", MinMaxLoop( GetCommonDataDefault( "Continue", 1 ) + 1, 0, 3 ) ); }
+						else{
+							let key = [ "BGGEnable", "BGEEnable", "BGMEnable", "SEEnable" ][ OptionSelect - 1 ];
+							SetCommonData( key, !GetCommonDataDefault( key, true ) );
+						}
+					}
+					yield;
+				}
+				PlaySEEx( seCancel );
+				CreateSaveData();
+				SaveEx();
+				PlayMusicEx( [ 0, 1 ][ GetCommonDataDefault( "BGMEnable", true ) ] );
+				SetPhase( 3 );
+			}
+			case( 9 ){
+				while( GetKeyState( VK_SHOT ) != KEY_PUSH && GetKeyState( VK_BOMB ) != KEY_PUSH ){
+					PracticeStage = MenuSelect( PracticeStage, seSelect, 5 );
+					yield;
+				}
+				if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+					PlaySEEx( seOk );
+					SetCommonData( "Practice", true );
+					StageRelease[ PracticeStage ] = true;
+					CreateSaveData();
+					SaveEx();
+					SetPhase( 4 );
+				}
+				else{
+					PlaySEEx( seCancel );
+					SetPhase( 3 );
+				}
+			}
+			case( 10 ){
+				while( GetKeyState( VK_SHOT ) != KEY_PUSH && GetKeyState( VK_BOMB ) != KEY_PUSH ){
+					if( IsPushDirKey() ){
+						PlaySEEx( seSelect );
+						if( GetKeyState( VK_UP ) == KEY_PUSH ){ SpellSelect--; }
+						if( GetKeyState( VK_DOWN ) == KEY_PUSH ){ SpellSelect++; }
+						if( GetKeyState( VK_LEFT ) == KEY_PUSH ){ SpellSelect -= 12; }
+						if( GetKeyState( VK_RIGHT ) == KEY_PUSH ){ SpellSelect += 12; }
+					}
+					SpellSelect = MinMaxLoop( SpellSelect, 0, 119 );
+					yield;
+				}
+				if( GetKeyState( VK_SHOT ) == KEY_PUSH ){
+					SetCommonData( "SpellPractice", true );
+					SetCommonData( "Level", [ 4, SpellSelect % 4 ][ SpellSelect < 108 ] );
+					PlaySEEx( seOk );
+					SetPhase( 30 + SpellSelect );
+					DeleteGraphicList( DeleteLoadGraphicList, DeleteLoadSEList );
+					SpellPractice( SpellSelect );
+					return;
+				}
+				else{
+					PlaySEEx( seCancel );
+					SetPhase( [ 3, 9 ][ GetCommonDataDefault( "Practice", false ) ] );
+				}
+			}
+			others{
+				SetPhase( 3 );
+			}
+		}
+	}
+	@Initialize{
+		SetCommonData( "Continue", 1 );
+		SetCommonData( "BGGEnable", true );
+		SetCommonData( "BGEEnable", true );
+		SetCommonData( "BGMEnable", true );
+		SetCommonData( "SEEnable", true );
+		local{
+			ascent( let i in 0..120 ){
+				SpellCardGetHistory = SpellCardGetHistory ~ [ 0 ];
+				SpellCardPlayHistory = SpellCardPlayHistory ~ [ 0 ];
+				SpellCardHighScore = SpellCardHighScore ~ [ 0 ];
+			}
+		}
+		local{
+			ascent( let i in 0..6 ){
+				StageRelease = StageRelease ~ [ i == 0 ];
+				StageHighScore = StageHighScore ~ [ 0 ];
+			}
+		}
+		local{ ascent( let i in 0..19 ){ MusicRelease = MusicRelease ~ [ i <= 1 ]; } }
+		LoadCommonData();
+		DataMinimize();
+		SetCommonData( "LoadingProgress", 0 );
+		SetCommonData( "Stage", -1 );
+		SetCommonData( "StageTitle", false );
+		LoadGraphic( imgMapBlack );
+		ExpertEx( debug, GetCommonDataDefault( "Continue", 1 ), 3 );
+		//	Å™òMÇÈÇ∆ê≥èÌÇ…ÉäÉvÉåÉCÇ™çƒê∂Ç≈Ç´Ç»Ç≠Ç»ÇËÇ‹Ç∑ÇÃÇ≈Ç≤íçà”ÇÅB
+		PlayMusic( bgmList[ 0 ] );
+		SetShotAutoDeleteClip( 64, 64, 64, 64 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "GlobalCount", count );
+		SetCommonData( "NowCount", now );
+		SetCommonData( "DrawFrameCount", DrawFrameCount );
+		if( PrevStage != GetCommonDataDefault( "Stage", -1 ) ){
+			PrevStage = GetCommonDataDefault( "Stage", -1 );
+			NextPhase();
+		}
+		if( PrevStage != -1 ){
+			if( SlowEffectAlpha != 0 || GetKeyState( VK_SLOWMOVE ) == KEY_HOLD ){ SlowEffectAlpha = MinMax( SlowEffectAlpha + [ -1, 1 ][ GetKeyState( VK_SLOWMOVE ) == KEY_HOLD ], 0, 64 ); }
+			if( StageTitleAlpha != 0 || GetCommonDataDefault( "StageTitle", false ) ){
+				StageTitleAlpha = MinMax( StageTitleAlpha + [ -4, 3 ][ GetCommonDataDefault( "StageTitle", false ) ] , 0, 255 );
+			}
+			if( ShowNameAlpha != 0 || GetCommonDataDefault( "ShowName", -1 ) != -1 ){
+				ShowNameAlpha = MinMax( ShowNameAlpha + [ -5, 1.5 ][ GetCommonDataDefault( "ShowName", -1 ) != -1 ], 0, 255 );
+				if( GetCommonDataDefault( "ShowName", -1 ) != -1 ){ ShowName = GetCommonDataDefault( "ShowName", -1 ); }
+			}
+			if( PrevBGStep != GetCommonDataDefault( "BGStep", 0 ) ){
+				PrevBGStep = GetCommonDataDefault( "BGStep", 0 );
+				SetCommonData( "BGStepChangeCount", now );
+			}
+			if( NormList[ NormIndex ] >= 0 && GetPoint() >= NormList[ NormIndex ] ){
+				if( NormIndex != 0 ){ Extend( 1 ); }
+				NormIndex = Min( NormIndex + 1, length( NormList ) - 1 );
+				SetNormPoint( NormList[ NormIndex ] );
+			}
+			if( Continued() ){
+				if( GetPoint() * 50000 < GetCommonDataDefault( "ResultPoint", 0 ) ){ SetCommonData( "ResultPoint", 0 ) }
+				if( GetGraze() * 500 < GetCommonDataDefault( "ResultGraze", 0 ) ){ SetCommonData( "ResultGraze", 0 ) }
+			}
+		}
+		if( PrevBGM != GetCommonDataDefault( "NowBGM", 0 ) ){
+			PrevBGM = GetCommonDataDefault( "NowBGM", 0 );
+			BGMStartCount = count;
+		}
+		if( WhiteFadeOutAlpha != 0 || GetCommonDataDefault( "WhiteFadeOut", 0 ) != 0 ){
+			WhiteFadeOutAlpha = MinMax( WhiteFadeOutAlpha + [ -1, 0.5 ][ GetCommonDataDefault( "WhiteFadeOut", 0 ) != 0 ], 0, 255 );
+		}
+		yield;
+		if( GetCommonDataDefault( "Stage", -1 ) == -1 || GetCommonDataDefault( "Ready", false ) ){
+			SetPlayerX( PlayerDefaultX );
+			SetPlayerY( PlayerDefaultY );
+		}
+		MoveBGEffect();
+		if( !GetCommonDataDefault( "Ready", false ) && GetCommonDataDefault( "LoadingProgress", -1 ) == -1 && GetCommonDataDefault( "BGStep", 0 ) != 32767 ){
+			alternative( GetCommonDataDefault( "Stage", -1 ) )
+			case( 0 ){ Stage1Loop( now ); }
+			case( 1 ){ Stage2Loop( now ); }
+			case( 2 ){ Stage3Loop( now ); }
+			case( 3 ){ Stage4Loop( now ); }
+			case( 4 ){ Stage5Loop( now ); }
+			case( 5 ){ Stage6Loop( now ); }
+			case( 6 ){ StageEXLoop( now ); }
+		}
+		if( PrevBGM == 18 && GetCommonDataDefault( "BGStep", 0 ) == 32767 && GetCommonDataDefault( "BGGEnable", true ) ){
+			let scount = count - BGMStartCount;
+			if( scount % trunc( Smooth( 30, 5, scount, 5000 ) ) == 0 ){ AddBGEffect( -50, 0, 0, RandBlur( 1.2 ), rand( 1, 4 ), RandBlur( 1.2 ), 255, 0 ); }
+			if( scount > 11555 ){ Clear(); }
+		}
+		count += [ 1, 5 ][ Phase == 1 && LogoAnimeSkip ];
+		now = count - PhaseStartCount;
+	}
+	@BackGround{
+		if( GetCommonDataDefault( "BGGEnable", true ) && !GetCommonDataDefault( "Ready", false ) && GetCommonDataDefault( "LoadingProgress", -1 ) == -1 && GetCommonDataDefault( "BGStep", 0 ) != 32767 ){
+			UseZBuffer( true );
+			WriteZBuffer( true );
+			alternative( GetCommonDataDefault( "Stage", -1 ) )
+			case( 0 ){ Stage1BG( now ); }
+			case( 1 ){ Stage2BG( now ); }
+			case( 2 ){ Stage3BG( now ); }
+			case( 3 ){ Stage4BG( now ); }
+			case( 4 ){ Stage5BG( now ); }
+			case( 5 ){ Stage6BG( now ); }
+			case( 6 ){ StageEXBG( now ); }
+		}
+		DrawFrameCount++;
+	}
+	@DrawBottomObject{ if( debug ){ DrawNumSmall( imgSystemNumSmall, now / 6, GetClipMinX() + 32, GetClipMaxY() - 24 ); } }
+	@DrawTopObject{
+		if( GetCommonDataDefault( "Stage", -1 ) == -1 || GetCommonDataDefault( "BGStep", 0 ) == 32767 ){
+			SetGraphicRect( 0, 0, 512, 512 );
+			DrawCenter( imgMapBlack );
+		}
+		if( Phase >= 1 && Phase < 20 ){
+			if( Phase == 1 && now < 150 ){
+				if( now > 80 ){
+					let rgb = Smooth( 0, 255, now - 80, 60 );
+					SetColor( rgb, rgb, rgb );
+				}
+				else{ SetColor( 0, 0, 0 ); }
+			}
+			if( Phase == 2 ){
+				let rgb = Smooth( 255, 96, now, 30 );
+				SetColor( rgb, rgb, rgb );
+			}
+			if( Phase > 2 ){ SetColor( 96, 96, 96 ); }
+			SetGraphicRect( 0, 0, 384, 448 );
+			DrawCenter( imgSystemLogoBG );
+			if( Phase == 1 && now < 150 ){
+				if( now > 80 ){ SetColor( Smooth( 96, 255, now - 80, 60 ), Smooth( 0, 255, now - 80, 60 ), 255 ); }
+				else{ SetColor( Smooth( 0, 96, now, 80 ), 0, Smooth( 0, 255, now, 80 ) ); }
+			}
+			_DrawChrRect( imgSystemLogo, GetClipMinX() + 96, GetCenterY() - [ 0, SlowDown( 32, 0, now, 90 ) ][ Phase == 1 ], 0, 0, 192, 448 );
+			SetColor( 255, 255, 255 );
+			alternative( Phase )
+			case( 3 ){
+				ascent( let y in 0..5 ){
+					let ex = [ 0.7, 1 ][ y == MainMenu ];
+					SetAlpha( Smooth( 0, [ 96, 255 ][ y == MainMenu ], now, 20 ) );
+					SetColor( 255, 255, [ 255, 240 + sin( now * 3 ) * 16 ][ y == MainMenu ] );
+					SetGraphicScale( ex, ex );
+					DrawMainMenu( imgSystemMenu, y, SlowDown( [ 32, 64 ][ y % 2 ], 48, now, 20 ) + [ 16, 0 ][ y == MainMenu ] );
+				}
+			}
+			case( 4 ){
+				ascent( let i in 0..4 ){
+					let ex = [ 0.86, 1 ][ i == Level ];
+					let posx = [ 0, 160 ][ i % 2 ];
+					let posy = [ 0, 96 ][ trunc( i / 2 ) ];
+					SetGraphicScale( ex, ex );
+					SetAlpha( Smooth( 0, [ 96, 255 ][ i == Level ], now, 20 ) );
+					_DrawChrRect( imgSystemLevelSelect, GetCenterX() + [ 64, 48 ][ i == Level ] + ( i - 1.5 ) * SlowDown( 0, 16, now, 20 ), 112 + i * 88, posx, posy, 160 + posx, 96 + posy );
+				}
+			}
+			case( 5 ){
+				let y = 0;
+				let ex = [ 0.86, 1 ][ y == ExtraSelect ];
+				let posy = 96 * y;
+				let posx = 160 * y;
+				SetGraphicScale( ex, ex );
+				SetAlpha( Smooth( 0, [ 96, 255 ][ y == ExtraSelect ], now, 20 ) );
+				_DrawChrRect( imgSystemLevelSelect, GetCenterX() + [ 64, 48 ][ y == ExtraSelect ] + ( y - 0.5 ) * SlowDown( 0, 24, now, 20 ), 160 + y * 128, 320, posy, 480, posy + 96 );
+			}
+			case( 6 ){
+				ascent( let y in 0..2 ){
+					let ex = [ 0.7, 1 ][ y == PracticeMode ];
+					SetAlpha( Smooth( 0, [ 96, 255 ][ y == PracticeMode ], now, 20 ) );
+					SetColor( 255, 255, [ 255, 240 + sin( now * 3 ) * 16 ][ y == PracticeMode ] );
+					SetGraphicScale( ex, ex );
+					DrawMainMenu( imgSystemPractice, y, SlowDown( [ 32, 64 ][ y % 2 ], 48, now, 20 ) + [ 16, 0 ][ y == PracticeMode ] );
+				}
+			}
+			case( 7 ){
+				let height = 27;
+				ascent( let i in 0..12 ){
+					let xx = GetCenterX() + [ 32, 0 ][ i == 5 ] + i * 3 + SlowDown( [ 0, -16, 0, 16 ][ i % 4 ], 0, now, 20 );
+					let yy = GetClipMinY() + 64 + i * 20 + SlowDown( [ -16, 0, 16, 0 ][ i % 4 ], 0, now, 20 );
+					let title = ( 18 + i + MusicRoom - 4 ) % 18;
+					if( title == 0 ){ title = 18; }
+					SetMainMenuRect( [ 0, title ][ debug || MusicRelease[ title ] ], height, 256, height - 1 );
+					SetAlpha( Smooth( 0, [ Smooth( [ 96, 32 ][ i < 5 ], [ 32, 96 ][ i < 5 ], i - [ 6, 0 ][ i < 5 ], [ 6, 4 ][ i < 5 ] ), 255 ][ i == 5 ], now, 20 ) );
+					SetColor( 255, 255, [ 255, 240 + sin( now * 3 ) * 16 ][ i == 5 ] );
+					_DrawChr( imgSystemMusicList, xx, yy );
+					DrawNumMiddle( imgSystemNumMiddle, title, xx - 144, yy );
+				}
+				SetColor( 255, 255, 255 );
+				SetAlpha( Smooth( 0, 255, now, 20 ) );
+				SetMainMenuRect( GetCommonDataDefault( "NowBGM", 1 ), height, 256, height - 1 );
+				_DrawChr( imgSystemMusicList, GetCenterX() + 32, GetClipMaxY() - 56 );
+				_DrawChrRect( imgSystemOtama, GetCenterX() - 144, GetClipMaxY() - 54, 0, 0, 24, 28 );
+				DrawNumMiddle( imgSystemNumMiddle, GetCommonDataDefault( "NowBGM", 1 ), GetCenterX() - 112, GetClipMaxY() - 56 );
+				let commentheight = 72;
+				let posx = 333 * trunc( MusicRoom / 9 );
+				let posy = commentheight * ( MusicRoom % 9 );
+				if( MusicRelease[ MusicRoom + 1 ] ){ _DrawChrRect( imgSystemMusicComment, GetCenterX(), GetCenterY() + 112, 1 + posx, 1 + posy, 334 + posx, 1 + commentheight + posy ); }
+				else{ _DrawChrRect( imgSystemNetabare, GetCenterX(), GetCenterY() + 104, 0, 0, 320, 96 ); }
+			}
+			case( 8 ){
+				ascent( let y in 0..5 ){
+					let yy = GetClipMinY() + 64 + y * 40 + SlowDown( [ 0, -16, 0, 16 ][ y % 4 ], 0, now, 20 );
+					let xx = GetClipMinX() + 128 + SlowDown( [ -16, 0, 16, 0 ][ y % 4 ], 0, now, 20 );
+					SetMainMenuRect( y, 44, 202, 44 );
+					SetAlpha( Smooth( 0, [ 96, 255 ][ y == OptionSelect ], now, 20 ) );
+					SetColor( 255, 255, [ 255, 240 + sin( now * 3 ) * 16 ][ y == OptionSelect ] );
+					_DrawChr( imgSystemOption, xx, yy );
+					if( y == 0 ){ DrawNum( imgSystemNum, GetCommonDataDefault( "Continue", 1 ), xx + 192, yy ); }
+					else{
+						let key = [ "BGGEnable", "BGEEnable", "BGMEnable", "SEEnable" ][ y - 1 ];
+						DrawBoolean( imgSystemBoolean, GetCommonDataDefault( key, true ), xx + 192, yy );
+					}
+				}
+			}
+			case( 9 ){
+				ascent( let y in 0..6 ){
+					let yy = GetClipMinY() + 88 + y * 36 + SlowDown( [ 0, -16, 0, 16 ][ y % 4 ], 0, now, 20 );
+					let xx = GetClipMinX() + 128 + SlowDown( [ -16, 0, 16, 0 ][ y % 4 ], 0, now, 20 );
+					let ex = [ 0.7, 1 ][ y == PracticeStage ];
+					SetAlpha( Smooth( 0, [ 96, 255 ][ y == PracticeStage ], now, 20 ) );
+					SetColor( 255, 255, [ 255, 240 + sin( now * 3 ) * 16 ][ y == PracticeStage ] );
+					SetGraphicScale( ex, ex );
+					_DrawChrRect( imgSystemStage, xx, yy, 1, 1, 145, 44 );
+					DrawNum( imgSystemNum, [ 0, y + 1 ][ debug || StageRelease[ y ] ], xx + 160, yy );
+				}
+				SetGraphicScale( 1, 1 );
+				SetAlpha( 255 );
+				SetColor( 255, 255, 255 );
+				if( !StageRelease[ PracticeStage ] ){
+					_DrawChrRect( imgSystemNetabare, GetCenterX(), GetCenterY() + 104, 0, 0, 320, 96 ); 
+				}
+				else{
+					_DrawChrRect( imgSystemSpellResult, GetClipMinX() + 96, GetClipMaxY() - 96, 0, 0, 128, 20 );
+					DrawNumMiddle( imgSystemNumMiddle, StageHighScore[ PracticeStage ], GetCenterX() + 96, GetClipMaxY() - 96 );
+				}
+			}
+			case( 10 ){
+				let height = 24;
+				let width = 256;
+				let cutin = "";
+				let cutinheight = 344;
+				let name = 0;
+				if( SpellSelect >= 0 && SpellSelect < 8 ){
+					cutin = imgCutInAlice;
+					cutinheight = 320;
+					name = 1;
+				}
+				if( SpellSelect >= 8 && SpellSelect < 20 ){
+					cutin = imgCutInSakuya;
+					cutinheight = 320;
+					name = 3;
+				}
+				if( SpellSelect >= 20 && SpellSelect < 24 ){
+					cutin = imgCutInLetty;
+					cutinheight = 304;
+					name = 4;
+				}
+				if( SpellSelect >= 24 && SpellSelect < 40 ){
+					cutin = imgCutInLily;
+					cutinheight = 288;
+					name = 5;
+				}
+				if( SpellSelect >= 40 && SpellSelect < 60 ){
+					cutin = imgCutInLeila;
+					cutinheight = 304;
+					name = 6;
+				}
+				if( ( SpellSelect >= 60 && SpellSelect < 84 ) || ( SpellSelect >= 108 && SpellSelect < 110 ) ){
+					cutin = imgCutInMerry;
+					cutinheight = 256;
+					name = 7;
+				}
+				if( SpellSelect >= 84 && SpellSelect < 108 ){
+					cutin = imgCutInKene;
+					cutinheight = 344;
+					name = 8;
+				}
+				if( SpellSelect >= 110 ){
+					cutin = imgCutInRenko;
+					cutinheight = 288;
+					name = 9;
+				}
+				if( SpellCardPlayHistory[ SpellSelect ] != 0 ){
+					SetAlpha( 96 );
+					_DrawChrRect( cutin, GetClipMaxX() - 96, GetClipMaxY() - cutinheight / 2, 0, 0, 192, cutinheight );
+					SetAlpha( 255 );
+					_DrawChrRect( imgSystemSpellResult, GetClipMinX() + 96, GetClipMaxY() - 128, 0, 20, 128, 40 );
+					_DrawChrRect( imgSystemSpellResult, GetCenterX() + 32, GetClipMaxY() - 128, 0, 40, 32, 60 );
+					_DrawChrRect( imgSystemSpellResult, GetClipMinX() + 96, GetClipMaxY() - 96, 0, 0, 128, 20 );
+					DrawNumMiddle( imgSystemNumMiddle, SpellCardGetHistory[ SpellSelect ], GetCenterX(), GetClipMaxY() - 128 );
+					DrawNumMiddle( imgSystemNumMiddle, SpellCardPlayHistory[ SpellSelect ], GetCenterX() + 96, GetClipMaxY() - 128 );
+					DrawNumMiddle( imgSystemNumMiddle, SpellCardHighScore[ SpellSelect ], GetCenterX() + 96, GetClipMaxY() - 96 );
+					SetMainMenuRect( name, 21.5, 128, 22 );
+					_DrawChr( imgSystemName, GetClipMaxX() - 128, GetClipMaxY() - 56 );
+				}
+				ascent( let i in 0..12 ){
+					let xx = GetCenterX() + [ 32, 0 ][ i == 5 ] + i * 3 + SlowDown( [ 0, -16, 0, 16 ][ i % 4 ], 0, now, 20 );
+					let yy = GetClipMinY() + 64 + i * 20 + SlowDown( [ -16, 0, 16, 0 ][ i % 4 ], 0, now, 20 );
+					let title = ( 120 + i + SpellSelect - 5 ) % 120;
+					SetAlpha( Smooth( 0, [ Smooth( [ 96, 32 ][ i < 5 ], [ 32, 96 ][ i < 5 ], i - [ 6, 0 ][ i < 5 ], [ 6, 4 ][ i < 5 ] ), 255 ][ i == 5 ], now, 20 ) );
+					SetColor( 255, 255, [ 255, 240 + sin( now * 3 ) * 16 ][ i == 5 ] );
+					DrawNumMiddle( imgSystemNumMiddle, title + 1, xx - 144, yy );
+					if( !debug && SpellCardPlayHistory[ title ] == 0 ){ title = 120; }
+					let srcx = ( title % 4 ) * width;
+					let srcy = trunc( title / 4 ) * height;
+					SetGraphicRect( srcx, srcy, srcx + width, srcy + height );
+					_DrawChr( imgSystemSpellName, xx, yy );
+				}
+				if( SpellCardPlayHistory[ SpellSelect ] == 0 ){
+					SetGraphicScale( 1, 1 );
+					SetAlpha( 255 );
+					SetColor( 255, 255, 255 );
+					_DrawChrRect( imgSystemNetabare, GetCenterX(), GetCenterY() + 112, 0, 0, 320, 96 );
+				}
+			}
+			SetGraphicScale( 1, 1 );
+			SetAlpha( 255 );
+			SetColor( 255, 255, 255 );
+			if( Phase >= 4 && Phase <= 8 && !GetCommonDataDefault( "Practice", false ) ){
+				DrawMenuHeading( imgSystemMenu, MainMenu, now );
+				FadeMainMenu( imgSystemMenu, MainMenu, now );
+			}
+			if( Phase >= 9 && Phase <= 10 ){
+				DrawMenuHeading( imgSystemPractice, PracticeMode, now );
+				FadeMainMenu( imgSystemPractice, PracticeMode, now );
+			}
+			if( Phase == 1 && now < 150 ){ SetAlpha( Smooth( 48, 255, now, 150 ) ); }
+			_DrawChrRect( imgSystemCopyright, GetClipMaxX() - 104, GetClipMaxY() - 20, 1, 1, 164, 40 );
+			SetAlpha( 255 );
+		}
+		if( GetCommonData( "Stage" ) != -1 && GetCommonDataDefault( "BGStep", 0 ) != 32767 ){
+			if( SlowEffectAlpha != 0 ){
+				SetGraphicRect( 0, 0, 64, 64 );
+				SetGraphicAngle( 0, 0, count );
+				SetAlpha( SlowEffectAlpha );
+				DrawPlayer( imgSystemPlayerBorder );
+				SetGraphicAngle( 0, 0, 0 );
+				SetAlpha( 255 );
+			}
+			local{
+				let levelx = GetClipMaxX() - 52;
+				let levely = GetClipMaxY() - 7;
+				SetAlpha( Smooth( 32, 255, Hypot( levelx - GetPlayerX(), levely - GetPlayerY() ), 80 ) );
+				SetMainMenuRect( GetCommonDataDefault( "Level", 1 ), 14, 64, 13 );
+				_DrawChr( imgSystemLevel, levelx, levely );
+				if( GetCommonDataDefault( "Practice", false ) ){
+					SetMainMenuRect( 6, 14, 64, 13 );
+					_DrawChr( imgSystemLevel, levelx, levely - 9 );
+				}
+				if( GetCommonDataDefault( "SpellPractice", false ) ){
+					SetMainMenuRect( 7, 14, 64, 13 );
+					_DrawChr( imgSystemLevel, levelx, levely - 9 );
+				}
+				SetAlpha( 255 );
+			}
+			DrawSpell( imgSystemSpellName, imgSystemSpellBonus, imgSystemNumSmall );
+			if( BGMStartCount != 0 && BGMStartCount + 400 > count ){
+				let y = GetClipMaxY() + [ Smooth( -16, 16, count - ( BGMStartCount + 300 ), 100 ), -16 ][ BGMStartCount + 300 > count ];
+				if( BGMStartCount + 100 > count ){ SetAlpha( Smooth( 0, 255, count - BGMStartCount, 100 ) ); }
+				SetMainMenuRect( GetCommonDataDefault( "NowBGM", 0 ), 27, 256, 26 );
+				_DrawChr( imgSystemMusicList, GetClipMaxX() - 128, y );
+				_DrawChrRect( imgSystemOtama, GetClipMaxX() - 272, y, 1, 1, 23, 28 );
+			}
+			if( StageTitleAlpha != 0 ){
+				SetGraphicRect( 0, 0, 256, 128 );
+				SetAlpha( StageTitleAlpha );
+				DrawCenter( imgStage[ GetCommonData( "Stage" ) ] );
+			}
+			if( ShowNameAlpha != 0 ){
+				let namex = GetClipMaxX() - 104;
+				let namey = GetClipMinY() + 24;
+				SetMainMenuRect( ShowName, 21.5, 128, 22 );
+				SetAlpha( Smooth( Min( 32, ShowNameAlpha ), ShowNameAlpha, Hypot( namex - GetPlayerX(), namey - GetPlayerY() ), 112 ) );
+				_DrawChr( imgSystemName, namex, namey );
+			}
+		}
+		SetAlpha( 255 );
+		if( GetCommonDataDefault( "LoadingProgress", -1 ) != -1 ){
+			SetGraphicRect( 0, 0, 512, 512 );
+			DrawCenter( imgMapBlack );
+			DrawProgress( imgSystemProgress, imgSystemProgressBG, imgSystemNumSmall, 256, 12, 96 );
+		}
+		if( GetCommonDataDefault( "Ready", false ) ){
+			SetGraphicRect( 0, 0, 512, 512 );
+			DrawCenter( imgMapBlack );
+			SetGraphicRect( 1, 1, 256, 27 );
+			_DrawChrRect( imgSystemPushKey, GetClipMaxX() - 128, GetClipMaxY() - 14, 1, 1, 256, 27 );
+		}
+		if( GetCommonDataDefault( "Result", false ) ){
+			SetMainMenuRect( [ 0, 1 ][ GetCommonData( "Stage" ) >= 5 ], 25, 192, 26 );
+			_DrawChr( imgSystemClear, GetCenterX(), GetClipMinY() + 64 );
+			ascent( let i in 0..9 ){
+				let y = GetClipMinY() + 96 + i * 24;
+				if( ( GetCommonData( "Stage" ) >= 5 && ( i == 3 || i == 4 ) ) || ( i != 3 && i != 4 && i != 5 && i != 7 ) ){
+					SetMainMenuRect( [ [ 10, 5 + GetCommonDataDefault( "Level", 1 ) ][ i == 6 ], i ][ i < 5 ], 23.2, 118, 23 );
+					_DrawChr( imgSystemResult, GetClipMinX() + 128, y );
+					let width = 25.4 * [ 0, 0, 0, 1, 1, 0, 3, 0, 2 ][ i ];
+					_DrawChrRect( imgSystemEqual, GetCenterX() + 16, y, 1 + width, 1, 1 + 25.6 + width, 31 );
+					DrawResultNum( imgSystemResultNum, GetCommonDataDefault( "Result" ~ [ "Clear", "Point", "Graze", "Player", "Bomb", "0", "Rank", "0", "Total" ][ i ], 3679 ), i, y );
+				}
+			}
+		}
+		local{
+			let step = GetCommonDataDefault( "EDStep", [ -1, 0 ] );
+			if( step[ 0 ] >= 0 ){
+				if( step[ 0 ] != 0 && IsMarisa() ){ step[ 0 ] = step[ 0 ] + 3; }
+				SetGraphicRect( 0, 0, 384, 448 );
+				if( GetCommonDataDefault( "EDFade", 0 ) != 0 ){ SetAlpha( Smooth( 255, 0, now - GetCommonDataDefault( "EDFade", 0 ), 300 ) ); }
+				DrawCenter( imgED[ step[ 0 ] ] );
+				if( step[ 0 ] != 0 ){
+					SetAlpha( Smooth( 255, 0, now - step[ 1 ], 30 ) );
+					DrawCenter( imgED[ step[ 0 ] - [ 1, 4 ][ IsMarisa() && step[ 0 ] == 4 ] ] );
+				}
+				SetAlpha( 255 );
+			}
+		}
+		if( PrevBGM == 18 && GetCommonDataDefault( "BGStep", 0 ) == 32767 ){
+			let scount = count - BGMStartCount;
+			UseZBuffer( true );
+			WriteZBuffer( true );
+			SetViewFrom( 300, 90, 5 );
+			SetViewTo( 0, 100, 0 );
+			SetFog( Smooth( 50, 500, scount, 1800 ), Smooth( 50, 1000, scount, 1800 ), 0, 0, 0 );
+			if( GetCommonDataDefault( "BGGEnable", true ) ){
+				SetGraphicRect( 0, 0, 512, 512 );
+				SetGraphicAngle( 0, 0, 0 );
+				SetGraphicScale( 10, 10 );
+				SetTexture( imgMapBlack );
+				DrawGraphic3D( 0, 0, -300 );
+				SetGraphicAngle( 90, 0, -count / 2.5 );
+				SetGraphicScale( 0.3, 0.3 );
+				SetTexture( imgMapSeal );
+				DrawGraphic3D( -50, 0, 0 );
+				SetTexture( imgMapSnow );
+				SetGraphicRect( 0, 0, 128, 128 );
+				ascent( let i in 0..length( BGEffectX ) ){
+					SetGraphicAngle( 0, 0, count * 2 );
+					SetAlpha( [ BGEffectLife[ i ], Smooth( 0, 255, 250 - BGEffectLife[ i ], 48 ) ][ BGEffectLife[ i ] > 208 ] );
+					SetColor( 255, 255, BGEffectLife[ i ] );
+					DrawGraphic3D( BGEffectX[ i ], BGEffectY[ i ], BGEffectZ[ i ] );
+				}
+			}
+			SetGraphicScale( 0.2, 0.2 );
+			SetGraphicAngle( 180, 0, 0 );
+			SetTexture( imgSystemStaffRoll );
+			ascent( let i in 0..15 ){
+				let srcx = trunc( i / 8 ) * 256;
+				let srcy = ( i % 8 ) * 64;
+				let dsty = scount / 19 - i * 32 + 50;
+				SetGraphicRect( srcx, srcy, srcx + 256, srcy + 64 );
+				SetAlpha( MinMax( ( dsty - 64 ) * 5, 0, 255 ) );
+				DrawGraphic3D( 8, Max( dsty, 100 ), 200 );
+			}
+			if( scount > 2200 ){
+				if( scount > 2900 ){ SetAlpha( Smooth( 255, 0, scount - 2900, 300 ) ); }
+				else{ SetAlpha( Smooth( 0, 255, scount - 2200, 200 ) ); }
+				SetMainMenuRect( 18, 27, 256, 26 );
+				SetTexture( imgSystemMusicList );
+				DrawGraphic3D( 15, 78, 200 );
+				SetGraphicRect( 0, 0, 24, 28 );
+				SetTexture( imgSystemOtama );
+				DrawGraphic3D( -15, 78, 200 );
+			}
+			if( scount > 10000 ){
+				if( !Continued() ){
+					SetAlpha( Smooth( 0, 255, scount - 10555, 300 ) );
+					SetGraphicRect( 0, 0, 256, 128 );
+					SetTexture( imgSystemExtra );
+					DrawGraphic3D( 8, 112, 200 );
+				}
+				SetAlpha( Smooth( 0, 255, scount - [ 11010, 10555 ][ Continued() ], 300 ) );
+				SetGraphicRect( 0, 0, 128, 32 );
+				SetTexture( imgSystemNextAge );
+				DrawGraphic3D( 24, 78, 200 );
+			}
+		}
+		if( WhiteFadeOutAlpha != 0 ){
+			SetAlpha( WhiteFadeOutAlpha );
+			SetGraphicRect( 0, 0, 512, 512 );
+			DrawCenter( imgMapWhite );
+			SetAlpha( 255 );
+		}
+	}
+}

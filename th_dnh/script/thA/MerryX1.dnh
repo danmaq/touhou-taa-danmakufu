@@ -1,0 +1,95 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		SetShotAutoDeleteClip( 88, 88, 88, 88 );
+		loop{
+			Border();
+			Wait( 150 );
+			ExMove( false, count );
+			loop( 20 ){
+				SetShotDirectionType( PLAYER );
+				let angle = 0;
+				while( angle < 360 ){
+					ascent( let i in 0..2 ){
+						CreateShotA( 0, GetX(), GetY(), 5 );
+						SetShotDataA( 0, 0, 10, angle + 180 + i * 6, 0, -0.3, 0, PURPLE12 );
+						SetShotDataA( 0, 112, NULL, NULL, 8 * [ -1, 1 ][ i ], 0.2, 2, PURPLE12 );
+						SetShotDataA( 0, 120, NULL, NULL, 0, 0.2, 2, PURPLE12 );
+						FireShot( 0 );
+					}
+					angle += 12;
+				}
+				PlaySEEx( seShot1 );
+				Wait( 8 );
+			}
+			Wait( 50 );
+			ExMove( false, count );
+		}
+	}
+	task Border(){
+		ascent( let i in 0..3 ){
+			PlaySEEx( sePower1 );
+			Concentration02( 90 );
+			Wait( 90 );
+			MakeShot( [ i, 1 ][ i == 2 ] );
+		}
+	}
+	function MakeShot( let pattern ){
+		let space = 56;
+		let px = GetPlayerX() % space;
+		let py = GetPlayerY() % space;
+		let y = GetClipMinY() - 128;
+		while( y <= GetClipMaxY() + 128 ){
+			let x = GetClipMinX() - 88;
+			while( x <= GetClipMaxX() + 88 ){
+				ascent( let i in 0..2 ){ Sudden( x + px, y + py, i * 180 + pattern * 90, [ RED21, BLUE21 ][ pattern ] ); }
+				x += space;
+			}
+			y += space;
+		}
+	}
+	task Sudden( let x, let y, let angle, let color ){
+		let objcount = 0;
+		let obj = SetShotObject( x, y, 0, angle, color, 0 );
+		Obj_SetAlpha( obj, 0 );
+		Obj_SetCollisionToPlayer( obj, false );
+		while( !Obj_BeDeleted( obj ) && objcount < 60 ){
+			Obj_SetAlpha( obj, Smooth( 0, 255, objcount, 60 ) );
+			Obj_SetSpeed( obj, Smooth( 0, 1.2, objcount, 60 ) );
+			yield;
+			objcount++;
+		}
+		if( Obj_BeDeleted( obj ) ){ return; }
+		SetShotDirectionType( ABSOLUTE );
+		CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), 2.4, angle, color, 0 );
+		Obj_Delete( obj );
+	}
+	@Initialize{
+		SetLife( 2000 );
+		SetTimer( 44 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		SetColor( 240, 128, 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		SetColor( 255, 255, 255 );
+		DrawBossChr( imgEnemyMerry, 1, 1, 44, 60, count );
+	}
+}

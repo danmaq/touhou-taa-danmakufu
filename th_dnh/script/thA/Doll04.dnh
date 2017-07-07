@@ -1,0 +1,38 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 0 );
+	let FadeTime = 0;
+	let maxnum = 8 + Level;
+	task Behavior(){
+		Wait( 100 );
+		SetShotDirectionType( PLAYER );
+		ascent( let i in 0..maxnum ){ WayShotGap01( 60, [ 12, 10 ][ Level == 3 ], Smooth( 1, [ 2.5, 3.6 ][ trunc( Level / 2 ) ], i, maxnum - 1 ), RED04, 24, Smooth( -10, 10, i, maxnum - 1 ) ); }
+		PlaySEEx( seShot1 );
+		Wait( 60 );
+		FadeTime = count;
+		Wait( 100 );
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 100 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count > 90 ){ Collision( 20, 0 ); }
+		SEShotHit( seDamage, count );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 3, 16 ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		if( count < 100 ){ SetAlpha( Smooth( 0, 255, count, 100 ) ); }
+		if( FadeTime != 0 ){ SetAlpha( Smooth( 255, 0, count - FadeTime, 100 ) ); }
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei5, count );
+		SetAlpha( 255 );
+	}
+}

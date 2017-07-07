@@ -1,0 +1,131 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_CAVEDA4";
+	let PrevTime = GetTimer();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let dir = -1;
+		loop( 2 ){
+			CreateEnemyFromScript( "Obj", GetX(), GetY(), 0, 0, dir );
+			dir = -dir;
+		}
+		let pattern = 0;
+		loop{
+			SetShotDirectionType( ABSOLUTE );
+			let pangle = GetAngleToPlayer();
+			alternative( pattern % 3 )
+			case( 0 ){
+				let angle = 66;
+				loop( 3 ){
+					ascent( let i in 0..2 ){ BuckShot( pangle + angle * [ 1, -1 ][ i ] ); }
+					PlaySEEx( seShot1 );
+					Wait( 40 );
+					angle -= 30;
+				}
+			}
+			case( 1 ){
+				let angle = 30;
+				loop( 10 ){
+					ascent( let i in 0..2 ){ BuckShot( pangle + angle * [ 1, -1 ][ i ] ); }
+					PlaySEEx( seShot1 );
+					Wait( 10 );
+					angle += 24;
+				}
+			}
+			case( 2 ){
+				ascent( let i in 0..18 ){
+					if( i % 2 == 0 ){
+						let angle = -80;
+						while( angle <= 80 ){
+							BuckShot( GetAngleToPlayer() + angle );
+							angle += 80;
+						}
+					}
+					else{ BuckShot( GetAngleToPlayer() ); }
+					PlaySEEx( seShot1 );
+					Wait( [ 10, 5 ][ i < 8 ] );
+				}
+			}
+			Wait( [ 90, 30 ][ pattern % 3 == 1 ] );
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	function BuckShot( let angle ){
+		Ref( angle, 5, RED03 );
+		loop( [ 10, 6, 10, 16 ][ Level ] ){
+			let color = [ RED04, RED01, RED02 ][ rand_int( 0, 2 ) ];
+			let gap;
+			let speed;
+			alternative( color )
+			case( RED02 ){
+				gap = 2.2;
+				speed = rand( 4.2, 4.8 );
+			}
+			case( RED01 ){
+				gap = 4;
+				speed = rand( 3.3, 4.4 );
+			}
+			case( RED04 ){
+				gap = 5;
+				speed = rand( 2.8, 3.6 );
+			}
+			Ref( angle + RandBlur( gap ), speed, color );
+		}
+	}
+	task Ref( let angle, let speed, let color ){
+		let obj = SetShotObject( GetX(), GetY(), speed, angle, color, 33 );
+		while( !( Obj_BeDeleted( obj ) || ReflectObject( obj, false, Level != 0, true ) ) ){ yield; }
+		if( Obj_BeDeleted( obj ) ){ return; }
+		CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), speed, Obj_GetAngle( obj ), color, 0 );
+		Obj_Delete( obj );
+	}
+	@Initialize{
+		SetLife( 5555 );
+		SetTimer( 80 );
+		SetInvincibility( 30 );
+		SetDamageRate( 100, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		SetShotAutoDeleteClip( 64, 64, 64, 64 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, -1 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{
+		SetGraphicRect( 0, 0, 512, 256 );
+		SetAlpha( Smooth( 255, 192, count, 200 ) );
+		SetGraphicScale( Accelerate( 2, 1, count, 60 ), Accelerate( 0, 1, count, 60 ) );
+		DrawChr( imgEnemyBat[ count % 10 ], count );
+		SetGraphicScale( 1, 1 );
+		SetAlpha( 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+}
+script_enemy Obj{
+	let Argv = GetArgument();
+	let uniquestr = "G_CAVEDA4";
+	@Initialize{
+		SetDamageRateEx( 100, 100, 10, 5 );
+		SetLife( 32767 );
+	}
+	@MainLoop{
+		SetX( GetCommonData( uniquestr ~ "X" ) + 128 * Argv );
+		SetY( GetCommonData( uniquestr ~ "Y" ) - 144 );
+		SetCollisionA( GetX(), GetY(), 96 );
+	}
+}

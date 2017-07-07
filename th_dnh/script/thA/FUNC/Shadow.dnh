@@ -1,0 +1,45 @@
+#include_function ".\FUNC\Enemy&Shadow.dnh"
+function IsHidden(){ return GetKeyState( VK_SLOWMOVE ) == KEY_HOLD; }
+function IsSudden(){ return !IsHidden(); }
+function DestructShadow( let radius ){
+	if( !BeVanished() ){ DeleteEnemyShotToItemInCircle( SHOT, GetX(), GetY(), radius ); }
+	DeleteEnemyShotToItemInCircle( ALL, GetX(), GetY(), 0 );
+}
+function StandardBehaviorShadow( let hiddense, let suddense, let prevlife, let uniquestr, let collision ){
+	let life = GetLife();
+	if( prevlife != life ){
+		let total = GetCommonData( uniquestr ~ "D" ) + absolute( life - prevlife );
+		SetCommonData( uniquestr ~ "D", total );
+	}
+	alternative( GetKeyState( VK_SLOWMOVE ) )
+	case( KEY_PUSH ){ PlaySE( hiddense ); }
+	case( KEY_PULL ){ PlaySE( suddense ); }
+	case( KEY_FREE ){
+		Collision( 40, [ 0, 12 ][ collision ] );
+		if( GetCommonData( "NowCount" ) % 2 == 0 ){
+			CreateShotA( 0, GetX(), GetY(), 20 );
+			SetShotDataA( 0, 0, 0, 0, 0, 0, 0, WHITE05 );
+			SetShotKillTime( 0, 0 );
+			FireShot( 0 );
+		}
+	}
+	alternative( GetCommonData( uniquestr ) )
+	case( 0 ){ AddLife( -32767 ); }
+	case( 2 ){ VanishEnemy(); }
+	return life;
+}
+function MoveRotate( let speed, let diam, let count, let uniquestr ){
+	SetX( GetCommonData( uniquestr ~ "X" ) - cos( count * speed + GetAngle() ) * diam );
+	SetY( GetCommonData( uniquestr ~ "Y" ) + sin( count * speed + GetAngle() ) * diam );
+}
+function DrawShadowRect( let circle, let enemy, let width, let height, let angle, let count ){
+	SetAlpha( [ 48, 192 ][ IsHidden() ] );
+	_DrawCircle( circle, count, 64 );
+	SetAlpha( [ 255, 48 ][ IsHidden() ] );
+	SetGraphicAngle( 0, 0, angle );
+	SetGraphicRect( 0, 0, width, height );
+	DrawChr( enemy, count );
+	SetGraphicAngle( 0, 0, 0 );
+	SetAlpha( 255 );
+}
+function DrawShadow( let circle, let enemy, let count ){ DrawShadowRect( circle, enemy, 32, 32, 0, count ); }

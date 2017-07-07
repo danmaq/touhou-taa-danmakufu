@@ -1,0 +1,134 @@
+#include_function ".\IMAGE\index_mini.dnh"
+#include_function ".\FUNC\Stage&Shot&Enemy&Shadow.dnh"
+function IsOut( let deadline ){ return IsOutPos( GetX(), GetY(), deadline ); }
+function _WayShot02( let start, let end, let space, let speed, let accelerate, let max, let type, let delay ){
+	let angle = start;
+	while( [ angle <= end, angle < end ][ end >= 360 + start ] ){
+		if( accelerate == 0 ){ CreateShot01( GetX(), GetY(), speed, angle, type, delay ); }
+		else{ CreateShot02( GetX(), GetY(), speed, angle, accelerate, max, type, delay ); }
+		angle += space;
+	}
+}
+function _WayShot01( let start, let end, let space, let speed, let type, let delay ){ _WayShot02( start, end, space, speed, 0, speed, type, delay ); }
+function WayShotGap01( let limit, let space, let speed, let type, let delay, let gap ){ _WayShot01( -limit + gap, limit + gap, space, speed, type, delay ); }
+function WayShot01( let limit, let space, let speed, let type, let delay ){ WayShotGap01( limit, space, speed, type, delay, 0 ); }
+function CircleShotGap01( let space, let speed, let type, let delay, let gap ){ _WayShot01( gap, 360 + gap, space, speed, type, delay ); }
+function CircleShot01( let space, let speed, let type, let delay ){ CircleShotGap01( space, speed, type, delay, 0 ); }
+function WayShotGap02( let limit, let space, let speed, let accelerate, let max, let type, let delay, let gap ){ _WayShot02( -limit + gap, limit + gap, space, speed, accelerate, max, type, delay ); }
+function WayShot02( let limit, let space, let speed, let accelerate, let max, let type, let delay ){ WayShotGap02( limit, space, speed, accelerate, max, type, delay, 0 ); }
+function CircleShotGap02( let space, let speed, let accelerate, let max, let type, let delay, let gap ){ _WayShot02( gap, 360 + gap, space, speed, accelerate, max, type, delay ); }
+function CircleShot02( let space, let speed, let accelerate, let max, let type, let delay ){ CircleShotGap02( space, speed, accelerate, max, type, delay, 0 ); }
+function _WayShotObject02( let object, let start, let end, let space, let speed, let accelerate, let max, let type, let delay ){
+	let angle = start;
+	while( [ angle <= end, angle < end ][ end >= 360 + start ] ){
+		if( accelerate == 0 ){ CreateShot01( Obj_GetX( object ), Obj_GetY( object ), speed, angle, type, delay ); }
+		else{ CreateShot02( Obj_GetX( object ), Obj_GetY( object ), speed, angle, accelerate, max, type, delay ); }
+		angle += space;
+	}
+}
+function _WayShotObject01( let object, let start, let end, let space, let speed, let type, let delay ){ _WayShotObject02( object, start, end, space, speed, 0, speed, type, delay ); }
+function WayShotObjectGap01( let object, let limit, let space, let speed, let type, let delay, let gap ){ _WayShotObject01( object, -limit + gap, limit + gap, space, speed, type, delay ); }
+function WayShotObject01( let object, let limit, let space, let speed, let type, let delay ){ WayShotObjectGap01( object, limit, space, speed, type, delay, 0 ); }
+function CircleShotObjectGap01( let object, let space, let speed, let type, let delay, let gap ){ _WayShotObject01( object, gap, 360 + gap, space, speed, type, delay ); }
+function CircleShotObject01( let object, let space, let speed, let type, let delay ){ CircleShotObjectGap01( object, space, speed, type, delay, 0 ); }
+function WayShotObjectGap02( let object, let limit, let space, let speed, let accelerate, let max, let type, let delay, let gap ){
+	_WayShotObject02( object, -limit + gap, limit + gap, space, speed, accelerate, max, type, delay );
+}
+function WayShotObject02( let object, let limit, let space, let speed, let accelerate, let max, let type, let delay ){ WayShotObjectGap02( object, limit, space, speed, accelerate, max, type, delay, 0 ); }
+function CircleShotObjectGap02( let object, let space, let speed, let accelerate, let max, let type, let delay, let gap ){
+	_WayShotObject02( object, gap, 360 + gap, space, speed, accelerate, max, type, delay );
+}
+function CircleShotObject02( let object, let space, let speed, let accelerate, let max, let type, let delay ){ CircleShotObjectGap02( object, space, speed, accelerate, max, type, delay, 0 ); }
+function _WayScriptShot( let name, let start, let end, let space, let speed, let delay, let argv ){
+	let angle = start;
+	while( [ angle <= end, angle < end ][ end >= 360 + start ] ){
+		CreateShotFromScript( name, GetX(), GetY(), speed, angle, delay, argv );
+		angle += space;
+	}
+}
+function ReflectObject( let object, let bottom, let side, let top ){
+	let angle = Obj_GetAngle( object ) % 360;
+	if( ( top && Obj_GetY( object ) < GetClipMinY() ) || ( bottom && Obj_GetY( object ) > GetClipMaxY() ) ){
+		Obj_SetAngle( object, -angle );
+		return true;
+	}
+	if( side && ( Obj_GetX( object ) < GetClipMinX() || Obj_GetX( object ) > GetClipMaxX() ) ){
+		Obj_SetAngle( object, 180 - angle );
+		return true;
+	}
+	return false;
+}
+function _SetObject( let x, let y, let speed, let angle, let delay, let autodelete ){
+	let obj = Obj_Create( OBJ_SHOT );
+	Obj_SetX( obj, x );
+	Obj_SetY( obj, y );
+	Obj_SetSpeed( obj, speed );
+	Obj_SetAngle( obj, angle );
+	Obj_SetAutoDelete( obj, autodelete );
+	ObjShot_SetDelay( obj, delay );
+	return obj;
+}
+function SetHiddenObject( let x, let y, let speed, let angle, let delay, let redist, let autodelete ){
+	let obj = _SetObject( x, y, speed, angle, delay, autodelete );
+	Obj_SetCollisionToPlayer( obj, false );
+	ObjShot_SetBombResist( obj, redist );
+	return obj;
+}
+function SetShotObject( let x, let y, let speed, let angle, let color, let delay ){
+	let obj = _SetObject( x, y, speed, angle, delay, true );
+	ObjShot_SetGraphic( obj, color );
+	return obj;
+}
+function MoveRotateObject( let speed, let diam, let count, let obj ){
+	Obj_SetX( obj, GetX() - cos( count * speed + GetAngle() ) * diam );
+	Obj_SetY( obj, GetY() + sin( count * speed + GetAngle() ) * diam );
+}
+function WaitObject( let obj, let frame ){
+	let count = 0;
+	while( !Obj_BeDeleted( obj ) && count < frame ){
+		yield;
+		count++;
+	}
+	return Obj_BeDeleted( obj );
+}
+function GetAngleToPlayerObject( let obj ){ return atan2( GetPlayerY() - Obj_GetY( obj ), GetPlayerX() - Obj_GetX( obj ) ); }
+function Reflect( let bottom ){
+	if( !IsOut( 0 ) ){ return false; }
+	let angle = GetAngle() % 360;
+	if( GetY() < GetClipMinY() || ( bottom && GetY() > GetClipMaxY() ) ){ SetAngle( -angle ); }
+	if( GetX() < GetClipMinX() || GetX() > GetClipMaxX() ){ SetAngle( 180 - angle ); }
+	return true;
+}
+function CircleScriptShotGap( let name, let space, let speed, let delay, let argv, let gap ){ _WayScriptShot( name, gap, 360 + gap, space, speed, delay, argv ); }
+function SetFade02( let count, let birthtime, let deathtime, let fadetime ){
+	SetAlpha( [
+		0, [ [ 255, Smooth( 255, 0, count - ( deathtime - fadetime ), fadetime ) ][ count > deathtime - fadetime ], Smooth( 0, 255, count - birthtime, fadetime ) ][ count < birthtime + fadetime ]
+	][ count > birthtime && count < deathtime ] );
+}
+function SetFade01( let count, let deathtime, let fadetime ){ SetFade02( count, 32767, deathtime, fadetime ); }
+function DrawChrGap( let file, let gap ){ _DrawChr( file, GetX(), GetY() + gap ); }
+function DrawChr( let file, let count ){ DrawChrGap( file, sin( count * 2.5 ) * 8 ); }
+function DrawCircle( let file, let count, let width ){
+	SetAlpha( 96 );
+	_DrawCircle( file, count, width );
+	SetAlpha( 255 );
+}
+function _DrawCircle( let file, let count, let width ){
+	SetGraphicAngle( 0, 0, -count );
+	SetGraphicRect( 0, 0, width, width );
+	DrawChrGap( file, 0 );
+	SetGraphicAngle( 0, 0, 0 );
+}
+function DrawRotate( let file, let count ){
+	SetGraphicAngle( 0, 0, count );
+	DrawChrGap( file, 0 );
+	SetGraphicAngle( 0, 0, 0 );
+}
+function WaitSpeedDown( let under ){ yield; while( GetSpeed() > under ){ yield; } }
+function WaitZeroSpeed(){ WaitSpeedDown( 0 ); }
+task TaskPlay( let sefile, let num, let interval ){
+	loop( num ){
+		PlaySEEx( sefile );
+		Wait( interval );
+	}
+}

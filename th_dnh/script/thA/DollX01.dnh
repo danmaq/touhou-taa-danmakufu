@@ -1,0 +1,54 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Argv = GetArgumentDefault( 0 );
+	let FadeTime = 0;
+	task Behavior(){
+		Wait( 100 );
+		let dir = [ 1, -1 ][ GetX() < GetCenterX() ];
+		let space = 30;
+		SetShotDirectionType( PLAYER );
+		ascent( let i in 0..2 ){
+			let angle = 0;
+			while( angle < 360 ){
+				let gap = 0;
+				while( gap <= space ){
+					let color = [ AQUA12, RED12 ][ i ];
+					if( !( gap >= space / 2 - 3 && gap <= space / 2 + 3 ) ){
+						CreateShotA( 0, GetX(), GetY(), [ 5, 30 ][ i ] );
+						SetShotDataA( 0, 0, Smooth( 5, 13, gap, space ), ( angle + gap ) * dir, 0, 0, 20, color );
+						SetShotDataA( 0, 2, NULL, NULL, 0, -0.5, Smooth( 2.6, [ 3, 5 ][ i ], gap, space ), color );
+						FireShot( 0 );
+					}
+					gap += 3;
+				}
+				angle += space;
+			}
+		}
+		PlaySEEx( seShot1 );
+		Wait( 60 );
+		FadeTime = count;
+		Wait( 100 );
+		VanishEnemy();
+	}
+	@Initialize{
+		SetLife( 100 );
+		Behavior();
+	}
+	@MainLoop{
+		if( count > 90 ){ Collision( 20, 0 ); }
+		SEShotHit( seDamage, count );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 2, 16 ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		if( count < 100 ){ SetAlpha( Smooth( 0, 255, count, 100 ) ); }
+		if( FadeTime != 0 ){ SetAlpha( Smooth( 255, 0, count - FadeTime, 100 ) ); }
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei1, count );
+		SetAlpha( 255 );
+	}
+}

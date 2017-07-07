@@ -1,0 +1,122 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquecode = RandBlur( 32767 );
+	let uniquestr = ToString( uniquecode );
+	let Argv = GetArgumentDefault( 0 );
+	task Behavior(){
+		yield;
+		SetShotDirectionType( ABSOLUTE );
+		CreateShadowInterface( uniquestr );
+		PlaySEEx( seShadow );
+		Wait( 20 );
+		let tablex = [];
+		let tabley = [];
+		alternative( Argv )
+		case( 0 ){
+			tablex = tablex ~ [ -180,	-112,	112,	180 ];
+			tabley = tabley ~ [ 144,	-208,	208,	-144 ];
+		}
+		case( 1 ){
+			tablex = tablex ~ [ -160,	-160,	-160,	160,	160,	160 ];
+			tabley = tabley ~ [ -192,	0,		192,	-192,	0,		192 ];
+		}
+		case( 2 ){
+			tablex = tablex ~ [ -196,	-196,	-196,	-196,	-140,	-84,	-28,	28,		84,		140,	196,	196,	196,	196 ];
+			tabley = tabley ~ [ -232,	-104,	24,		152,	216,	-232,	216,	-232,	216,	-232,	216,	86,		-40,	-168 ];
+		}
+		ascent( let i in 0..length( tablex ) ){ CreateEnemyFromScript( "Shadow", GetCenterX() + tablex[ i ], GetCenterY() + tabley[ i ], 0, [ 0, 45 ][ Argv == 1 ], uniquecode ); }
+		PlaySEEx( seShadow );
+		Wait( 60 );
+		let angle = GetAngleToPlayer();
+		let pattern = 0;
+		loop( 6 ){
+			let speed = 1;
+			loop( 14 ){
+				SetShotDirectionType( ABSOLUTE );
+				CircleShotGap01( 360 / ( 6 + Level + pattern ), speed * [ 0.8, 1, 1.2, 1.5 ][ Level ], PURPLE12, 25, angle );
+				PlaySE( seShot1 );
+				Wait( 5 );
+				speed += 0.35;
+				angle += 8 - Level;
+			}
+			speed = 2.4;
+			loop( 8 ){
+				SetShotDirectionType( ABSOLUTE );
+				CircleShotGap01( 360 / ( 6 + Level + pattern ), speed * [ 0.8, 1, 1.2, 1.5 ][ Level ], GREEN12, 25, angle );
+				PlaySE( seShot1 );
+				Wait( 5 );
+				speed += 0.2;
+				angle -= 3.3 - Level / 2;
+			}
+			pattern++;
+		}
+		Wait( 120 );
+		SetSpeed( 0.8 );
+		SetAngle( 270 );
+	}
+	@Initialize{
+		SetLife( 80 );
+		SetDamageRate( 2, 100 );
+		SetX( GetCenterX() );
+		SetY( GetClipMinY() + 96 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 400 ){ SetDamageRate( 100, 50 ); }
+		TaskShadowInterface( uniquestr, [ -1, 3 ][ count > 420 ] );
+		SEShotHit( seDamage, count );
+		Collision( 20, 8 );
+		Gone();
+		if( IsBossExisting() ){ VanishEnemy(); }
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		DropItem( 8, 32 );
+		if( Argv == 2 && !BeVanished() ){
+			DropItem( 32, 64 );
+			DropExtend();
+		}
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicScale( Accelerate( 0, 1, count, 20 ), Accelerate( 2, 1, count, 20 ) );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+		SetGraphicScale( 1, 1 );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	task Behavior(){
+		Wait( 30 );
+		let pattern = 0;
+		loop{
+			SetShotDirectionType( ABSOLUTE );
+			CircleShotGap01( 90, Smooth( 1, [ 2.5, 4, 4.4, 4.5 ][ Level ], pattern, 8 ), YELLOW02, 5, GetAngle() );
+			PlaySEEx( seShot1 );
+			Wait( 10 );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 200 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

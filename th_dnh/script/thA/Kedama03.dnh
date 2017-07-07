@@ -1,0 +1,41 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 0 );
+	let Shot;
+	task Behavior(){
+		yield;
+		let dir = [ 1, -1 ][ GetX() > GetCenterX() ];
+		SetSpeed( 3 );
+		Wait( 60 );
+		loop( 45 ){
+			SetAngle( GetAngle() + 2 * dir );
+			yield
+		}
+	}
+	@Initialize{
+		SetLife( 30 );
+		Behavior();
+		Shot = rand_int( 0, 6 ) * 3;
+	}
+	@MainLoop{
+		if( count % 20 == Shot ){
+			SetShotDirectionType( PLAYER );
+			CircleShot02( 360 / ( Level + 2 ), 0, 0.01, [ 0.3, 0.5, 0.7, 1 ][ Level ], [ BLUE01, RED01, PURPLE01, GREEN01, AQUA01, YELLOW01, ORANGE01 ][ Shot % 7 ], 5 );
+			PlaySEEx( seShot1 );
+		}
+		SEShotHit( seDamage, count );
+		Collision( 20, 0 );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ if( count > 100 || Argv % 3 == 0 ){ DropItem( 1, 8 ); } }
+	@DrawLoop{
+		SetGraphicAngle( 0, 0, -count * 8 );
+		SetGraphicRect( 0, 0, 32, 32 );
+		DrawChr( imgEnemyKedamaAqua, count );
+		SetGraphicAngle( 0, 0, 0 );
+	}
+}

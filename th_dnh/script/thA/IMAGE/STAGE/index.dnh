@@ -1,0 +1,9 @@
+let imgStage = [
+	GetCurrentScriptDirectory() ~ "IMAGE\STAGE\1.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\STAGE\2.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\STAGE\3.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\STAGE\4.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\STAGE\5.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\STAGE\6.png",
+	GetCurrentScriptDirectory() ~ "IMAGE\STAGE\Extra.png",
+];

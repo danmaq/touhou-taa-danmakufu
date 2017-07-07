@@ -1,0 +1,71 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgumentDefault( 0 );
+	let FadeTime = 0;
+	let Invincible = 0;
+	task Behavior(){
+		Wait( 100 );
+		Invincible++;
+		SetShotDirectionType( ABSOLUTE );
+		let angle = 0;
+		while( angle < 360 ){
+			let pangle = angle + GetAngleToPlayer();
+			Appear( pangle );
+			angle += [ 30, 20, 20, 15 ][ Level ];
+		}
+		PlaySEEx( seShot3 );
+		Wait( 2 );
+		Invincible++;
+		Wait( 60 );
+		FadeTime = count;
+		Wait( 100 );
+		VanishEnemy();
+	}
+	task Appear( let angle ){
+		let obj = SetShotObject( GetX(), GetY(), 20, angle, AQUA12, 0 );
+		Obj_SetCollisionToPlayer( obj, false );
+		let count = 0;
+		if( WaitObject( obj, [ 2, 1 ][ Level == 3 ] ) ){ return; }
+		alternative( Level )
+		case( 0, 1 ){
+			CreateShotA( 0, Obj_GetX( obj ), Obj_GetY( obj ), 0 );
+			SetShotDataA( 0, 0, 10, angle, 0, -0.7, 0.8, AQUA12 );
+			FireShot( 0 );
+		}
+		case( 2, 3 ){
+			let dir = 1;
+			loop( 2 ){
+				CreateShotA( 0, Obj_GetX( obj ), Obj_GetY( obj ), 0 );
+				SetShotDataA( 0, 0, 10, angle + 10 * dir, dir, -0.5, 0.8, AQUA12 );
+				SetShotDataA( 0, 50, NULL, NULL, 0, -0.5, 0.8, AQUA12 );
+				FireShot( 0 );
+				dir = -dir;
+			}
+		}
+		Obj_Delete( obj );
+	}
+	@Initialize{
+		SetLife( 3 );
+		SetDamageRate( 0, 0 );
+		Behavior();
+	}
+	@MainLoop{
+		if( Invincible >= 1 ){ Collision( 20, 0 ); }
+		if( Invincible == 2 ){ SetDamageRate( 100, 1 ); }
+		SEShotHit( seDamage, count );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DropItem( 2, 16 ); }
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		if( count < 100 ){ SetAlpha( Smooth( 0, 255, count, 100 ) ); }
+		if( FadeTime != 0 ){ SetAlpha( Smooth( 255, 0, count - FadeTime, 100 ) ); }
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei3, count );
+		SetAlpha( 255 );
+	}
+}

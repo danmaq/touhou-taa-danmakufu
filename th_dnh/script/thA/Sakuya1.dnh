@@ -1,0 +1,121 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let uniquestr = "G_SAKUYA1";
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		Wait( 120 );
+		let pattern = 0;
+		while( 1 ){
+			let limit = [ 60, 120 ][ trunc( Level / 2 ) ];
+			let angle = -limit;
+			while( angle <= limit ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 1, angle + GetAngleToPlayer(), pattern );
+				angle += [ 120, 80 ][ trunc( Level / 2 ) ];
+			}
+			PlaySEEx( seShadow );
+			Wait( 60 );
+			SetShotDirectionType( PLAYER );
+			let speed = 1;
+			loop( [ 1, 2 ][ Level == 3 ] ){
+				CircleShot01( [ 60, 10, 6, 8 ][ Level ], speed, GREEN12, 10 );
+				speed += 0.3;
+			}
+			Wait( 30 );
+			loop( 4 ){
+				if( Level != 0 ){
+					SetShotDirectionType( PLAYER );
+					let speed = 1.2;
+					loop( 3 ){
+						WayShot01( 6, 3, speed, RED32, 5 );
+						speed += 0.2;
+					}
+					PlaySEEx( seShot2 );
+				}
+				Wait( 45 );
+			}
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 2000 );
+		SetTimer( 60 );
+		SetInvincibility( 30 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEnemyMarker( true );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, [ -1, 12 ][ count > 130 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 20 );
+		count++;
+	}
+	@Finalize{ ReleaseShadowInterface( uniquestr ); }
+	@DrawLoop{ DrawBossChr( imgEnemySakuya, 1, 1, 44, 86, count ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_SAKUYA1";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevLife;
+	let Argv = GetArgument();
+	task SpellShot( let angle ){
+		let obj = Obj_Create( OBJ_SHOT );
+		Obj_SetX( obj, GetX() );
+		Obj_SetY( obj, GetY() );
+		Obj_SetSpeed( obj, 16 );
+		Obj_SetAngle( obj, angle );
+		Obj_SetAlpha( obj, 0 );
+		Obj_SetCollisionToPlayer( obj, false );
+		Wait( 3 );
+		SetShotDirectionType( ABSOLUTE );
+		let speed = 1;
+		loop( Min( Level + 1, 2 ) ){
+			CreateShot01( Obj_GetX( obj ), Obj_GetY( obj ), speed, Obj_GetAngle( obj ) + [ 160, 90 ][ IsHidden() ], [ BLUE31, PURPLE31 ][ IsHidden() ], 3 );
+			speed += 0.3;
+		}
+		PlaySEEx( seShot1 );
+		Obj_Delete( obj );
+	}
+	task Behavior(){
+		Wait( 60 );
+		let pattern = 0;
+		loop{
+			Wait( 8 );
+			SetShotDirectionType( PLAYER );
+			let angle = rand( 0, 360 );
+			let limit = [ 4, 5, 5, 6 ][ Level ];
+			let gap = -limit;
+			while( gap <= limit ){
+				SpellShot( angle + gap );
+				gap += 2;
+			}
+			if( IsOut( -16 ) || GetY() > GetCenterY() + 80 ){ return; }
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 222 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		Gone();
+		yield;
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleGreen, imgEnemyShadow, count ); }
+}

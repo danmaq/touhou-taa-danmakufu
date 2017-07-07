@@ -1,0 +1,202 @@
+function GetStage6BGLoadList(){ return [ imgMapCandle1, imgMapCandle8, imgMapLight1, imgMapSeal ]; }
+function GetStage6KeneLoadList(){ return [ imgSpellWheel, imgSpellStar, imgSpellKene, imgCutInKene, imgNameKene, imgEnemyKene, imgSystemCircleBig ]; }
+task Stage6(){
+	MuteMusic();
+	let loadgraphiclist = [ imgStage[ 5 ] ];
+	loadgraphiclist = loadgraphiclist ~ GetStage6BGLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStage5MerryLoadList();
+	loadgraphiclist = loadgraphiclist ~ GetStage6KeneLoadList();
+	loadgraphiclist = loadgraphiclist ~ imgEnemySense;
+	loadgraphiclist = loadgraphiclist ~ imgEnemyBat;
+	loadgraphiclist = loadgraphiclist ~ imgEnemyPhoenix;
+	let loadenemylist = [ _enemyBlur, enemyKedama04, enemyKedama05, enemyYosei14 ];
+	if( GetCommonDataDefault( "Practice", false ) ){ StageLoad( DefaultStageLoadGraphicList ~ loadgraphiclist, DefaultStageLoadSEList, loadenemylist ); }
+	else{ StageLoad( loadgraphiclist, [], loadenemylist ); }
+	Ready( seOk );
+	Stage6LoopInit();
+	ForbidBomb( false );
+	ForbidShot( false );
+	SetCommonData( "Result", false );
+	SetCommonData( "Stage", 5 );
+	SetCommonData( "BGStep", 0 );
+	PlayMusicEx( 12 );
+	MusicRelease[ 12 ] = true;
+	StageRelease[ 5 ] = true;
+	CreateSaveData();
+	SaveEx();
+	let startcount = GetCommonData( "GlobalCount" );
+	//Globalにしないとどういうわけかこの先でループし続けてしまう
+	Wait( 180 );
+//	/*
+	SetCommonData( "StageTitle", true );
+	Wait( 360 );
+	SetCommonData( "StageTitle", false );
+	Wait( 400 );
+	local{
+		ascent( let i in 0..44 ){
+			CreateEnemyFromFile( [ enemyKedama05, enemyKedama04 ][ trunc( i / 2 ) % 2 ], GetCenterX() + 202 * [ 1, -1 ][ i % 2 ], GetClipMinY() + 96 + i * 197 % 104, 0, sin( GetCommonData( "NowCount" ) ) * 45 + [ 180, 0 ][ i % 2 ], i );
+			Wait( 15 );
+		}
+	}
+	Wait( 240 );
+	CreateEnemyFromFile( enemyYosei14, GetCenterX(), GetClipMinY() + 96, 0, 0, 0 );
+	Wait( 480 );
+	CreateEnemyFromFile( enemyYosei14, GetCenterX(), GetClipMinY() + 96, 0, 0, 1 );
+	Wait( 480 );
+	CreateEnemyFromFile( enemyYosei14, GetCenterX(), GetClipMinY() + 96, 0, 0, 2 );
+	Wait( 180 );
+	SetCommonData( "StartCount", startcount );
+	CreateEnemyBossFromFile( bossMerryC, -32, GetClipMaxY(), 0, 0, startcount );
+	WaitZeroEnemy();
+	DeleteCommonData( "StartCount" );
+	ReadData();
+	SaveEx();
+	while( GetCommonData( "GlobalCount" ) < startcount + 5100 ){ yield; }
+	//Globalにしないとどういうわけかここでループし続けてしまう
+	SetCommonData( "BGStep", 1 );
+	Wait( 360 );
+	MusicRelease[ 13 ] = true;
+	CreateSaveData();
+	SaveEx();
+	CreateEnemyBossFromFile( bossCavedA, GetCenterX(), GetCenterY() - 96, 0, 0, 0 );
+	WaitZeroEnemy();
+	ForbidBomb( true );
+	ReadData();
+	SaveEx();
+	SetCommonData( "BGStep", 5 );
+	PlaySEEx( seBossExplode );
+	MuteMusic();
+	LoadMusic( bgmList[ 14 ] );
+	Wait( 240 );
+	CreateEnemyFromFile( _enemyConcentrate, GetCenterX(), GetCenterY(), 0, 0, 0 );
+	Wait( 120 );
+	PlayMusicEx( 14 );
+	MusicRelease[ 14 ] = true;
+	CreateSaveData();
+	SaveEx();
+	CreateEnemyBossFromFile( bossCavedB, GetCenterX(), GetCenterY(), 0, 0, 0 );
+	WaitZeroEnemy();
+	ReadData();
+	SaveEx();
+	SetCommonData( "ShowName", -1 );
+//	*/
+	CreateEnemyFromFile( bossCavedBE, -128, -128, 0, 0, 0 );
+	ForbidShot( true );
+	WaitZeroEnemy();
+	StageHighScore[ 5 ] = GetCommonDataDefault( "ResultTotal", 0 );
+	CreateSaveData();
+	SaveEx();
+	Wait( 600 );
+	if( IsReplay() || GetCommonDataDefault( "Practice", false ) ){
+		Clear();	//	EDを見せないためにも必要
+		return;
+	}
+	ClearByteCodeCash();
+	DeleteGraphicList( loadgraphiclist, [] );
+	LoadGraphicList( imgED );
+	LoadGraphicList( [ imgSystemStaffRoll, imgSystemExtra, imgSystemNextAge, imgMapSeal, imgMapSnow ] );
+	SetCommonData( "BGStep", 32767 );
+	SetCommonData( "WhiteFadeOut", 0 );
+	SetCommonData( "EDStep", [ 0, GetCommonData( "NowCount" ) ] );
+	SetCommonData( "Result", false );
+	MuteMusic();
+	PlayMusicEx( 17 );
+	MusicRelease[ 17 ] = true;
+	CreateSaveData();
+	SaveEx();
+	Wait( 200 );
+	CreateEnemyFromFile( _enemyED, 0, 0, 0, 0, 0 );
+	WaitZeroEnemy();
+	MuteMusic();
+	PlayMusicEx( 18 );
+	MusicRelease[ 18 ] = true;
+	CreateSaveData();
+	SaveEx();
+}
+function Stage6LoopInit(){
+	ClearBGEffect();
+	SetCommonData( "PrevBG", [ 0, 0 ] );
+	SetCommonData( "BGViewTo", [ 0, 0, 0 ] );
+	SetCommonData( "BGViewFrom", [ 500, 90, 0 ] );
+	SetCommonData( "SealRGB", [ 0, 0, 0 ] );
+}
+function Stage6Loop( let count ){
+	let speed = [ 0.5, 0, 0, 0, 0, 0 ];
+	let step = GetCommonDataDefault( "BGStep", 0 );
+	let prev = GetCommonData( "PrevBG" );
+	let from = GetCommonData( "BGViewFrom" );
+	let to = GetCommonData( "BGViewTo" );
+	let sealrgb = GetCommonData( "SealRGB" );
+	if( step != prev[ 0 ] ){
+		prev = [ step, count ];
+		SetCommonData( "PrevBG", prev );
+	}
+	let bgphasecount = count - prev[ 1 ];
+	to[ 2 ] = to[ 2 ] - Smooth( speed[ Max( step - 1, 0 ) ], speed[ step ], bgphasecount, 200 );
+	alternative( step )
+	case( 1 ){
+		from[ 2 ] = SplineFakeSFS( 0, 90, bgphasecount, 200 );
+		let rgb = Smooth( 0, 255, bgphasecount - 100, 300 );
+		ascent( let i in 0..3 ){ sealrgb[ i ] = rgb; }
+	}
+	case( 2 ){
+		sealrgb[ 0 ] = Smooth( 255, 96, bgphasecount, 300 );
+		sealrgb[ 1 ] = Smooth( 255, 0, bgphasecount, 300 );
+		sealrgb[ 2 ] = 255;
+	}
+	case( 3 ){
+		sealrgb[ 0 ] = Smooth( 96, 255, bgphasecount, 300 );
+		sealrgb[ 1 ] = Smooth( 0, 192, bgphasecount, 300 );
+		sealrgb[ 2 ] = Smooth( 255, 224, bgphasecount, 300 );
+	}
+	case( 4 ){
+		sealrgb[ 0 ] = 255;
+		sealrgb[ 1 ] = Smooth( 192, 64, bgphasecount, 300 );
+		sealrgb[ 2 ] = Smooth( 224, 0, bgphasecount, 300 );
+	}
+	case( 5 ){
+		sealrgb[ 0 ] = Smooth( 255, 64, bgphasecount, 300 );
+		sealrgb[ 1 ] = Smooth( 64, 0, bgphasecount, 300 );
+		sealrgb[ 2 ] = Smooth( 0, 64, bgphasecount, 300 );
+	}
+	SetCommonData( "BGViewFrom", from );
+	SetCommonData( "BGViewTo", to );
+	SetCommonData( "SealRGB", sealrgb );
+}
+function Stage6BG( let count ){
+	let from = GetCommonData( "BGViewFrom" );
+	let to = GetCommonData( "BGViewTo" );
+	let sealrgb = GetCommonData( "SealRGB" );
+	SetFog( 700, 1000, 0, 0, 0 );
+	SetViewFrom( from[ 0 ], from[ 1 ], from[ 2 ] );
+	SetViewTo( to[ 0 ], to[ 1 ], to[ 2 ] );
+	SetGraphicAngle( 90, 0, count / 2 );
+	SetGraphicRect( 0, 0, 512, 512 );
+	SetTexture( imgMapSeal );
+	SetAlpha( 128 );
+	SetColor( sealrgb[ 0 ], sealrgb[ 1 ], sealrgb[ 2 ] );
+	DrawGraphic3D( 0, -133, -2666 );
+	SetColor( 255, 255, 255 );
+	SetAlpha( 255 );
+	if( GetCommonData( "BGStep" ) <= 1 ){
+		SetGraphicAngle( 180, 0, 0 );
+		let z = -2304;
+		loop( 10 ){
+			let x = -128;
+			loop( 2 ){
+				if( GetCommonData( "BGStep" ) == 0 ){
+					SetGraphicRect( 0, 0, 256, 256 );
+					SetTexture( [ imgMapCandle1, imgMapCandle8 ][ GetCommonDataDefault( "DrawFrameCount", 0 ) % 2 ] );
+					DrawGraphic3D( x, -96, z );
+				}
+				else{ SetGraphicAngle( to[ 2 ], 0, 0 ); }
+				SetGraphicRect( 0, 0, 128, 128 );
+				SetTexture( imgMapLight1 );
+				DrawGraphic3D( x, -36, z );
+				x += 256;
+			}
+			z += 256;
+		}
+	}
+	SetGraphicAngle( 0, 0, 0 );
+}

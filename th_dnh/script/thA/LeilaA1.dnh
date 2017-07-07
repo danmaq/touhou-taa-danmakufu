@@ -1,0 +1,84 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let uniquestr = "G_LEILAA1";
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetShotDirectionType( PLAYER );
+		Wait( 60 );
+		let dir = -1;
+		loop{
+			ascent( let i in 0..10 ){
+				let speed = 1;
+				loop( [ 1, 2 ][ Level != 0 ] ){
+					CircleShotGap01( [ 90, 60 ][ trunc( Level / 2 ) ], speed, RED03, 20, i * 12 * dir );
+					speed += 0.6;
+				}
+				PlaySEEx( seShot1 );
+				Wait( 10 );
+			}
+			ExMove( false, count );
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 2, angle, 0 );
+				angle += 45;
+			}
+			PlaySEEx( seShadow );
+			Wait( 60 );
+			dir = -dir;
+		}
+	}
+	@Initialize{
+		SetLife( 1500 );
+		SetTimer( 30 );
+		SetInvincibility( 50 );
+		SetDamageRate( 100, 10 );
+		DeleteEnemyShotToItem( ALL );
+		SetEffectForZeroLife( 1, 0, 0 );
+		Behavior();
+		SetShotAutoDeleteClip( 64, 64, 64, 64 );
+		SetCommonData( "ShowName", 6 );
+	}
+	@MainLoop{
+		yield;
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, 3 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		SetCommonData( "ShowName", -1 );
+		DropItem( 10, 64 );
+		DropBomb();
+	}
+	@DrawLoop{
+		SetAlpha( Smooth( 0, 240, count, 200 ) );
+		DrawBossChr( imgEnemyLeila, 1, 1, 38, 76, count );
+		SetAlpha( 255 );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let PrevLife;
+	@Initialize{
+		SetLife( 70 );
+		PrevLife = GetLife();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, "G_LEILAA1", true );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleRed, imgEnemyShadow, count ); }
+}

@@ -1,0 +1,98 @@
+task SpellPractice( let code ){
+	MuteMusic();
+	let current = GetCurrentScriptDirectory();
+	let SpellFile = [
+		current ~ "Alice1S.dnh",	current ~ "Alice2S.dnh",	current ~ "Sakuya1S.dnh",	current ~ "Sakuya2S.dnh",	current ~ "Sakuya3S.dnh",
+		current ~ "Letty1S.dnh",	current ~ "Lily1S.dnh",		current ~ "Lily2S.dnh",		current ~ "Lily3S.dnh",		current ~ "Lily4S.dnh",
+		current ~ "LeilaB1S.dnh",	current ~ "LeilaB2S.dnh",	current ~ "LeilaB3S.dnh",	current ~ "LeilaB4S.dnh",	current ~ "LeilaB5S.dnh",
+		current ~ "MerryA1S.dnh",	current ~ "MerryB1S.dnh",	current ~ "MerryB2S.dnh",	current ~ "MerryB3S.dnh",	current ~ "MerryB4S.dnh",
+		current ~ "MerryC1S.dnh",	current ~ "CavedA1S.dnh",	current ~ "CavedA2S.dnh",	current ~ "CavedA3S.dnh",	current ~ "CavedA4S.dnh",
+		current ~ "CavedA5S.dnh",	current ~ "CavedB1S.dnh"
+	];
+	let SpellEXFile = [
+		current ~ "MerryX1S.dnh",	current ~ "MerryX2S.dnh",
+		current ~ "Renko1S.dnh",	current ~ "Renko2S.dnh",	current ~ "Renko3S.dnh",	current ~ "Renko4S.dnh",	current ~ "Renko5S.dnh",
+		current ~ "Renko6S.dnh",	current ~ "Renko7S.dnh",	current ~ "Renko8S.dnh",	current ~ "Renko9S.dnh",	current ~ "Renko10S.dnh",
+	];
+	let bgm;
+	let stage;
+	let codediv = trunc( code / 4 );
+	let loadgraphiclist = SpellPracticeDefaultLoadGraphicList;
+	if( codediv < 2 )					{ bgm = 3;	stage = 0; }
+	if( codediv >= 2 && codediv < 5 )	{ bgm = 5;	stage = 1; }
+	if( codediv == 5 )					{ bgm = 6;	stage = 2; }
+	if( codediv >= 6 && codediv < 10 )	{ bgm = 7;	stage = 2; }
+	if( codediv >= 10 && codediv < 15 )	{ bgm = 9;	stage = 3; }
+	if( codediv == 15 )					{ bgm = 10;	stage = 4; }
+	if( codediv >= 16 && codediv < 20 )	{ bgm = 11;	stage = 4; }
+	if( codediv == 20 )					{ bgm = 12;	stage = 5; }
+	if( codediv >= 21 && codediv < 26 )	{ bgm = 13;	stage = 5; }
+	if( codediv == 26 )					{ bgm = 14;	stage = 5; }
+	if( code >= 108 && code < 110 )		{ bgm = 15;	stage = 6; }
+	if( code >= 110 )					{ bgm = 16;	stage = 6; }
+	alternative( stage )
+	case( 0 ){
+		Stage1LoopInit();
+		loadgraphiclist = loadgraphiclist ~ GetStage1BGLoadList();
+		loadgraphiclist = loadgraphiclist ~ GetStage1AliceLoadList();
+	}
+	case( 1 ){
+		Stage2LoopInit();
+		loadgraphiclist = loadgraphiclist ~ GetStage2BGLoadList();
+		loadgraphiclist = loadgraphiclist ~ GetStage2SakuyaLoadList();
+	}
+	case( 2 ){
+		Stage3LoopInit();
+		loadgraphiclist = loadgraphiclist ~ GetStage3BGLoadList();
+		alternative( bgm )
+		case( 6 ){ loadgraphiclist = loadgraphiclist ~ GetStage3LettyLoadList(); }
+		case( 7 ){ loadgraphiclist = loadgraphiclist ~ GetStage3LilyLoadList(); }
+	}
+	case( 3 ){
+		Stage4LoopInit();
+		loadgraphiclist = loadgraphiclist ~ GetStage4BGLoadList();
+		loadgraphiclist = loadgraphiclist ~ GetStage4LeilaLoadList();
+	}
+	case( 4 ){
+		Stage5LoopInit();
+		loadgraphiclist = loadgraphiclist ~ GetStage5BGLoadList();
+		loadgraphiclist = loadgraphiclist ~ GetStage5MerryLoadList();
+	}
+	case( 5 ){
+		Stage6LoopInit();
+		loadgraphiclist = loadgraphiclist ~ GetStage6BGLoadList();
+		alternative( bgm )
+		case( 12 ){ loadgraphiclist = loadgraphiclist ~ GetStage5MerryLoadList(); }
+		case( 13, 14 ){
+			loadgraphiclist = loadgraphiclist ~ GetStage6KeneLoadList();
+		}
+		alternative( codediv )
+		case( 22 ){ loadgraphiclist = loadgraphiclist ~ imgEnemyPhoenix; }
+		case( 23 ){ loadgraphiclist = loadgraphiclist ~ imgEnemySense; }
+		case( 24 ){ loadgraphiclist = loadgraphiclist ~ imgEnemyBat; }
+	}
+	case( 6 ){
+		StageEXLoopInit();
+		loadgraphiclist = loadgraphiclist ~ GetStageEXBGLoadList();
+		alternative( bgm )
+		case( 15 ){ loadgraphiclist = loadgraphiclist ~ GetStage5MerryLoadList(); }
+		case( 16 ){ loadgraphiclist = loadgraphiclist ~ GetStageEXRenkoLoadList(); }
+	}
+	StageLoad( loadgraphiclist, DefaultStageLoadSEList, [ _enemyBlur ] );
+	ForbidShot( false );
+	SetCommonData( "Stage", stage );
+	SetCommonData( "BGStep", 0 );
+	PlayMusicEx( bgm );
+	Wait( 60 );
+	CreateSaveData();
+	CreateEnemyFromFile( _enemyConcentrate, GetCenterX(), GetClipMinY() + 96, 0, 0, 0 );
+	WaitZeroEnemy();
+	if( codediv < 27 ){ CreateEnemyBossFromFile( SpellFile[ codediv ], GetCenterX(), GetClipMinY() + 96, 0, 0, 0 ); }
+	else{ CreateEnemyBossFromFile( SpellEXFile[ code - 108 ], GetCenterX(), GetClipMinY() + 96, 0, 0, 0 ); }
+	WaitZeroEnemy();
+	PlaySEEx( seBossExplode );
+	SetCommonData( "ShowName", -1 );
+	Wait( 250 );
+	Clear();
+	return;
+}

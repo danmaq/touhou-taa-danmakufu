@@ -1,0 +1,113 @@
+script_enemy_main{
+#include_function ".\FUNC\Zako.dnh"
+	let count = 0;
+	let uniquecode = RandBlur( 32767 );
+	let uniquestr = ToString( uniquecode );
+	let Argv = GetArgument();
+	let firstx = GetX();
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetShotDirectionType( ABSOLUTE );
+		SetMovePosition03( GetX(), GetCenterY() - 64, 20, 5 );
+		local{
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow", GetX(), GetY(), 0, angle, uniquecode );
+				angle += 72;
+			}
+		}
+		local{
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow2", GetX(), GetY(), 0, angle, uniquecode );
+				angle += 72;
+			}
+		}
+		PlaySE( seShadow );
+		Wait( 60 );
+		SetSpeed( 2 );
+		SetAngle( [ 310, 240 ][ firstx < GetCenterX() ] );
+	}
+	@Initialize{
+		SetLife( 10 );
+		SetDamageRate( 2, 2 );
+		SetMovePosition03( GetCenterX(), GetCenterY() - 96, 7, 20 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		if( count == 60 ){ SetDamageRate( 100, 10 ); }
+		TaskShadowInterface( uniquestr, [ -1, 10 ][ count > 130 ] );
+		SEShotHit( seDamage, count );
+		Collision( 40, 0 );
+		Gone();
+		if( GetCommonDataDefault( "Stage5Boss", false ) ){ VanishEnemy(); }
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		DropItem( 4, 48 );
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleWhite, count, 64 );
+		SetGraphicRect( 1, 1, 32, 32 );
+		DrawYosei( imgEnemyYosei2, count );
+	}
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let PrevLife;
+	let RotateSpeed = 3;
+	task Behavior(){
+		Wait( 30 );
+		loop( 12 ){
+			ascent( let i in 1..6 ){ CreateShot01( GetX(), GetY(), i, GetAngle() - count * RotateSpeed + 70, GREEN01, 10 ); }
+			PlaySEEx( seShot1 );
+			Wait( 8 );
+		}
+	}
+	@Initialize{
+		SetLife( 300 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( count, 80 ), count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}
+script_enemy Shadow2{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = ToString( GetArgument() );
+	let PrevLife;
+	let RotateSpeed = -2;
+	task Behavior(){
+		Wait( 30 );
+		loop( 12 ){
+			ascent( let i in 1..6 ){ CreateShot01( GetX(), GetY(), i, GetAngle() - count * RotateSpeed - 70, AQUA01, 10 ); }
+			PlaySEEx( seShot1 );
+			Wait( 8 );
+		}
+	}
+	@Initialize{
+		SetLife( 300 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( RotateSpeed, Min( count * 2, 133 ), count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, false );
+		count++;
+	}
+	@Finalize{ DestructShadow( 40 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}

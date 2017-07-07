@@ -1,0 +1,204 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let bgm = false;
+	task Behavior(){
+		yield;
+		while( GetEventStep() != 1 ){ yield; }
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 4 );
+		SetEnemyMarker( true );
+		while( GetEventStep() != 2 ){ yield; }
+		SetCommonData( "ShowName", 9 );
+		while( GetEventStep() != 3 ){ yield; }
+		PlayMusicEx( 16 );
+		Wait( 30 );
+		bgm = true;
+	}
+	@Initialize{
+		SetLife( 1 );
+		DeleteEnemyShotToItem( ALL );
+		SetDamageRate( 0, 0 );
+		SetX( GetClipMinX() );
+		SetY( -128 );
+		CreateEventFromScript( "Talk" );
+		Behavior();
+	}
+	@MainLoop{
+		if( !OnEvent() && bgm ){ AddLife( -1 ); }
+		SEShotHit( seDamage, count );
+		Collision( 24, 0 );
+		yield;
+		count++;
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyRenko, 1, 1, 43, 72, count );
+	}
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]えっと、たしかどこだっけ・・・" );
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]前回は勘で何とかなったけど、\nはっきり場所覚えてないからなぁ・・・" );
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]ま、テキトーに行けば到着するでしょ" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]そっちは無限ループ回廊よ" );
+			SetStep( 1 );
+			Wait( 100 );
+			SetChar( RIGHT, imgCutInRenko );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Enemy();
+			TextOut( "\c[RED]何？７分１１秒も遅刻の上\n代理人なんてどういう了見かしら" );
+			Player();
+			SetChar( LEFT, imgCutInReimu2 );
+			TextOut( "\c[BLUE]あんた誰？" );
+			SetStep( 2 );
+			SetNameFromTexture( RIGHT, imgNameRenko );
+			Enemy();
+			TextOut( "\c[RED]メリーのお友達。\n宇佐見蓮子と言うわ、よろしく" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]それはどうも（ぺこり）" );
+			Enemy();
+			TextOut( "\c[RED]いえいえこちらこそ・・・\nってあんた、私の連れはどこに居るのよ" );
+			Player();
+			DeleteName( RIGHT );
+			TextOut( "\c[BLUE]途中で死んじゃったから\n私が代わりに来たわ" );
+			Enemy();
+			TextOut( "\c[RED]そう、あなたが殺したのね" );
+			Player();
+			TextOut( "\c[BLUE]悪かったかしら？" );
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]で、悪いついでに魔方陣も壊しに\n行きたいんだけど、どいてくれない？" );
+			Enemy();
+			TextOut( "\c[RED]前者は別に悪くないけど、\n後者はとっても悪い" );
+			TextOut( "\c[RED]今あれを壊されちゃとっても困るわ" );
+			TextOut( "\c[RED]そうね・・・\n３年くらい待ってくれないかしら" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]何？\nあんたが歴史食いの代理人になるつもり？" );
+			Enemy();
+			TextOut( "\c[RED]今更過去をやり直すことなんて\n別に興味ないわ" );
+			TextOut( "\c[RED]あの魔方陣には世界の全ての歴史が\n２００年余りに渡り刻まれている" );
+			TextOut( "\c[RED]その記憶の価値は既存のあらゆる財宝を\nもってしても替えられないほどよ" );
+			Player();
+			TextOut( "\c[BLUE]その魔方陣は歴史以外に\nご飯も食べられるわけね" );
+			TextOut( "\c[BLUE]ほっとけばきっと肥満になって\n幻想郷を埋め尽くしかねないわね" );
+			Enemy();
+			TextOut( "\c[RED]なるわけないじゃない" );
+			Player();
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]こっちだって頼まれごとなんだし\nちょっと引けないわね" );
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]私も正直、\nあの魔方陣は危険だと思ってるし" );
+			Enemy();
+			TextOut( "\c[RED]・・・そうね、どうしても先に\n進みたいならこっちにも考えがあるわ" );
+			Player();
+			TextOut( "\c[BLUE]あんたのお友達は\nその考えをやって撃沈したのよ" );
+			Enemy();
+			TextOut( "\c[RED]あんまりなめないでもらえるかしら" );
+			TextOut( "\c[RED]メリーとも何度か同士討ちしてみたけど\n現時点で９勝０敗よ" );
+			Player();
+			TextOut( "\c[BLUE]じゃあ先に１０勝したら私の勝ちね" );
+			Enemy();
+			TextOut( "\c[RED]ＯＫ、それでいいわ・・・" );
+			SetStep( 3 );
+			TextOut( "\c[RED]じゃあ早速行くわよ！\nじゃーんけーん・・・" );
+			Player();
+			TextOut( "\c[BLUE]パー弾幕とか出るのかしら" );
+			Enemy();
+			TextOut( "\c[RED]まさか、それをやったら\n違うＳＴＧになってしまうわ" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa4 );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			MoveChar( LEFT, FRONT );
+			TextOut( "\c[BLUE]あー、見事に迷ったぜ" );
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]３回行けば完全に道覚えるんだが\nまだ２回目だしな・・・" );
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]おっと、ここ曲がるんだったかな" );
+			MoveChar( LEFT, BACK );
+			TextOut( "\c[RED]そっちは肥溜めトラップよ" );
+			SetStep( 1 );
+			Wait( 100 );
+			SetChar( RIGHT, imgCutInRenko );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Enemy();
+			TextOut( "\c[RED]何？あなたいつから\n魔女コスの趣味に目覚めたのかしら" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]誰？" );
+			Enemy();
+			TextOut( "\c[RED]あぁ、人違いだったのね" );
+			SetStep( 2 );
+			SetNameFromTexture( RIGHT, imgNameRenko );
+			TextOut( "\c[RED]私は宇佐見蓮子。もう一人とコンビ組んで\nこっちの世界にお邪魔しているのよ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]あぁ、それはそれは\nイナカにウェルカムだぜ" );
+			Enemy();
+			TextOut( "\c[RED]ところで、もう一人・・・青紫の服に\nモブキャップの都会者見かけなかった？" );
+			Player();
+			DeleteName( RIGHT );
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]あー、都会者は知らないけど、\n変人なら見かけたぜ" );
+			Enemy();
+			TextOut( "\c[RED]で？" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]変だったから殺した" );
+			Enemy();
+			TextOut( "\c[RED]・・・どうやらここの人間には\n私たちの言葉が通じるようね" );
+			Player();
+			TextOut( "\c[BLUE]そりゃどうも・・・で、\nちょっとついでに道を聞きたいんだが" );
+			Enemy();
+			TextOut( "\c[RED]件の魔方陣ならこの先よ" );
+			Player();
+			TextOut( "\c[BLUE]そうかい、じゃああんたは離れてな\nちょっと派手にぶっ壊してくるから" );
+			Enemy();
+			TextOut( "\c[RED]壊すの？あれを？" );
+			TextOut( "\c[RED]悪いけど、待ってもらえないかしら\n・・・そうね、３年くらいは" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]残念だが、３分が限度だな" );
+			Enemy();
+			TextOut( "\c[RED]何でせっかくの貴重な魔方陣を壊すのよ？" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]こっちも頼まれてやってるからなぁ\n恨みは無いがお飯のため死んでもらうのさ" );
+			Enemy();
+			TextOut( "\c[RED]そう、あなたには\nあれの価値が分からないのかしら" );
+			TextOut( "\c[RED]あの魔方陣には世界の全ての歴史が\n２００年余りに渡り刻まれている" );
+			TextOut( "\c[RED]その記憶の価値は既存のあらゆる歴史書を\nもってしても替えられないほどよ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]あー、それは残念なことだな" );
+			Enemy();
+			TextOut( "\c[RED]ということで、今は帰ってもらおうかしら" );
+			Player();
+			TextOut( "\c[BLUE]そうだな、お前ももう一人と同じく\nアレできるようになったんだっけ？" );
+			Enemy();
+			TextOut( "\c[RED]アレはできないけど\nソレならできるわ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]じゃあソレでもいいから\n１０枚以内で私を倒してみな！" );
+			SetStep( 3 );
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]そしたら壊さずに私が蒐集してやる" );
+			Enemy();
+			TextOut( "\c[RED]不公平もいいところね\n・・・まぁでもいいわ" );
+			TextOut( "\c[RED]その時はあなたのところに\n入り浸って研究させてもらうわよ" );
+			Player();
+			TextOut( "\c[BLUE]ふん、多少は弾の扱いがうまいと聞いたが\n全部避けきってやるぜ！" );
+		}
+		End();
+	}
+}

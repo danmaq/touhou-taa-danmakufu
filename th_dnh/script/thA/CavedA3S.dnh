@@ -1,0 +1,118 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let uniquestr = "G_CAVEDA3S";
+	let PrevTime = GetTimer();
+	task BlurShot( let pattern ){
+		let BlurTime = 80;
+		PlaySEEx( sePower1 );
+		Concentration01( 120 );
+		Wait( 120 );
+		let angle = 0;
+		while( angle < 360 ){
+			CreateShotA( 0, GetX(), GetY(), 20 );
+			SetShotDataA( 0, 0, 2, angle + GetAngleToPlayer(), 0, 0, 2, PURPLE03 );
+			let speed = 2.5;
+			loop( 3 + Level * 2 ){
+				CreateShotA( 1, 0, 0, 0 );
+				SetShotDataA( 1, 0, 2, angle + GetAngleToPlayer(), 0, 0.1, speed, PURPLE03 );
+				AddShot( BlurTime, 0, 1, 0 );
+				speed += 0.5;
+			}
+			FireShot( 0 );
+			angle += [ [ [ 18, 15, 12, 10 ][ Level ], [ 18, 12, 10, 8 ][ Level ] ][ pattern == 0 ], [ 24, 18, 15, 12 ][ Level ], [ 30, 30, 24, 18 ][ Level ] ][ pattern % 3 ];
+		}
+		PlaySE( seShot1 );
+		Wait( BlurTime );
+		PlaySE( seKira1 );
+	}
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		let dir = -1;
+		loop( 2 ){
+			CreateEnemyFromScript( "Obj", GetX(), GetY(), 0, 0, dir );
+			dir = -dir;
+		}
+		SetShotDirectionType( ABSOLUTE );
+		let anglegap = 0;
+		let pattern = 0;
+		loop{
+			BlurShot( pattern );
+			if( pattern == 0 ){ Wait( 180 ); }
+			loop( [ 30, 40, 40, 60 ][ Level ] ){
+				ascent( let angle in 0..4 ){
+					ascent( let i in 0..[ 2, 4 ][ trunc( Level / 2 ) ] ){
+						let firstangle = angle * 90 + anglegap * [ 1, -1, -1, 1 ][ i ] + GetAngleToPlayer();
+						let color = [ BLUE22, AQUA22, RED22, YELLOW22 ][ angle ];
+						CreateShotA( 0, GetX(), GetY(), 10 );
+						SetShotDataA( 0, 0, [ 4.5, 1.5 ][ i % 2 ] + Level / 2, firstangle, 0, -0.1, 1, color );
+						SetShotDataA( 0, [ 50, 70, 50, 40 ][ Level ], [ 1.2, 1.5 ][ i % 2 ], firstangle + [ -90, 60, 60, -90 ][ i ], 0, 0, [ 1.2, 1.5 ][ i % 2 ], color );
+						FireShot( 0 );
+					}
+				}
+				PlaySEEx( seShot2 );
+				anglegap += [ 15, 8 ][ trunc( Level / 2 ) ];
+				Wait( [ 8, 5, 5, 5 ][ Level ] );
+			}
+			ExMove( false, count );
+			pattern++;
+		}
+	}
+	@Initialize{
+		SetLife( 1200 );
+		SetScore( 3650000 );
+		SetTimer( 95 );
+		SetInvincibility( 130 );
+		SetDamageRate( 30, 5 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( 1, 0, 0 );
+		SetCommonData( "ShowName", 8 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 23, imgCutInKene, 192, 344 );
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		TaskShadowInterface( uniquestr, -1 );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		CreateSpellResult( 23 * 4 + Level );
+		EndSpell();
+		DropItem( 20, 64 );
+	}
+	@DrawLoop{
+		SetGraphicRect( 0, 0, 512, 256 );
+		SetAlpha( Smooth( 255, 192, count, 200 ) );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ SetGraphicScale( Accelerate( 2, 1, count, 60 ), Accelerate( 0, 1, count, 60 ) ); }
+		DrawChr( imgEnemySense[ count % 10 ], count );
+		SetGraphicScale( 1, 1 );
+		SetAlpha( 255 );
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+	@BackGround{ KeneBG( imgSpellStar, imgSpellWheel, imgSpellKene, ALPHA, count ); }
+}
+script_enemy Obj{
+	let Argv = GetArgument();
+	let uniquestr = "G_CAVEDA3S";
+	@Initialize{
+		SetDamageRateEx( 100, 100, 5, 2 );
+		SetLife( 32767 );
+	}
+	@MainLoop{
+		SetX( GetCommonData( uniquestr ~ "X" ) + 128 * Argv );
+		SetY( GetCommonData( uniquestr ~ "Y" ) - 144 );
+		SetCollisionA( GetX(), GetY(), 96 );
+	}
+}

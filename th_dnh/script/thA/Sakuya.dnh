@@ -1,0 +1,11 @@
+#ScriptPathData
+#ScriptPath[.\Sakuya0.dnh]
+#ScriptPath[.\Sakuya1.dnh]
+#ScriptPath[.\Sakuya1S.dnh]
+#ScriptNextStep
+#ScriptPath[.\Sakuya2.dnh]
+#ScriptPath[.\Sakuya2S.dnh]
+#ScriptNextStep
+#ScriptPath[.\Sakuya3_.dnh]
+#ScriptPath[.\Sakuya3S.dnh]
+#EndScriptPathData

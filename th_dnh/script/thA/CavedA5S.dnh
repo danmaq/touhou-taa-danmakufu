@@ -1,0 +1,226 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let PrevTime = GetTimer();
+	let uniquestr = "G_CAVEDA5S";
+	function Concentration(){
+		if( GetTimer() <= 30 ){ return; }
+		Concentration01( 120 );
+		PlaySEEx( sePower1 );
+		Wait( 120 );
+	}
+	task Circle(){
+		loop( 30 ){
+			let angle = 0;
+			while( angle < 360 ){
+				CreateShotA( 0, GetX(), GetY(), 5 );
+				SetShotDataA( 0, 0, 10, angle + 180, 0, -0.3, 0, WHITE12 );
+				SetShotDataA( 0, 120, NULL, NULL, 0, 0.2, 6, WHITE12 );
+				FireShot( 0 );
+				angle += 6;
+			}
+			PlaySEEx( seShot1 );
+			Wait( 3 );
+		}
+		let angle = 0;
+		while( angle < 360 ){
+			CreateEnemyFromScript( "Shadow", GetX(), GetY(), 3, angle + GetAngleToPlayer(), 0 );
+			angle += 30;
+		}
+		PlaySEEx( seShadow );
+	}
+	task CircleSE(){
+		loop( 30 ){
+			PlaySEEx( seKira1 );
+			Wait( 3 );
+		}
+	}
+	task Option(){
+		ascent( let i in 0..4 ){
+			let angle = -30;
+			while( angle <= 30 ){
+				ascent( let gap in 0..2 ){ CreateEnemyFromScript( "Shadow2", GetX(), GetY(), 0, angle + gap * 180, i ); }
+				angle += [ 60, [ 30, 60 ][ i < 2 ] ][ trunc( Level / 2 ) ];
+			}
+		}
+		PlaySEEx( seShadow );
+	}
+	task Move(){
+		loop{
+			Wait( 300 );
+			CreateShot02( GetX(), GetY(), 11, GetAngleToPlayer(), -0.6, 0.8, AQUA02, 20 );
+			PlaySEEx( seShot3 );
+			let dstx = GetX();
+			let dsty = GetY();
+			let len = 40;
+			dstx = dstx + len * [ -1, 1 ][ GetPlayerX() - GetX() > 0 ];
+			if( GetPlayerY() > GetCenterY() ){ dsty += 32 * [ -1, 1 ][ rand_int( 0, 1 ) ]; }
+			else{ dsty = dsty + len * [ -1, 1 ][ GetPlayerY() - GetY() > 0 ]; }
+			if( dstx < GetClipMinX() + 96 ){ dstx += 64; }
+			else if( dstx > GetClipMaxX() - 96 ){ dstx -= 64; }
+			if( dsty < GetClipMinY() + 16 ){ dsty += 64; }
+			else if( dsty > GetCenterY() - 128 ){ dsty -= 64; }
+			SetMovePosition03( dstx, dsty, 20, 1.6 );
+		}
+	}
+	task Behavior(){
+		yield;
+		CreateShadowInterface( uniquestr );
+		SetShotDirectionType( PLAYER );
+		PlaySEEx( sePower1 );
+		Concentration01( 120 );
+		Wait( 120 );
+		Circle();
+		Wait( 120 );
+		CircleSE();
+		PlaySEEx( sePower1 );
+		Concentration01( 100 );
+		Wait( 100 );
+		Option();
+		Move();
+		ascent( let i in 0..1 + trunc( Level / 2 ) ){
+			while( GetTimer() > 30 && GetLife() > 8000 - i * 2000 ){ loop( 5 ){ yield; } }
+			Concentration();
+			let angle = 0;
+			while( angle < 360 ){
+				CreateEnemyFromScript( "Shadow3", GetX(), GetY(), 0, angle, i );
+				angle += 60;
+			}
+			PlaySEEx( seShadow );
+		}
+	}
+	@Initialize{
+		SetLife( 9999 );
+		SetScore( 6000000 );
+		SetTimer( 120 );
+		SetInvincibility( 300 );
+		SetDamageRate( 80, 10 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 96, 20, 2.5 );
+		SetEffectForZeroLife( [ 60, 1 ][ GetCommonDataDefault( "SpellPractice", false ) ], 0, 0 );
+		SetCommonData( "ShowName", 8 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 25, imgCutInKene, 192, 344 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		if( GetLife() <= 0 ){
+			SetCommonData( uniquestr, 0 );
+			if( count % 15 == 0 ){ PlaySEEx( seShot1 ); }
+		}
+		else{ yield; }
+		TaskShadowInterface( uniquestr, [ -1, 7 ][ count > 300 ] );
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 16 );
+		count++;
+	}
+	@Finalize{
+		ReleaseShadowInterface( uniquestr );
+		CreateSpellResult( 25 * 4 + Level );
+		EndSpell();
+	}
+	@DrawLoop{
+		DrawCircle( imgSystemCircleBig, count, 256 );
+		DrawBossChr( imgEnemyKene, 1, 1, 45, 86, count );
+	}
+	@BackGround{ KeneBG( imgSpellStar, imgSpellWheel, imgSpellKene, ALPHA, count ); }
+}
+script_enemy Shadow{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let PrevLife;
+	@Initialize{
+		SetLife( 128 );
+		PrevLife = GetLife();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, "G_CAVEDA5S", true );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleRed, imgEnemyShadow, count ); }
+}
+script_enemy Shadow2{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgument();
+	let CentralX = GetCenterX() + [ 128, 80 ][ trunc( Argv / 2 ) ] * [ 1, -1 ][ Argv % 2 ];
+	let CentralY = GetClipMinY() + [ 64, 160 ][ trunc( Argv / 2 ) ];
+	let RotateSpeed = [ 1.5, 1, 0.8, 0.8 ][ Level ] * [ 1, -1 ][ Argv % 2 ];
+	let PrevLife;
+	task Behavior(){
+		yield;
+		Wait( 20 );
+		loop{
+			loop( 10 ){
+				SetShotDirectionType( ABSOLUTE );
+				CreateShot01( GetX(), GetY(), Smooth( 0.5, [ 1.2, 1.4, 1.5, 1.4 ][ Level ], 100 - GetTimer(), 100 ), atan2( CentralY - GetY(), CentralX - GetX() ), BLUE12, 10 );
+				if( Level == 3 && Argv < 2 ){ CreateShot01( GetX(), GetY(), Smooth( 0.7, 1.5, 100 - GetTimer(), 100 ), atan2( CentralY - GetY(), CentralX - GetX() ) + 180, BLUE12, 10 ); }
+				PlaySEEx( seShot1 );
+				Wait( 8 );
+			}
+			Wait( 5 );
+		}
+	}
+	@Initialize{
+		SetLife( [ 500, 1800 ][ Argv < 2 ] );
+		SetDamageRate( 100, [ 1, 3 ][ Argv < 2 ] );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, "G_CAVEDA5S", false );
+		SetX( CentralX - cos( count * RotateSpeed + GetAngle() ) * 32 );
+		SetY( CentralY + sin( count * RotateSpeed + GetAngle() ) * 32 );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleBlue, imgEnemyShadow, count ); }
+}
+script_enemy Shadow3{
+#include_function ".\FUNC\Shadow.dnh"
+	let count = 0;
+	let uniquecode = "G_CAVEDA5S";
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let Argv = GetArgument() + 1;
+	let PrevLife;
+	task Behavior(){
+		Wait( Argv * 5 + 60 );
+		loop{
+			CircleShotGap01(
+				[ 120, 90 ][ Level == 3 ],
+				[ 1.2, 1.4, 1.5, 1.6 ][ Level ],
+				[ YELLOW04, ORANGE04, RED04, PURPLE04 ][ Argv - 1 ],
+				10,
+				[ count * 2 * GetDir( GetX() - GetCommonData( uniquecode ~ "X" ) ), 90 ][ count < 90 ]
+			);
+			PlaySEEx( seShot1 );
+			Wait( 20 );
+		}
+	}
+	@Initialize{
+		SetLife( 5000 );
+		SetDamageRate( 100, 5 );
+		PrevLife = GetLife();
+		Behavior();
+	}
+	@MainLoop{
+		yield;
+		MoveRotate( 0, Argv * 32, count, uniquecode );
+		PrevLife = StandardBehaviorShadow( seHidden, seSudden, PrevLife, uniquecode, true );
+		Gone();
+		count++;
+	}
+	@Finalize{ DestructShadow( 68 ); }
+	@DrawLoop{ DrawShadow( imgSystemCircleRed, imgEnemyShadow, count ); }
+}

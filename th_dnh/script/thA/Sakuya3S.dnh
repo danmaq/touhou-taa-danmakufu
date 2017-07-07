@@ -1,0 +1,68 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	let Level = GetCommonDataDefault( "Level", 1 );
+	let BlackOutCount = -100;
+	let FreezeTime = 150;
+	let PrevTime = GetTimer();
+	task Behavior(){
+		Wait( 90 );
+		SetShotDirectionType( PLAYER );
+		while( 1 ){
+			loop( rand_int( 1, 4 ) ){
+				ascent( let i in 0..4 ){
+					let angle = RandBlur( [ [ 100, 180 ][ trunc( Level / 2 ) ], 5 ][ trunc( i / 2 ) ] );
+					let x = GetX() + RandBlur( 48 );
+					let y = GetY() + RandBlur( 48 );
+					alternative( i % 2 )
+					case( 0 ){
+						loop( [ 3, 5, 5, 6 ][ Level ] ){
+							let speed = rand( 6, 10 );
+							CreateShot02( x, y, speed, angle + RandBlur( 8 ), -speed / 30, speed / 6, BLUE32, 10 );
+						}
+					}
+					case( 1 ){
+						let speed = rand( 6, 10 );
+						CircleShot02( [ 90, 60, 45, 20 ][ Level ], speed, -speed / 30, speed / 6, BLUE32, 10 );
+					}
+					PlaySEEx( seShot3 );
+					if( GetLife() <= 0 ){ return; }
+					Wait( [ 15, 12, 8, 5 ][ Level ] );
+				}
+			}
+			Wait( 10 );
+		}
+	}
+	@Initialize{
+		SetLife( 398 );
+		SetScore( 639800 );
+		SetTimer( 50 );
+		SetInvincibility( 130 );
+		SetDamageRate( 20, 24 );
+		SetEffectForZeroLife( [ 60, 1 ][ GetCommonDataDefault( "SpellPractice", false ) ], 0, 0 );
+		SetMovePosition03( GetCenterX(), GetClipMinY() + 128, 20, 2.5 );
+		SetCommonData( "ShowName", 3 );
+		if( GetCommonDataDefault( "SpellPractice", false ) ){ LastSpell(); }
+		StartSpell( 4, imgCutInSakuya, 192, 320 );
+		Behavior();
+	}
+	@MainLoop{
+		SetCommonData( "SpellBonus", [ GetSpellCardBonusScore(), count ] );
+		if( PrevTime != GetTimer() ){
+			PrevTime = GetTimer();
+			if( GetTimer() < 10 ){ PlaySEEx( seTimeOut ); }
+		}
+		if( count > 180 && count % [ 50, 30 ][ GetTimer() < 30 ] == 0 ){ ExMove( true, count ); }
+		if( GetLife() <= 0 ){ if( count % 15 == 0 ){ PlaySEEx( seShot1 ); } }
+		else{ yield; }
+		SEShotHitBoss( seDamage, count );
+		Collision( 32, 20 );
+		count++;
+	}
+	@Finalize{
+		CreateSpellResult( 16 + Level );
+		EndSpell();
+	}
+	@DrawLoop{ DrawBossChr( imgEnemySakuya, 1, 1, 44, 86, count ); }
+	@BackGround{ SakuyaBG( imgSpellRotateStone, imgSpellBlood, BlackOutCount, 150, count ); }
+}

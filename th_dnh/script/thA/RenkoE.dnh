@@ -1,0 +1,249 @@
+script_enemy_main{
+#include_function ".\FUNC\Boss.dnh"
+	let count = 0;
+	task Behavior(){
+		yield;
+		PlaySEEx( seBossExplode );
+		CreateEventFromScript( "Talk" );
+		while( OnEvent() ){ yield; }
+		let angle = 0;
+		while( angle < 360 ){
+			CreateShot02( GetPlayerX(), GetPlayerY(), 0, angle, 0.1, 5, RED03, 30 );
+			angle += 10;
+		}
+		Wait( 5 );
+		PlaySEEx( seShot1 );
+		Wait( 80 );
+		DeleteEnemyShotToItem( ALL );
+		CreateEventFromScript( "Talk2" );
+		while( GetEventStep() != 1 ){ yield; }
+		SetCommonData( "Result", true );
+		let clear = 100000000;
+		let point = GetPoint() * 50000;
+		let graze = GetGraze() * 500;
+		let player = ( GetPlayerLife() - 1 ) * 20000000;
+		let bomb = GetPlayerBomb() * 4000000;
+		let rank = 200;
+		let total = ( clear + point + graze + player + bomb ) * ( rank / 100 );
+		SetCommonData( "ResultClear", clear );
+		SetCommonData( "ResultPoint", point );
+		SetCommonData( "ResultGraze", graze );
+		SetCommonData( "ResultPlayer", player );
+		SetCommonData( "ResultBomb", bomb );
+		SetCommonData( "ResultRank", rank );
+		SetCommonData( "ResultTotal", total );
+		AddScore( total );
+	}
+	@Initialize{
+		SetLife( 1 );
+		SetX( -128 );
+		SetY( -128 );
+		LoadSE( seBossExplode );
+		ForbidShot( true );
+		SetCommonData( "ShowName", -1 );
+		Behavior();
+	}
+	@MainLoop{ yield; }
+}
+script_event Talk{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			SetChar( RIGHT, imgCutInRenkoCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Player();
+			TextOut( "\c[BLUE]そういえばもう１０勝ね" );
+			Enemy();
+			TextOut( "\c[RED]スペルカード取れても\n取れなくても勝ちってなんかずるい・・・" );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]ずるいのは私の能力で\n私自身はずるくないわ" );
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]それにあんたみたいな\n駆け出しの弾幕が通じると思って？" );
+			Enemy();
+			TextOut( "\c[RED]・・・えぅぅ" );
+			Player();
+			TextOut( "\c[BLUE]ま、そこいらの雑魚毛玉よりは\nまともな弾吐いてたわね" );
+			Enemy();
+			TextOut( "\c[RED]・・・こうなったら" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			SetChar( RIGHT, imgCutInRenkoCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Player();
+			TextOut( "\c[BLUE]さぁ、もう１０枚終わったぜ\nゲームセットだ" );
+			Enemy();
+			TextOut( "\c[RED]やっぱりそうはうまくいかないものね" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]おいおい、こっちはプロだぜ" );
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]弾幕一日入門受けただけのような\nお前が勝てるわけなかろうが" );
+			Enemy();
+			TextOut( "\c[RED]・・・くすん" );
+			Player();
+			TextOut( "\c[BLUE]私なら２枚もありゃお前を完膚なきまでに倒せるぜ" );
+			Enemy();
+			TextOut( "\c[RED]・・・こうなったら" );
+		}
+		End();
+	}
+}
+script_event Talk2{
+#include_function ".\FUNC\Event.dnh"
+	@MainLoop{
+		alternative( GetPlayerType() )
+		case( REIMU_A, REIMU_B ){
+			SetChar( LEFT, imgCutInReimu );
+			SetGraphicRect( LEFT, 1, 1, 192, 320 );
+			SetChar( RIGHT, imgCutInRenkoCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Player();
+			SetChar( LEFT, imgCutInReimu2 );
+			TextOut( "\c[BLUE]ひゃ、何するのよ！\n当たるところだったじゃない！" );
+			Enemy();
+			TextOut( "\c[RED]・・・当てようと思ったのに" );
+			Player();
+			SetChar( LEFT, imgCutInReimu3 );
+			TextOut( "\c[BLUE]あんた今のはずるいわ！もし打ち所が\n悪ければ即効ゲームオーバーじゃない！" );
+			Enemy();
+			TextOut( "\c[RED]あなたの能力のほうが余程ずるいと思う" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]私のは神に仕えて得た能力だから\nずるくないのよ、まぁ神信じてないけど" );
+			Enemy();
+			TextOut( "\c[RED]さっきと言ってることが違う" );
+			Player();
+			SetChar( LEFT, imgCutInReimu3 );
+			TextOut( "\c[BLUE]とにかく、会話中に弾幕は嫌われるわ\nそれが幻想郷での暗黙のルールね" );
+			Enemy();
+			TextOut( "\c[RED]別に人様から嫌われてたほうが\nやりたいことに専念できるし～" );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]話聞いてる？" );
+			Enemy();
+			TextOut( "\c[RED]あんまり聞いてない" );
+			Player();
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]じゃあ私はさっさと魔方陣壊して帰るわ" );
+			Enemy();
+			TextOut( "\c[RED]そういえばあなた、博麗の紅白さんね" );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]巫女って言わない辺り偉いわ。後で覚えてなさい" );
+			Enemy();
+			TextOut( "\c[RED]なんか幻想郷の歴史に\n深く関わりがあるらしいわね" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]まぁ確かになんか由緒ありそうだけど" );
+			Enemy();
+			TextOut( "\c[RED]まぁいいわ、じゃあ魔方陣あきらめるから\nあなたについていっていいかしら？" );
+			Player();
+			TextOut( "\c[BLUE]別にいいわよ？\nでも神社っつったって特に何も無いわ" );
+			Enemy();
+			TextOut( "\c[RED]別に物には期待してないわ、\nあなた掃除とか苦手そうだし" );
+			Player();
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]どこから分かるのよ" );
+			Enemy();
+			TextOut( "\c[RED]さっきまでのやり取りと勘と\n・・・あと魔方陣に聞いた" );
+			Player();
+			SetChar( LEFT, imgCutInReimu );
+			TextOut( "\c[BLUE]じゃあその個人情報漏洩しまくりな\n魔方陣はさっさと破壊しないとね" );
+			Enemy();
+			TextOut( "\c[RED]その代わりあなたから幻想郷の\n歴史についてみっちりと聞き出すわ" );
+			TextOut( "\c[RED]正直あの魔方陣の価値が余りに\n凄すぎて、卒倒しそうだったし" );
+			Player();
+			TextOut( "\c[BLUE]ふーん、まぁ何でも聞いて良いわよ\n分かる範囲で答えたげるわ" );
+			Enemy();
+			TextOut( "\c[RED]うん、じゃあ・・・まず博麗神社は\nどういう経緯で建てられたのかしら？" );
+			Player();
+			TextOut( "\c[BLUE]知らないわ" );
+			Enemy();
+			TextOut( "\c[RED]・・・・・・" );
+			Player();
+			SetChar( LEFT, imgCutInReimu5 );
+			TextOut( "\c[BLUE]だから、「分かる範囲」で\n答えたげるって言ったじゃない" );
+			Enemy();
+			TextOut( "\c[RED]・・・ねぇ、もう一回弾幕勝負しない？" );
+			SetStep( 1 );
+			Player();
+			SetChar( LEFT, imgCutInReimu4 );
+			TextOut( "\c[BLUE]やっぱあんたずるい！" );
+		}
+		case( MARISA_A, MARISA_B ){
+			SetChar( LEFT, imgCutInMarisa );
+			SetGraphicRect( LEFT, 1, 1, 192, 296 );
+			SetChar( RIGHT, imgCutInRenkoCry );
+			SetGraphicRect( RIGHT, 1, 1, 192, 288 );
+			Player();
+			SetChar( LEFT, imgCutInMarisa2 );
+			TextOut( "\c[BLUE]うぉ何するんだよ！" );
+			Enemy();
+			TextOut( "\c[RED]・・・ちっ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]今のは明らかに酷いぜ、ルール違反だ！" );
+			Enemy();
+			TextOut( "\c[RED]弾幕にルールも何もあるの？" );
+			Player();
+			TextOut( "\c[BLUE]今作った！" );
+			Enemy();
+			TextOut( "\c[RED]その「今作った」の方が\nルール違反丸出しよ" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]お前・・・そのうち嫌われるぜ" );
+			Enemy();
+			TextOut( "\c[RED]大丈夫よ、人様から嫌われてた方が\nやりたいことに専念できるし" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa );
+			TextOut( "\c[BLUE]とにかく、会話中は弾幕しないのが\n暗黙の了解だ、いいか？" );
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]次やったら\n変人と同じくらい酷い目にあわすぜ" );
+			Enemy();
+			TextOut( "\c[RED]もうあったじゃない" );
+			Player();
+			TextOut( "\c[BLUE]あぁもうなんだっていいよ\nさっさと魔方陣壊して帰る！" );
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]お前とは仲良くやれないぜ！" );
+			Enemy();
+			TextOut( "\c[RED]あ、そういえば" );
+			Player();
+			TextOut( "\c[BLUE]なんだよ！" );
+			Enemy();
+			TextOut( "\c[RED]魔方陣を破壊すると\n今までの蓄えられた歴史の情報が" );
+			TextOut( "\c[RED]全て解き放たれて\nそこいらじゅうにばら撒かれるんだけど" );
+			Player();
+			TextOut( "\c[BLUE]それがどうした！" );
+			Enemy();
+			TextOut( "\c[RED]あなたのことも\n例外なく全部ばら撒かれるわよ" );
+			TextOut( "\c[RED]例えばこの前の××××したとことか\n夜な夜な△△△△△してることとか" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]ッ！・・・なんでそれを知ってるんだよ" );
+			Enemy();
+			TextOut( "\c[RED]魔方陣から聞いた" );
+			Player();
+			TextOut( "\c[BLUE]・・・・・・" );
+			Enemy();
+			TextOut( "\c[RED]他にもあるわ、そうね・・・昨日あなたが\n完成させた符の名前とか・・・（クスッ）" );
+			Player();
+			SetChar( LEFT, imgCutInMarisa3 );
+			TextOut( "\c[BLUE]・・・もう好きにしろよ！私は帰るぜ！" );
+			Enemy();
+			TextOut( "\c[RED]あらあなた、弾幕ごっこ以外は\nそんな言うほど大したこと無いのね" );
+			SetStep( 1 );
+			Player();
+			SetChar( LEFT, imgCutInMarisa4 );
+			TextOut( "\c[BLUE]あーっ！今日はもう最悪だあっ！！" );
+		}
+		AllBack();
+		Wait( 5 );
+		StageClear();
+	}
+}
